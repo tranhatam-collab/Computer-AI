@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "IAI Computer",
+    "slug": "iai-computer-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": { "image": "./assets/splash.png", "resizeMode": "contain", "backgroundColor": "#0b0f14" },
+    "ios": { "supportsTablet": true, "bundleIdentifier": "one.iai.computer" },
+    "android": { "package": "one.iai.computer", "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#0b0f14" } },
+    "web": { "favicon": "./assets/favicon.png" },
+    "plugins": []
+  }
+}

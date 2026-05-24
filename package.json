@@ -1,0 +1,9 @@
+{
+  "name": "computer-iai-one-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "web:dev": "npm --prefix apps/web run dev",
+    "mobile:start": "npm --prefix apps/mobile run start"
+  }
+}
