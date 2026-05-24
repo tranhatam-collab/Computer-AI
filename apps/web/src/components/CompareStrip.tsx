@@ -1,19 +1,36 @@
-interface CompareStripProps { locale?: "vi" | "en"; }
+import { products } from "@iai/product-registry";
+import type { ProductDef } from "@iai/product-registry";
 
-const content = {
-  vi: { free: "làm quen với command-first AI work", personal: "cá nhân làm việc độc lập", creator: "nội dung, lịch, landing, script", business: "proposal, memo, report, SOP", studio: "content, media, design, publishing" },
-  en: { free: "get started with command-first AI work", personal: "independent individual work", creator: "content, calendar, landing, script", business: "proposal, memo, report, SOP", studio: "content, media, design, publishing" }
-} as const;
+const TIER_ORDER: Record<string, number> = { mass: 0, professional: 1, enterprise: 2, dedicated: 3 };
+const MAX_COMPARE = 6;
 
-export function CompareStrip({ locale = "vi" }: CompareStripProps) {
-  const t = content[locale];
+interface CompareStripProps {
+  locale?: "vi" | "en";
+  showAll?: boolean;
+}
+
+const tierLabel: Record<string, string> = {
+  mass: "Mass",
+  professional: "Pro",
+  enterprise: "Enterprise",
+  dedicated: "Dedicated"
+};
+
+export function CompareStrip({ locale = "vi", showAll = false }: CompareStripProps) {
+  const items: ProductDef[] = products
+    .sort((a, b) => (TIER_ORDER[a.tier] || 0) - (TIER_ORDER[b.tier] || 0) || a.order - b.order);
+
+  const display = showAll ? items : items.slice(0, MAX_COMPARE);
+
   return (
     <div className="compare-strip">
-      <div className="compare-item"><strong>Free</strong><span>{t.free}</span></div>
-      <div className="compare-item"><strong>Personal</strong><span>{t.personal}</span></div>
-      <div className="compare-item"><strong>Creator</strong><span>{t.creator}</span></div>
-      <div className="compare-item"><strong>Business</strong><span>{t.business}</span></div>
-      <div className="compare-item"><strong>Studio</strong><span>{t.studio}</span></div>
+      {display.map((p) => (
+        <div key={p.id} className="compare-item">
+          <strong style={{ fontSize: 15 }}>{p.name}</strong>
+          <span className="compare-tier-badge">{tierLabel[p.tier] || p.tier}</span>
+          <span>{p.tagline[locale]}</span>
+        </div>
+      ))}
     </div>
   );
 }
