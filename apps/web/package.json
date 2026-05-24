@@ -11,7 +11,8 @@
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "@iai/contracts": "workspace:*"
+    "@iai/contracts": "workspace:*",
+    "@iai/product-registry": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^18.3.8",

@@ -1,3 +1,19 @@
+import { products } from "../lib/products";
+
+function buildProductCopy(locale: "vi" | "en") {
+  const copy: Record<string, { tagline: string; audience: string[]; cta: string }> = {};
+  for (const p of products) {
+    copy[p.id] = {
+      tagline: p.tagline[locale],
+      audience: p.audience[locale],
+      cta: p.cta[locale],
+    };
+  }
+  return copy;
+}
+
+const t = buildProductCopy("en");
+
 export default {
   "site": {
     "brand": "IAI Computer",
@@ -22,19 +38,13 @@ export default {
   },
   "products": {
     "title": "Launch products",
-    "gridTitle": "5 initial launch products"
+    "gridTitle": "12 AI computer products"
   },
   "compare": {
     "title": "Quick compare",
-    "subtitle": "P1 only needs a clear enough comparison for users to choose the right package."
+    "subtitle": "Clear enough to choose the right package."
   },
-  "productCopy": {
-    "free": { "tagline": "Get started with command-first AI work", "audience": ["Beginners", "Students", "Curious users"], "cta": "Start free" },
-    "personal": { "tagline": "AI computer for independent individual work", "audience": ["Freelancer", "Knowledge worker", "Solo founder"], "cta": "View Personal" },
-    "creator": { "tagline": "Content and creative system with operational rhythm", "audience": ["Creator", "Trainer", "Writer", "Marketer"], "cta": "View Creator" },
-    "business": { "tagline": "Operating brain for founders and SMEs", "audience": ["Founder", "SME", "Consultant", "Ops lead"], "cta": "View Business" },
-    "studio": { "tagline": "Batch output environment for studios and agencies", "audience": ["Agency", "Studio", "Publisher", "Media team"], "cta": "View Studio" }
-  },
+  productCopy: t,
   "howItWorks": {
     "title": "How it works",
     "items": [

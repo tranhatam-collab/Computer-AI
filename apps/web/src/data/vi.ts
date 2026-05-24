@@ -1,3 +1,19 @@
+import { products } from "../lib/products";
+
+function buildProductCopy(locale: "vi" | "en") {
+  const copy: Record<string, { tagline: string; audience: string[]; cta: string }> = {};
+  for (const p of products) {
+    copy[p.id] = {
+      tagline: p.tagline[locale],
+      audience: p.audience[locale],
+      cta: p.cta[locale],
+    };
+  }
+  return copy;
+}
+
+const t = buildProductCopy("vi");
+
 export default {
   "site": {
     "brand": "IAI Computer",
@@ -22,19 +38,13 @@ export default {
   },
   "products": {
     "title": "Các gói mở bán đầu",
-    "gridTitle": "5 sản phẩm mở bán đầu"
+    "gridTitle": "12 sản phẩm AI computers"
   },
   "compare": {
     "title": "So sánh nhanh",
-    "subtitle": "P1 chỉ cần so sánh đủ rõ để người dùng chọn đúng gói."
+    "subtitle": "So sánh đủ rõ để chọn đúng gói."
   },
-  "productCopy": {
-    "free": { "tagline": "Làm quen với command-first AI work", "audience": ["Người mới", "Sinh viên", "Người muốn thử"], "cta": "Bắt đầu miễn phí" },
-    "personal": { "tagline": "Máy tính AI cho cá nhân làm việc độc lập", "audience": ["Freelancer", "Knowledge worker", "Founder đơn lẻ"], "cta": "Xem Personal" },
-    "creator": { "tagline": "Hệ nội dung và sáng tạo có nhịp vận hành", "audience": ["Creator", "Trainer", "Writer", "Marketer cá nhân"], "cta": "Xem Creator" },
-    "business": { "tagline": "Bộ não vận hành cho founder và SME", "audience": ["Founder", "SME", "Consultant", "Ops lead"], "cta": "Xem Business" },
-    "studio": { "tagline": "Môi trường xuất output hàng loạt cho studio và agency", "audience": ["Agency", "Studio", "Publisher", "Media team"], "cta": "Xem Studio" }
-  },
+  productCopy: t,
   "howItWorks": {
     "title": "Cách hoạt động",
     "items": [
