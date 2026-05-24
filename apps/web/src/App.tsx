@@ -8,12 +8,31 @@ import { ProductGrid } from "./components/ProductGrid";
 import { CompareStrip } from "./components/CompareStrip";
 import { Footer } from "./components/Footer";
 import { products } from "./lib/products";
+import { ProductPage } from "./pages/ProductPage";
+import type { ProductId } from "@iai/product-registry";
 
 type Locale = "vi" | "en";
+type View = { type: "home" } | { type: "product"; id: ProductId };
 
 export default function App() {
   const [locale, setLocale] = useState<Locale>("vi");
+  const [view, setView] = useState<View>({ type: "home" });
   const content = useMemo(() => (locale === "vi" ? vi : en), [locale]);
+
+  if (view.type === "product") {
+    return (
+      <div className="app-shell">
+        <Header
+          brand={content.site.brand}
+          links={[{ label: locale === "vi" ? "Trang chủ" : "Home", href: "#" }]}
+          locale={locale}
+          onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
+        />
+        <ProductPage productId={view.id} locale={locale} onBack={() => setView({ type: "home" })} />
+        <Footer locale={locale} />
+      </div>
+    );
+  }
 
   return (
     <div className="app-shell">
@@ -37,6 +56,7 @@ export default function App() {
           items={products}
           locale={locale}
           productCopy={content.productCopy}
+          onSelectProduct={(id) => setView({ type: "product", id: id as ProductId })}
         />
       </Section>
       <Section
