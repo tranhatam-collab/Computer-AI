@@ -9,10 +9,11 @@ import { CompareStrip } from "./components/CompareStrip";
 import { Footer } from "./components/Footer";
 import { products } from "./lib/products";
 import { ProductPage } from "./pages/ProductPage";
+import { PricingPage } from "./pages/PricingPage";
 import type { ProductId } from "@iai/product-registry";
 
 type Locale = "vi" | "en";
-type View = { type: "home" } | { type: "product"; id: ProductId };
+type View = { type: "home" } | { type: "product"; id: ProductId } | { type: "pricing" };
 
 export default function App() {
   const [locale, setLocale] = useState<Locale>("vi");
@@ -29,6 +30,21 @@ export default function App() {
           onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
         />
         <ProductPage productId={view.id} locale={locale} onBack={() => setView({ type: "home" })} />
+        <Footer locale={locale} />
+      </div>
+    );
+  }
+
+  if (view.type === "pricing") {
+    return (
+      <div className="app-shell">
+        <Header
+          brand={content.site.brand}
+          links={[{ label: locale === "vi" ? "Trang chủ" : "Home", href: "#" }]}
+          locale={locale}
+          onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
+        />
+        <PricingPage locale={locale} />
         <Footer locale={locale} />
       </div>
     );
