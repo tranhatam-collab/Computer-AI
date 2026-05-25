@@ -1,41 +1,65 @@
 import { useState } from "react";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
 interface AuthPageProps {
   locale?: "vi" | "en";
-  onLogin?: (email: string) => void;
+  onLogin?: (user: { id: string; email: string; name: string }) => void;
+}
+
+async function apiLogin(email: string) {
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || "Login failed");
+  return json.data as { user: { id: string; email: string; name: string }; session: { token: string } };
+}
+
+async function apiRegister(email: string, name: string, locale: string) {
+  const res = await fetch(`${API_BASE}/api/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, name, locale }),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || "Register failed");
+  return json.data as { id: string; email: string; name: string };
 }
 
 export function LoginPage({ locale = "vi", onLogin }: AuthPageProps) {
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [name, setName] = useState("");
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    onLogin?.(email);
+    setError("");
+    setLoading(true);
+    try {
+      if (mode === "register") {
+        await apiRegister(email.trim(), name.trim(), locale);
+      }
+      const result = await apiLogin(email.trim());
+      localStorage.setItem("token", result.session.token);
+      onLogin?.(result.user);
+    } catch (err: any) {
+      setError(err.message || "Error");
+    } finally {
+      setLoading(false);
+    }
   };
-
-  if (submitted) {
-    return (
-      <section className="auth-page">
-        <div className="container auth-container">
-          <div className="auth-card">
-            <h2>{locale === "vi" ? "Kiểm tra email" : "Check your email"}</h2>
-            <p>{locale === "vi" ? `Chúng tôi đã gửi magic link đến ${email}.` : `We've sent a magic link to ${email}.`}</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section className="auth-page">
       <div className="container auth-container">
         <div className="auth-card">
-          <h2>{locale === "vi" ? "Đăng nhập" : "Sign in"}</h2>
-          <p className="auth-subtitle">
-            {locale === "vi" ? "Nhập email để nhận magic link." : "Enter your email to receive a magic link."}
-          </p>
+          <h2>{mode === "login" ? (locale === "vi" ? "Đăng nhập" : "Sign in") : (locale === "vi" ? "Đăng ký" : "Sign up")}</h2>
+          {error ? <p className="auth-error">{error}</p> : null}
           <form onSubmit={handleSubmit}>
             <input
               type="email"
@@ -45,10 +69,23 @@ export function LoginPage({ locale = "vi", onLogin }: AuthPageProps) {
               required
               className="auth-input"
             />
-            <button type="submit" className="btn btn-primary auth-btn">
-              {locale === "vi" ? "Gửi magic link" : "Send magic link"}
+            {mode === "register" && (
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={locale === "vi" ? "Họ tên" : "Full name"}
+                required
+                className="auth-input"
+              />
+            )}
+            <button type="submit" className="btn btn-primary auth-btn" disabled={loading}>
+              {loading ? "..." : mode === "login" ? (locale === "vi" ? "Đăng nhập" : "Sign in") : (locale === "vi" ? "Đăng ký" : "Sign up")}
             </button>
           </form>
+          <button type="button" className="auth-switch" onClick={() => setMode((m) => (m === "login" ? "register" : "login"))}>
+            {mode === "login" ? (locale === "vi" ? "Chưa có tài khoản? Đăng ký" : "No account? Sign up") : (locale === "vi" ? "Đã có tài khoản? Đăng nhập" : "Have an account? Sign in")}
+          </button>
         </div>
       </div>
     </section>
