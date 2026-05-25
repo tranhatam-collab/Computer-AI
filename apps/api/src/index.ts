@@ -3,7 +3,6 @@ import { products, getPricing, getAllShells } from "@iai/product-registry";
 import { route } from "@iai/routing-matrix";
 import {
   assignRoute,
-  createInMemoryRunStore,
   createRun,
   getRun,
   listRuns,
@@ -11,11 +10,12 @@ import {
   updateRun,
   useStore
 } from "@iai/workflow-engine";
+import { createSqliteRunStore } from "@iai/database";
 
 const app = Fastify({ logger: true });
 const PORT = parseInt(process.env.PORT || "3001", 10);
 
-useStore(createInMemoryRunStore());
+useStore(createSqliteRunStore());
 
 // ── Product routes ──
 

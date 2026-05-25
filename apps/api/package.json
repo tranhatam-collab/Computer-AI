@@ -14,7 +14,8 @@
     "@iai/product-registry": "workspace:*",
     "@iai/routing-matrix": "workspace:*",
     "@iai/workflow-engine": "workspace:*",
-    "@iai/runtime-registry": "workspace:*"
+    "@iai/runtime-registry": "workspace:*",
+    "@iai/database": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.6.2",
