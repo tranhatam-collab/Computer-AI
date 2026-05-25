@@ -6,11 +6,12 @@ import { TaskListScreen } from "./src/screens/TaskListScreen";
 import { TaskDetailScreen } from "./src/screens/TaskDetailScreen";
 import { ApprovalsScreen } from "./src/screens/ApprovalsScreen";
 import { ResultsScreen } from "./src/screens/ResultsScreen";
+import { CommandScreen } from "./src/screens/CommandScreen";
 
 type Locale = "vi" | "en";
-type Screen = { type: "tasks" } | { type: "task-detail"; id: string } | { type: "approvals" } | { type: "results" };
+type Screen = { type: "tasks" } | { type: "task-detail"; id: string } | { type: "approvals" } | { type: "results" } | { type: "command" };
 
-const tabs = ["tasks", "approvals", "results"] as const;
+const tabs = ["command", "tasks", "approvals", "results"] as const;
 
 export default function App() {
   const [locale, setLocale] = useState<Locale>("vi");
@@ -20,6 +21,7 @@ export default function App() {
 
   const tabLabel = (key: string) => {
     const map: Record<string, { vi: string; en: string }> = {
+      command: { vi: "Lệnh", en: "Command" },
       tasks: { vi: "Tác vụ", en: "Tasks" },
       approvals: { vi: "Duyệt", en: "Approvals" },
       results: { vi: "Kết quả", en: "Results" },
@@ -29,12 +31,14 @@ export default function App() {
 
   const renderScreen = () => {
     switch (screen.type) {
+      case "command":
+        return <CommandScreen locale={locale} onSubmitted={() => setScreen({ type: "tasks" })} />;
       case "task-detail":
         return <TaskDetailScreen runId={screen.id} locale={locale} onBack={() => setScreen({ type: "tasks" })} />;
       case "approvals":
-        return <ApprovalsScreen approvals={[]} locale={locale} />;
+        return <ApprovalsScreen locale={locale} />;
       case "results":
-        return <ResultsScreen runs={[]} locale={locale} />;
+        return <ResultsScreen locale={locale} />;
       default:
         return <TaskListScreen locale={locale} onSelectRun={(id) => setScreen({ type: "task-detail", id })} />;
     }

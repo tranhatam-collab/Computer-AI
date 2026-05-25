@@ -22,10 +22,15 @@ export interface Run {
 
 export interface Approval {
   id: string;
+  userId: string;
+  assigneeId: string;
   action: string;
   resource: string;
-  state: string;
+  details: string;
+  state: "pending" | "approved" | "rejected" | "escalated";
   createdAt: number;
+  resolvedAt?: number;
+  reason?: string;
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -48,4 +53,12 @@ export const api = {
     }),
   getRuns: () => request<Run[]>("/api/runs"),
   getRun: (id: string) => request<Run>(`/api/runs/${id}`),
+  getApprovals: () => request<Approval[]>("/api/approvals"),
+  approve: (id: string) =>
+    request<Approval>(`/api/approvals/${id}/approve`, { method: "POST" }),
+  reject: (id: string, reason?: string) =>
+    request<Approval>(`/api/approvals/${id}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    }),
 };

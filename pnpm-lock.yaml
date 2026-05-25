@@ -10,6 +10,12 @@ importers:
 
   apps/api:
     dependencies:
+      '@iai/approval-sdk':
+        specifier: workspace:*
+        version: link:../../packages/approval-sdk
+      '@iai/audit-sdk':
+        specifier: workspace:*
+        version: link:../../packages/audit-sdk
       '@iai/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -94,6 +100,9 @@ importers:
 
   packages/approval-sdk:
     dependencies:
+      '@iai/audit-sdk':
+        specifier: workspace:*
+        version: link:../audit-sdk
       '@iai/contracts':
         specifier: workspace:*
         version: link:../contracts
