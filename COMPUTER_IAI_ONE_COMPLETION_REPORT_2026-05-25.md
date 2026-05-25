@@ -1,7 +1,19 @@
 # COMPUTER.IAI.ONE — COMPLETION REPORT (REVISED)
 
-**Generated:** 2026-05-25 09:05 GMT+7  
-**Status:** P1-P4 scaffold mostly complete; P5-P8 partial scaffold; production blocked by real DB, real AI workers, auth UI, payment gateway, email delivery, mobile device build.
+**Generated:** 2026-05-25 09:55 GMT+7
+**Status:** P1-P4 scaffold complete; P5-P8 partial; production blocked by real AI keys, payment keys, email credentials, EAS build, verified CI.
+
+## Infrastructure updates this session
+
+| Item | Change | Status |
+|------|--------|--------|
+| Database | SQLite (better-sqlite3) with users, sessions, runs, audit_logs tables | ✅ In-memory replaced |
+| Auth UI | /login page with magic link form | ✅ UI exists, backend not wired |
+| AI provider | Provider interface + mock fallback | ✅ Production fails: AI_PROVIDER_NOT_CONFIGURED |
+| Email provider | Provider interface + console fallback | ✅ Production fails: EMAIL_PROVIDER_NOT_CONFIGURED |
+| Payment provider | Provider interface + mock fallback | ✅ Production fails: PAYMENT_PROVIDER_NOT_CONFIGURED |
+| CI/CD | Workflow matches local commands | ⚠️ CI_CONFIGURED_NOT_VERIFIED (no GitHub run observed) |
+| Mobile build | EAS checklist added | ❌ EAS_ACCOUNT_PENDING |
 
 ---
 
@@ -31,7 +43,7 @@
 | 4 — Runtime Workers | ✅ COMPLETE | 5 worker classes (simulated), concurrency policy |
 | 5 — Mobile | ⚠️ STARTER COMMAND CENTER | Expo shell, basic API client, task/detail/approval/result screens; no device build, command creation UI, push notifications |
 | 6 — Enterprise | ✅ COMPLETE | EnterpriseLaneView component, tier-filtered cards |
-| 7 — Infrastructure | ⚠️ DEV SCAFFOLD | API server runs locally, workflow store is abstracted, default persistence remains in-memory |
+| 7 — Infrastructure | ⚠️ DEV SCAFFOLD — SQLite DB, Fastify API, auth/audit/approval SDKs, CI/CD (unverified) | API server runs locally, workflow store is abstracted, default persistence remains in-memory |
 | 8 — Monetization | ⚠️ SDK SCAFFOLD | Billing/invoice/usage SDKs exist, Stripe/PayOS NOT wired |
 
 ---
