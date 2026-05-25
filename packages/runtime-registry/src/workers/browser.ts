@@ -1,10 +1,10 @@
-import { BaseWorker, type WorkerTask } from "../base.js";
+import { BaseWorker, type WorkerTask, type WorkerResult } from "../base.js";
 
 export class BrowserWorker extends BaseWorker {
   name = "browser";
   allowedTypes = ["search", "browse", "fetch", "scrape"];
 
-  async run(task: WorkerTask): Promise<ReturnType<BaseWorker["execute"]>> {
+  async run(task: WorkerTask): Promise<WorkerResult> {
     const results = [
       `[Browser Worker] Task: ${task.id}`,
       `Type: ${task.type}`,

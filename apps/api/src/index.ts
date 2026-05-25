@@ -13,6 +13,7 @@ import {
 import { createSqliteRunStore } from "@iai/database";
 import { getPendingApprovals, approve, reject } from "@iai/approval-sdk";
 import { createUser, login, logout, authenticate } from "@iai/auth-sdk";
+import { getAppMap, getProductsByLane } from "@iai/product-registry";
 
 const app = Fastify({ logger: true });
 const PORT = parseInt(process.env.PORT || "3001", 10);
@@ -135,6 +136,16 @@ app.get<{ Headers: { authorization?: string } }>("/api/me", async (req) => {
   const user = token ? authenticate(token) : null;
   if (!user) return { success: false, error: "Unauthorized" };
   return { success: true, data: user };
+});
+
+// ── App map routes ──
+
+app.get("/api/app-map", async () => {
+  return { success: true, data: getAppMap() };
+});
+
+app.get<{ Params: { lane: string } }>("/api/app-map/:lane", async (req) => {
+  return { success: true, data: getProductsByLane(req.params.lane as any) };
 });
 
 // ── Health ──

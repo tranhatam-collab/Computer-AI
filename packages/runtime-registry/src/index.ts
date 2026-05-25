@@ -4,6 +4,9 @@ import { CodeWorker } from "./workers/code.js";
 import { ResearchWorker } from "./workers/research.js";
 import { ContentWorker } from "./workers/content.js";
 import { OfficeWorker } from "./workers/office.js";
+import { SalesWorker } from "./workers/sales.js";
+import { FinanceWorker } from "./workers/finance.js";
+import { EnterpriseWorker } from "./workers/enterprise.js";
 import type { LaneId, RuntimeClass } from "@iai/product-registry";
 
 export type { WorkerTask, WorkerResult } from "./base.js";
@@ -13,6 +16,9 @@ export { CodeWorker };
 export { ResearchWorker };
 export { ContentWorker };
 export { OfficeWorker };
+export { SalesWorker };
+export { FinanceWorker };
+export { EnterpriseWorker };
 export { checkConcurrency, acquireSlot, releaseSlot, getTimeoutMs } from "./policy.js";
 
 const browser = new BrowserWorker();
@@ -20,9 +26,12 @@ const code = new CodeWorker();
 const research = new ResearchWorker();
 const content = new ContentWorker();
 const office = new OfficeWorker();
+const sales = new SalesWorker();
+const finance = new FinanceWorker();
+const enterprise = new EnterpriseWorker();
 
 export interface RuntimeMetadata {
-  id: RuntimeClass | "office";
+  id: RuntimeClass | "office" | "sales" | "finance" | "enterprise";
   label: string;
   laneIds: LaneId[];
   capabilities: string[];
@@ -87,12 +96,45 @@ const registry = {
     metadata: {
       id: "office",
       label: "Office runtime",
-      laneIds: ["business", "finance", "sales"],
+      laneIds: ["business"],
       capabilities: office.allowedTypes,
       limits: { maxConcurrentRuns: 2, timeoutMs: 90000 },
       simulated: true,
     },
     worker: office,
+  },
+  sales: {
+    metadata: {
+      id: "sales",
+      label: "Sales runtime",
+      laneIds: ["sales"],
+      capabilities: sales.allowedTypes,
+      limits: { maxConcurrentRuns: 2, timeoutMs: 90000 },
+      simulated: true,
+    },
+    worker: sales,
+  },
+  finance: {
+    metadata: {
+      id: "finance",
+      label: "Finance runtime",
+      laneIds: ["finance"],
+      capabilities: finance.allowedTypes,
+      limits: { maxConcurrentRuns: 2, timeoutMs: 90000 },
+      simulated: true,
+    },
+    worker: finance,
+  },
+  enterprise: {
+    metadata: {
+      id: "enterprise",
+      label: "Enterprise runtime",
+      laneIds: ["enterprise"],
+      capabilities: enterprise.allowedTypes,
+      limits: { maxConcurrentRuns: 1, timeoutMs: 120000 },
+      simulated: true,
+    },
+    worker: enterprise,
   },
 } satisfies Record<string, RuntimeEntry>;
 

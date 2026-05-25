@@ -7,7 +7,7 @@ export type Tier = "mass" | "professional" | "enterprise" | "dedicated";
 
 export type LaneId =
   | "basic" | "research" | "content" | "code" | "business"
-  | "finance" | "media" | "sales" | "data";
+  | "finance" | "media" | "sales" | "data" | "enterprise";
 
 export type RuntimeClass = "browser" | "code" | "research" | "content" | "business";
 
