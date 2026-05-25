@@ -112,6 +112,14 @@ h1 { margin: 0 0 18px; font-size: clamp(34px,5vw,60px); line-height: 1.04; }
 .price-free { font-size: 32px; font-weight: 700; color: var(--success); }
 .price-contact { font-size: 20px; font-weight: 600; }
 .pricing-features { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.8; }
+.auth-page { padding: 80px 0; display: flex; align-items: center; min-height: 60vh; }
+.auth-container { max-width: 480px; margin: 0 auto; }
+.auth-card { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 32px; }
+.auth-card h2 { margin: 0 0 8px; }
+.auth-subtitle { color: var(--muted); margin-bottom: 24px; }
+.auth-input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font-size: 16px; margin-bottom: 16px; outline: none; }
+.auth-input:focus { border-color: var(--primary); }
+.auth-btn { width: 100%; text-align: center; }
 .feature-list {
   max-width: 600px;
   color: var(--muted);

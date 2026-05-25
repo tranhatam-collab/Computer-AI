@@ -10,10 +10,11 @@ import { Footer } from "./components/Footer";
 import { products } from "./lib/products";
 import { ProductPage } from "./pages/ProductPage";
 import { PricingPage } from "./pages/PricingPage";
+import { LoginPage } from "./pages/LoginPage";
 import type { ProductId } from "@iai/product-registry";
 
 type Locale = "vi" | "en";
-type View = { type: "home" } | { type: "product"; id: ProductId } | { type: "pricing" };
+type View = { type: "home" } | { type: "product"; id: ProductId } | { type: "pricing" } | { type: "login" };
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -33,6 +34,7 @@ function toHref(path: string): string {
 function viewFromPath(pathname: string): View {
   const path = toAppPath(pathname);
   if (path === "/pricing") return { type: "pricing" };
+  if (path === "/login") return { type: "login" };
   const productMatch = path.match(/^\/products\/([^/]+)$/);
   if (productMatch) return { type: "product", id: productMatch[1] as ProductId };
   return { type: "home" };
@@ -95,6 +97,21 @@ export default function App() {
           onNavigate={(href) => navigate(toAppPath(href))}
         />
         <PricingPage locale={locale} />
+        <Footer locale={locale} />
+      </div>
+    );
+  }
+
+  if (view.type === "login") {
+    return (
+      <div className="app-shell">
+        <Header
+          brand={content.site.brand}
+          links={[{ label: locale === "vi" ? "Trang chủ" : "Home", href: toHref("/") }]}
+          locale={locale}
+          onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
+        />
+        <LoginPage locale={locale} />
         <Footer locale={locale} />
       </div>
     );
