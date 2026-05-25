@@ -1,17 +1,47 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { products, getPricing } from "@iai/product-registry";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 interface PricingPageProps {
   locale?: "vi" | "en";
+  userId?: string;
 }
 
 const tierOrder = { mass: 0, professional: 1, enterprise: 2, dedicated: 3 };
 
-export function PricingPage({ locale = "vi" }: PricingPageProps) {
+async function apiSubscribe(userId: string, productId: string) {
+  const res = await fetch(`${API_BASE}/api/subscriptions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, productId }),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || "Subscribe failed");
+  return json.data;
+}
+
+export function PricingPage({ locale = "vi", userId }: PricingPageProps) {
+  const [subscribing, setSubscribing] = useState<string | null>(null);
+  const [subscribed, setSubscribed] = useState<Set<string>>(new Set());
+
   const sorted = useMemo(
     () => [...products].sort((a, b) => (tierOrder[a.tier] || 0) - (tierOrder[b.tier] || 0) || a.order - b.order),
     []
   );
+
+  const handleSubscribe = async (productId: string) => {
+    if (!userId) return alert(locale === "vi" ? "Vui lòng đăng nhập trước." : "Please sign in first.");
+    setSubscribing(productId);
+    try {
+      await apiSubscribe(userId, productId);
+      setSubscribed((prev) => new Set(prev).add(productId));
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSubscribing(null);
+    }
+  };
 
   return (
     <section className="section">
@@ -25,6 +55,7 @@ export function PricingPage({ locale = "vi" }: PricingPageProps) {
             const price = getPricing(p.id);
             const isFree = price.monthly === 0;
             const isContact = price.monthly === null;
+            const isSubscribed = subscribed.has(p.id);
             return (
               <div key={p.id} className="pricing-card">
                 <div className="product-tier">{p.tier}</div>
@@ -62,6 +93,23 @@ export function PricingPage({ locale = "vi" }: PricingPageProps) {
                     <li key={h}>{h}</li>
                   ))}
                 </ul>
+                {isFree ? (
+                  <button className="btn btn-secondary" disabled>{locale === "vi" ? "Đã bao gồm" : "Included"}</button>
+                ) : isContact ? (
+                  <button className="btn btn-secondary">{locale === "vi" ? "Liên hệ" : "Contact"}</button>
+                ) : (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => handleSubscribe(p.id)}
+                    disabled={subscribing === p.id || isSubscribed}
+                  >
+                    {isSubscribed
+                      ? (locale === "vi" ? "Đã đăng ký" : "Subscribed")
+                      : subscribing === p.id
+                        ? "..."
+                        : (locale === "vi" ? "Đăng ký" : "Subscribe")}
+                  </button>
+                )}
               </div>
             );
           })}

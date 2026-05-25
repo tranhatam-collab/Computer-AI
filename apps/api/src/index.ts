@@ -14,6 +14,8 @@ import { createSqliteRunStore } from "@iai/database";
 import { getPendingApprovals, approve, reject } from "@iai/approval-sdk";
 import { createUser, login, logout, authenticate } from "@iai/auth-sdk";
 import { getAppMap, getProductsByLane } from "@iai/product-registry";
+import { createSubscription, cancelSubscription, generateInvoice } from "@iai/billing-sdk";
+import { getCurrentUsage, getRemainingQuota } from "@iai/usage-sdk";
 
 const app = Fastify({ logger: true });
 const PORT = parseInt(process.env.PORT || "3001", 10);
@@ -146,6 +148,31 @@ app.get("/api/app-map", async () => {
 
 app.get<{ Params: { lane: string } }>("/api/app-map/:lane", async (req) => {
   return { success: true, data: getProductsByLane(req.params.lane as any) };
+});
+
+// ── Billing routes ──
+
+app.post<{ Body: { userId: string; productId: string } }>("/api/subscriptions", async (req) => {
+  const sub = createSubscription(req.body.userId, req.body.productId as any);
+  return { success: true, data: sub };
+});
+
+app.post<{ Body: { userId: string; productId: string } }>("/api/subscriptions/cancel", async (req) => {
+  cancelSubscription(req.body.userId, req.body.productId as any);
+  return { success: true };
+});
+
+app.post<{ Body: { userId: string; productId: string; currency?: "USD" | "VND" } }>("/api/invoices", async (req) => {
+  const inv = generateInvoice(req.body.userId, req.body.productId as any, req.body.currency);
+  return { success: true, data: inv };
+});
+
+// ── Usage routes ──
+
+app.get<{ Params: { userId: string; productId: string } }>("/api/usage/:userId/:productId", async (req) => {
+  const usage = getCurrentUsage(req.params.userId, req.params.productId as any);
+  const quota = getRemainingQuota(req.params.userId, req.params.productId as any);
+  return { success: true, data: { usage, quota } };
 });
 
 // ── Health ──

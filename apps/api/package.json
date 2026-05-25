@@ -18,7 +18,9 @@
     "@iai/database": "workspace:*",
     "@iai/approval-sdk": "workspace:*",
     "@iai/audit-sdk": "workspace:*",
-    "@iai/auth-sdk": "workspace:*"
+    "@iai/auth-sdk": "workspace:*",
+    "@iai/billing-sdk": "workspace:*",
+    "@iai/usage-sdk": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.6.2",

@@ -43,6 +43,7 @@ function viewFromPath(pathname: string): View {
 export default function App() {
   const [locale, setLocale] = useState<Locale>("vi");
   const [view, setView] = useState<View>(() => viewFromPath(window.location.pathname));
+  const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
   const content = useMemo(() => (locale === "vi" ? vi : en), [locale]);
 
   useEffect(() => {
@@ -96,7 +97,7 @@ export default function App() {
           homeHref={toHref("/")}
           onNavigate={(href) => navigate(toAppPath(href))}
         />
-        <PricingPage locale={locale} />
+        <PricingPage locale={locale} userId={user?.id} />
         <Footer locale={locale} />
       </div>
     );
@@ -111,7 +112,7 @@ export default function App() {
           locale={locale}
           onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
         />
-        <LoginPage locale={locale} />
+        <LoginPage locale={locale} onLogin={(u) => { setUser(u); navigate("/"); }} />
         <Footer locale={locale} />
       </div>
     );
