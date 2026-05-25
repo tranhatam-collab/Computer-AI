@@ -164,6 +164,8 @@ importers:
         specifier: workspace:*
         version: link:../contracts
 
+  packages/providers: {}
+
   packages/routing-matrix:
     dependencies:
       '@iai/contracts':
