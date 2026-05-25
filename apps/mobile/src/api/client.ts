@@ -33,9 +33,26 @@ export interface Approval {
   reason?: string;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  locale: "vi" | "en";
+}
+
+export interface Session {
+  token: string;
+  userId: string;
+  expiresAt: number;
+}
+
+let authToken: string | null = null;
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
+    headers,
     ...options,
   });
   const json = await res.json();
@@ -61,4 +78,24 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ reason }),
     }),
+  register: (email: string, name: string, locale?: "vi" | "en") =>
+    request<User>("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, name, locale }),
+    }),
+  login: async (email: string) => {
+    const result = await request<{ user: User; session: Session }>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+    authToken = result.session.token;
+    return result;
+  },
+  logout: () => {
+    authToken = null;
+    return request<void>("/api/auth/logout", { method: "POST" });
+  },
+  me: () => request<User>("/api/me"),
+  setToken: (token: string | null) => { authToken = token; },
+  getToken: () => authToken,
 };

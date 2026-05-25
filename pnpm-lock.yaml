@@ -16,6 +16,9 @@ importers:
       '@iai/audit-sdk':
         specifier: workspace:*
         version: link:../../packages/audit-sdk
+      '@iai/auth-sdk':
+        specifier: workspace:*
+        version: link:../../packages/auth-sdk
       '@iai/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts

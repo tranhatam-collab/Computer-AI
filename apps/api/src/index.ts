@@ -12,6 +12,7 @@ import {
 } from "@iai/workflow-engine";
 import { createSqliteRunStore } from "@iai/database";
 import { getPendingApprovals, approve, reject } from "@iai/approval-sdk";
+import { createUser, login, logout, authenticate } from "@iai/auth-sdk";
 
 const app = Fastify({ logger: true });
 const PORT = parseInt(process.env.PORT || "3001", 10);
@@ -107,6 +108,33 @@ app.post<{ Params: { id: string }; Body: { reason?: string } }>("/api/approvals/
   const result = reject(req.params.id, "user_1", req.body.reason || "Rejected");
   if (!result) return { success: false, error: "Approval not found or not pending" };
   return { success: true, data: result };
+});
+
+// ── Auth routes ──
+
+app.post<{ Body: { email: string; name: string; locale?: "vi" | "en" } }>("/api/auth/register", async (req) => {
+  const { email, name, locale = "vi" } = req.body;
+  const user = createUser(email, name, locale);
+  return { success: true, data: user };
+});
+
+app.post<{ Body: { email: string } }>("/api/auth/login", async (req) => {
+  const result = login(req.body.email);
+  if (!result) return { success: false, error: "Invalid credentials" };
+  return { success: true, data: result };
+});
+
+app.post<{ Headers: { authorization?: string } }>("/api/auth/logout", async (req) => {
+  const token = (req.headers.authorization || "").replace("Bearer ", "");
+  if (token) logout(token);
+  return { success: true };
+});
+
+app.get<{ Headers: { authorization?: string } }>("/api/me", async (req) => {
+  const token = (req.headers.authorization || "").replace("Bearer ", "");
+  const user = token ? authenticate(token) : null;
+  if (!user) return { success: false, error: "Unauthorized" };
+  return { success: true, data: user };
 });
 
 // ── Health ──

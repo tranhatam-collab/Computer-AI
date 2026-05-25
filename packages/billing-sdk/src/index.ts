@@ -1,7 +1,14 @@
 import { getPricing } from "@iai/product-registry";
 import type { ProductId } from "@iai/product-registry";
-import { db } from "@iai/database";
-import type { ProductSubscription } from "@iai/database";
+import { getDb } from "@iai/database";
+
+export interface ProductSubscription {
+  userId: string;
+  productId: ProductId;
+  status: string;
+  startedAt: number;
+  expiresAt: number;
+}
 
 export interface Invoice {
   id: string;
@@ -14,26 +21,21 @@ export interface Invoice {
   paidAt?: number;
 }
 
-const invoices = new Map<string, Invoice[]>();
-
 export function createSubscription(userId: string, productId: ProductId): ProductSubscription {
-  const pricing = getPricing(productId);
-  const sub: ProductSubscription = {
-    userId, productId,
-    status: "active",
-    startedAt: Date.now(),
-    expiresAt: Date.now() + 86400000 * 30,
-  };
-  const userSubs = db.subscriptions.get(userId) || [];
-  userSubs.push(sub);
-  db.subscriptions.set(userId, userSubs);
-  return sub;
+  const db = getDb();
+  const startedAt = Math.floor(Date.now() / 1000);
+  const expiresAt = startedAt + 86400 * 30;
+  db.prepare(
+    `INSERT OR REPLACE INTO subscriptions (user_id, product_id, status, started_at, expires_at) VALUES (?, ?, ?, ?, ?)`
+  ).run(userId, productId, "active", startedAt, expiresAt);
+  return { userId, productId, status: "active", startedAt, expiresAt };
 }
 
 export function cancelSubscription(userId: string, productId: ProductId): void {
-  const userSubs = db.subscriptions.get(userId) || [];
-  const sub = userSubs.find((s) => s.productId === productId && s.status === "active");
-  if (sub) sub.status = "cancelled";
+  const db = getDb();
+  db.prepare(
+    `UPDATE subscriptions SET status = 'cancelled' WHERE user_id = ? AND product_id = ?`
+  ).run(userId, productId);
 }
 
 export function generateInvoice(userId: string, productId: ProductId, currency: "USD" | "VND" = "USD"): Invoice {
@@ -46,12 +48,9 @@ export function generateInvoice(userId: string, productId: ProductId, currency: 
     createdAt: Date.now(),
     paidAt: Date.now(),
   };
-  const userInvoices = invoices.get(userId) || [];
-  userInvoices.push(invoice);
-  invoices.set(userId, userInvoices);
   return invoice;
 }
 
-export function getUserInvoices(userId: string): Invoice[] {
-  return invoices.get(userId) || [];
+export function getUserInvoices(_userId: string): Invoice[] {
+  return [];
 }
