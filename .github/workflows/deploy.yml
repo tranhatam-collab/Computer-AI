@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 jobs:
-  build-and-deploy:
+  verify-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,9 +18,16 @@ jobs:
         with:
           version: 9
 
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
 
-      - run: pnpm --filter ./apps/web build
+      - name: Type check
+        run: pnpm --filter ./apps/web exec tsc --noEmit
+
+      - name: Build web
+        run: pnpm --filter ./apps/web build
+
+      - name: Build API
+        run: pnpm --filter ./apps/api build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

@@ -1,9 +1,17 @@
 import type { ProductId } from "@iai/product-registry";
-import { getEntitlements, getShell } from "@iai/product-registry";
+import { getEntitlements, products } from "@iai/product-registry";
 
 export interface GateResult {
   allowed: boolean;
   reason?: string;
+}
+
+const TIER_ORDER = ["mass", "professional", "enterprise", "dedicated"] as const;
+
+function getProductTier(productId: ProductId): string {
+  const product = products.find((p) => p.id === productId);
+  if (!product) return "mass";
+  return product.tier;
 }
 
 export function checkEntitlement(productId: ProductId, required: string): GateResult {
@@ -15,11 +23,13 @@ export function checkEntitlement(productId: ProductId, required: string): GateRe
 }
 
 export function checkProductAccess(userProductId: ProductId, targetProductId: ProductId): GateResult {
-  const userShell = getShell(userProductId);
-  const targetShell = getShell(targetProductId);
-  const tierOrder = ["mass", "professional", "enterprise", "dedicated"];
-  const userTierIndex = tierOrder.indexOf(userShell.id === "enterprise" ? "dedicated" : "mass");
-  const targetTierIndex = tierOrder.indexOf(targetShell.id === "enterprise" ? "dedicated" : "mass");
-  if (userTierIndex >= targetTierIndex) return { allowed: true };
-  return { allowed: false, reason: "Product tier too low for access" };
+  const userTier = getProductTier(userProductId);
+  const targetTier = getProductTier(targetProductId);
+  const userIdx = TIER_ORDER.indexOf(userTier as typeof TIER_ORDER[number]);
+  const targetIdx = TIER_ORDER.indexOf(targetTier as typeof TIER_ORDER[number]);
+  if (userIdx === -1 || targetIdx === -1) {
+    return { allowed: false, reason: "Unknown product tier" };
+  }
+  if (userIdx >= targetIdx) return { allowed: true };
+  return { allowed: false, reason: `Product tier "${userTier}" is below "${targetTier}"` };
 }

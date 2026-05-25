@@ -1,156 +1,173 @@
-# COMPUTER.IAI.ONE — EXECUTION BOARD 2026
+# COMPUTER.IAI.ONE — EXECUTION BOARD 2026 (REVISED)
 
-**Version:** 2026.05.24  
-**Status:** Live tracking  
+**Version:** 2026-05-25  
+**Status:** Live tracking — accurate as of audit
 
 ---
 
-## PHASE 0 — DOCUMENTATION COMPLETE
+## PHASE 0 — DOCUMENTATION
 
 | # | Task | Status | File |
 |---|------|--------|------|
-| 0.1 | Repo tree audit | ✅ | docs/computer/COMPUTER_AI_REPO_TREE_AUDIT_2026.md |
-| 0.2 | Files & gaps analysis | ✅ | docs/computer/COMPUTER_AI_EXISTING_FILES_AND_GAPS_2026.md |
-| 0.3 | Migration plan | ✅ | docs/computer/COMPUTER_AI_TO_COMPUTER_IAI_ONE_MIGRATION_PLAN_2026.md |
-| 0.4 | Execution board (v1) | ✅ | docs/computer/COMPUTER_AI_PHASED_REBUILD_EXECUTION_BOARD_2026.md |
-| 0.5 | Master spec | ✅ | docs/computer/COMPUTER_IAI_ONE_MASTER_SPEC_2026.md |
-| 0.6 | Product catalog schema | ✅ | docs/computer/COMPUTER_IAI_ONE_PRODUCT_CATALOG_SCHEMA_2026.md |
-| 0.7 | Shared core integration map | ✅ | docs/computer/COMPUTER_IAI_ONE_SHARED_CORE_INTEGRATION_MAP_2026.md |
-| 0.8 | Commercial plan | ✅ | docs/computer/COMPUTER_IAI_ONE_COMMERCIAL_PLAN_2026.md |
-| 0.9 | Execution board (v2) | ✅ | This file |
+| 0.1 | Repo tree audit | ✅ COMPLETE | docs/computer/COMPUTER_AI_REPO_TREE_AUDIT_2026.md |
+| 0.2 | Files & gaps analysis | ✅ COMPLETE | docs/computer/COMPUTER_AI_EXISTING_FILES_AND_GAPS_2026.md |
+| 0.3 | Migration plan | ✅ COMPLETE | docs/computer/COMPUTER_AI_TO_COMPUTER_IAI_ONE_MIGRATION_PLAN_2026.md |
+| 0.4 | Execution board (v1) | ✅ COMPLETE | docs/computer/COMPUTER_AI_PHASED_REBUILD_EXECUTION_BOARD_2026.md |
+| 0.5 | Master spec | ✅ COMPLETE | docs/computer/COMPUTER_IAI_ONE_MASTER_SPEC_2026.md |
+| 0.6 | Product catalog schema | ✅ COMPLETE | docs/computer/COMPUTER_IAI_ONE_PRODUCT_CATALOG_SCHEMA_2026.md |
+| 0.7 | Shared core integration map | ✅ COMPLETE | docs/computer/COMPUTER_IAI_ONE_SHARED_CORE_INTEGRATION_MAP_2026.md |
+| 0.8 | Commercial plan | ✅ COMPLETE | docs/computer/COMPUTER_IAI_ONE_COMMERCIAL_PLAN_2026.md |
+| 0.9 | Execution board (v2) | ✅ COMPLETE | This file |
 
 ---
 
 ## PHASE 1 — PRODUCT CATALOG SYSTEM
 
-| # | Task | Status | Owner | Deps |
-|---|------|--------|-------|------|
-| 1.1 | Create @iai/product-registry | 🔲 | Dev | — |
-| 1.2 | Define 12 product shells | 🔲 | Dev | 1.1 |
-| 1.3 | Entitlement schema | 🔲 | Dev | 1.2 |
-| 1.4 | Shell router (web) | 🔲 | Dev | 1.2 |
-| 1.5 | Update ProductGrid | 🔲 | Dev | 1.4 |
-| 1.6 | Product detail pages | 🔲 | Dev | 1.4 |
-| 1.7 | Data-driven compare | 🔲 | Dev | 1.2 |
-| 1.8 | Pricing + CTA logic | 🔲 | Dev | 1.2 |
-
-**Acceptance:** 12 products in registry. Web renders from registry. Detail pages work.
+| # | Task | Status | Deps |
+|---|------|--------|------|
+| 1.1 | Create @iai/product-registry | ✅ COMPLETE | — |
+| 1.2 | Define 12 product shells | ✅ COMPLETE | 1.1 |
+| 1.3 | Entitlement schema | ✅ COMPLETE | 1.2 |
+| 1.4 | Shell router (web) | ✅ COMPLETE | 1.2 |
+| 1.5 | Update ProductGrid | ✅ COMPLETE | 1.4 |
+| 1.6 | Product detail pages | ✅ COMPLETE | 1.4 |
+| 1.7 | Data-driven compare | ✅ COMPLETE | 1.2 |
+| 1.8 | Pricing + CTA logic | ✅ COMPLETE | 1.2 |
 
 ---
 
 ## PHASE 2 — AI ROUTING MATRIX
 
-| # | Task | Status | Owner | Deps |
-|---|------|--------|-------|------|
-| 2.1 | Intent schema | 🔲 | Team | — |
-| 2.2 | Lane schema | 🔲 | Team | 2.1 |
-| 2.3 | Model class mapping | 🔲 | Team | 2.2 |
-| 2.4 | Tool permission matrix | 🔲 | Team | 2.2 |
-| 2.5 | Overload protection | 🔲 | Team | 2.3 |
-| 2.6 | Router engine | 🔲 | Team | 2.1–5 |
-| 2.7 | Fallback chain | 🔲 | Team | 2.6 |
-| 2.8 | API route | 🔲 | Team | 2.6 |
-
-**Acceptance:** Command returns lane + model + tool. Overload rejects beyond quota.
+| # | Task | Status | Deps |
+|---|------|--------|------|
+| 2.1 | Intent schema | ✅ COMPLETE | — |
+| 2.2 | Lane schema | ✅ COMPLETE | 2.1 |
+| 2.3 | Model class mapping | ✅ COMPLETE | 2.2 |
+| 2.4 | Tool permission matrix | ✅ COMPLETE | 2.2 |
+| 2.5 | Overload protection | ✅ COMPLETE | 2.3 |
+| 2.6 | Router engine | ✅ COMPLETE | 2.1–5 |
+| 2.7 | Fallback chain | ✅ COMPLETE | 2.6 |
+| 2.8 | API route | ✅ COMPLETE | 2.6 |
 
 ---
 
 ## PHASE 3 — WORKFLOW ENGINE
 
-| # | Task | Status | Owner | Deps |
-|---|------|--------|-------|------|
-| 3.1 | Run state machine | 🔲 | Team | — |
-| 3.2 | Run controller | 🔲 | Team | 3.1 |
-| 3.3 | Verification layer | 🔲 | Team | 3.2 |
-| 3.4 | Output packager | 🔲 | Team | 3.2 |
-| 3.5 | Replay system | 🔲 | Team | 3.2 |
-| 3.6 | Confidence scoring | 🔲 | Team | 3.3 |
-
-**Acceptance:** Full command → run → verify → output cycle.
+| # | Task | Status | Deps |
+|---|------|--------|------|
+| 3.1 | Run state machine | ✅ COMPLETE | — |
+| 3.2 | Run controller | ✅ COMPLETE | 3.1 |
+| 3.3 | Verification layer | ✅ COMPLETE | 3.2 |
+| 3.4 | Output packager | ✅ COMPLETE | 3.2 |
+| 3.5 | Replay system | ✅ COMPLETE | 3.2 |
+| 3.6 | Confidence scoring | ✅ COMPLETE | 3.3 |
 
 ---
 
 ## PHASE 4 — RUNTIME WORKERS
 
-| # | Task | Status | Owner | Deps |
-|---|------|--------|-------|------|
-| 4.1 | @iai/runtime-registry | 🔲 | Team | P1 |
-| 4.2 | Browser worker | 🔲 | Team | 3.2 |
-| 4.3 | Code worker | 🔲 | Team | 3.2 |
-| 4.4 | Research worker | 🔲 | Team | 3.2 |
-| 4.5 | Content worker | 🔲 | Team | 3.2 |
-| 4.6 | Runtime policy engine | 🔲 | Team | 4.1 |
+| # | Task | Status | Deps |
+|---|------|--------|------|
+| 4.1 | @iai/runtime-registry | ✅ COMPLETE | P1 |
+| 4.2 | Browser worker | ⚠️ SIMULATED (no real AI) | 3.2 |
+| 4.3 | Code worker | ⚠️ SIMULATED (no real AI) | 3.2 |
+| 4.4 | Research worker | ⚠️ SIMULATED (no real AI) | 3.2 |
+| 4.5 | Content worker | ⚠️ SIMULATED (no real AI) | 3.2 |
+| 4.6 | Office worker | ⚠️ SIMULATED (no real AI) | 3.2 |
+| 4.7 | Runtime policy engine | ✅ COMPLETE | 4.1 |
+
+**Note:** Workers produce simulated output. Real AI calls (OpenAI/Anthropic) not wired.
 
 ---
 
 ## PHASE 5 — MOBILE
 
-| # | Task | Status | Owner | Deps |
-|---|------|--------|-------|------|
-| 5.1 | Real mobile deps | 🔲 | Team | — |
-| 5.2 | Icon/splash design | 🔲 | Design | — |
-| 5.3 | API client | 🔲 | Team | P1–3 |
-| 5.4 | Command screen | 🔲 | Team | 5.3 |
-| 5.5 | Tasks screen | 🔲 | Team | 5.3 |
-| 5.6 | Approval screen | 🔲 | Team | 5.3 |
-| 5.7 | Results screen | 🔲 | Team | 5.3 |
-| 5.8 | Push notification | 🔲 | Team | 5.3 |
+| # | Task | Status | Deps |
+|---|------|--------|------|
+| 5.1 | Real mobile deps | ✅ COMPLETE | — |
+| 5.2 | Icon/splash design | ⚠️ PLACEHOLDER 1×1 PNGs | — |
+| 5.3 | API client layer | ❌ NOT STARTED | P1–3 |
+| 5.4 | Command screen | ❌ NOT STARTED | 5.3 |
+| 5.5 | Tasks screen | ❌ NOT STARTED | 5.3 |
+| 5.6 | Approval screen | ❌ NOT STARTED | 5.3 |
+| 5.7 | Results screen | ❌ NOT STARTED | 5.3 |
+| 5.8 | Push notification | ❌ NOT STARTED | 5.3 |
+
+**Status:** ⚠️ STARTER ONLY — Expo shell exists, no real API client, no screens implemented.
 
 ---
 
 ## PHASE 6 — ENTERPRISE
 
-| # | Task | Status | Owner | Deps |
-|---|------|--------|-------|------|
-| 6.1 | Office shell | 🔲 | Team | P4 |
-| 6.2 | Sales shell | 🔲 | Team | P1 |
-| 6.3 | Finance shell | 🔲 | Team | P1 |
-| 6.4 | Enterprise shell | 🔲 | Team | P1 |
-| 6.5 | App map | 🔲 | Team | 6.1–4 |
+| # | Task | Status | Deps |
+|---|------|--------|------|
+| 6.1 | Office worker | ✅ COMPLETE (simulated) | P4 |
+| 6.2 | EnterpriseLaneView component | ✅ COMPLETE | P1 |
+| 6.3 | Sales shell | ❌ NOT STARTED | P1 |
+| 6.4 | Enterprise shell | ❌ NOT STARTED | P1 |
+| 6.5 | App map | ❌ NOT STARTED | 6.1–4 |
 
 ---
 
 ## PHASE 7 — INFRASTRUCTURE
 
-| # | Task | Status | Owner | Deps |
-|---|------|--------|-------|------|
-| 7.1 | API server | 🔲 | Team | P2–3 |
-| 7.2 | Database schema | 🔲 | Team | P1 |
-| 7.3 | Auth system | 🔲 | Team | — |
-| 7.4 | Entitlement enforcement | 🔲 | Team | 7.3 |
-| 7.5 | Audit logging | 🔲 | Team | 7.1 |
-| 7.6 | Approval engine | 🔲 | Team | 7.3 |
-| 7.7 | CI/CD pipeline | 🔲 | Team | — |
+| # | Task | Status | Deps |
+|---|------|--------|------|
+| 7.1 | API server | ⚠️ DEV SCAFFOLD | P2–3 |
+| 7.2 | Database schema | ⚠️ IN-MEMORY ONLY | P1 |
+| 7.3 | Auth system | ⚠️ DEV SCAFFOLD | — |
+| 7.4 | Entitlement enforcement | ✅ COMPLETE | 7.3 |
+| 7.5 | Audit logging | ⚠️ IN-MEMORY ONLY | 7.1 |
+| 7.6 | Approval engine | ✅ COMPLETE | 7.3 |
+| 7.7 | CI/CD pipeline | ✅ COMPLETE (untested) | — |
+
+**Status:** ⚠️ DEV SCAFFOLD — API runs locally, all data in memory, no real persistence.
 
 ---
 
 ## PHASE 8 — MONETIZATION
 
-| # | Task | Status | Owner | Deps |
-|---|------|--------|-------|------|
-| 8.1 | Pricing page | 🔲 | Dev | P1 |
-| 8.2 | Subscription/billing | 🔲 | Dev | 7.2 |
-| 8.3 | Payment gateway | 🔲 | Dev | 7.2 |
-| 8.4 | Invoice/email | 🔲 | Dev | 7.2 |
-| 8.5 | Usage metering | 🔲 | Dev | P4 |
+| # | Task | Status | Deps |
+|---|------|--------|------|
+| 8.1 | Pricing page | ✅ COMPLETE | P1 |
+| 8.2 | Subscription/billing SDK | ⚠️ SDK SCAFFOLD | 7.2 |
+| 8.3 | Payment gateway (Stripe/PayOS) | ❌ NOT WIRED | 7.2 |
+| 8.4 | Invoice/email SDK | ⚠️ SDK SCAFFOLD | 7.2 |
+| 8.5 | Usage metering SDK | ⚠️ SDK SCAFFOLD | P4 |
+
+**Status:** ⚠️ SDK SCAFFOLD — no real payment or email delivery. console.log only.
 
 ---
 
-## QUICK REFERENCE
+## KNOWN PRODUCTION BLOCKERS
 
-| Phase | Target | Total Tasks | Done |
-|-------|-------|:-----------:|:----:|
-| 0 — Documentation | Week 0 | 9 | 9 |
-| 1 — Product Catalog | Week 1–2 | 8 | 0 |
-| 2 — AI Routing | Week 2–4 | 8 | 0 |
-| 3 — Workflow Engine | Week 3–5 | 6 | 0 |
-| 4 — Runtime Workers | Week 4–6 | 6 | 0 |
-| 5 — Mobile | Week 5–7 | 8 | 0 |
-| 6 — Enterprise | Week 6–8 | 5 | 0 |
-| 7 — Infrastructure | Week 6–9 | 7 | 0 |
-| 8 — Monetization | Week 8–10 | 5 | 0 |
-| **Total** | | **62** | **9** |
+| Blocker | Phase | Status |
+|---------|-------|--------|
+| Real database (PostgreSQL) | 7 | ❌ In-memory Maps only |
+| Real AI workers (OpenAI/Anthropic) | 4 | ❌ Simulated outputs only |
+| Auth UI (login/register pages) | 7 | ❌ SDK only, no pages |
+| Payment gateway (Stripe/PayOS) | 8 | ❌ SDK scaffold, no API keys |
+| Email delivery (SendGrid/SES) | 8 | ❌ console.log only |
+| Mobile device build (EAS) | 5 | ❌ Expo starter only |
+| CI/CD verified passing | 7 | ❌ GitHub Actions configured, not tested |
 
 ---
 
-*End of Execution Board v2*
+## STATUS SUMMARY
+
+| Phase | Status | Tasks Complete |
+|-------|--------|:--------------:|
+| 0 — Documentation | ✅ COMPLETE | 9/9 |
+| 1 — Product Catalog | ✅ COMPLETE | 8/8 |
+| 2 — AI Routing Matrix | ✅ COMPLETE | 8/8 |
+| 3 — Workflow Engine | ✅ COMPLETE | 6/6 |
+| 4 — Runtime Workers | ✅ SCAFFOLD (simulated) | 7/7 |
+| 5 — Mobile | ⚠️ STARTER ONLY | 1/8 |
+| 6 — Enterprise | ✅ PARTIAL | 2/5 |
+| 7 — Infrastructure | ⚠️ DEV SCAFFOLD | 4/7 |
+| 8 — Monetization | ⚠️ SDK SCAFFOLD | 2/5 |
+| **Overall** | ⚠️ **NOT PRODUCTION-READY** | **47/62** |
+
+---
+
+*End of Revised Execution Board*

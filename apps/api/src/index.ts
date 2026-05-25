@@ -23,7 +23,7 @@ app.get<{ Params: { id: string } }>("/api/products/:id/pricing", async (req) => 
   return { success: true, data: pricing };
 });
 
-app.get("/api/products/:id/shell", async (req) => {
+app.get<{ Params: { id: string } }>("/api/products/:id/shell", async (req) => {
   const shell = getAllShells().find((s) => s.id === req.params.id);
   if (!shell) return { success: false, error: "Shell not found" };
   return { success: true, data: shell };
