@@ -19,5 +19,6 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter computer-iai-web build
-      - run: pnpm --filter computer-iai-mobile exec tsc --noEmit
+      - run: pnpm run typecheck
+      - run: pnpm --filter ./apps/web build
+      - run: pnpm --filter ./apps/api build
