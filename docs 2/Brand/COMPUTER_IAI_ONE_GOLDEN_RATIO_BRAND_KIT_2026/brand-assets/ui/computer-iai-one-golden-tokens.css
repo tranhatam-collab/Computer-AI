@@ -1,0 +1,21 @@
+:root {
+  --computer-iai-phi:1.618034;
+  --computer-iai-obsidian:#080B12;
+  --computer-iai-carbon:#151C2C;
+  --computer-iai-gold:#D7B46A;
+  --computer-iai-gold-light:#F3D995;
+  --computer-iai-gold-deep:#9E7B34;
+  --computer-iai-aqua:#5EEAD4;
+  --computer-iai-blue:#4EA3FF;
+  --computer-iai-violet:#8B5CF6;
+  --computer-iai-platinum:#EEF2F6;
+  --computer-iai-white:#F8F5EC;
+  --computer-iai-muted:#8A94A7;
+  --computer-iai-space-1:8px; --computer-iai-space-2:13px; --computer-iai-space-3:21px;
+  --computer-iai-space-4:34px; --computer-iai-space-5:55px; --computer-iai-space-6:89px;
+}
+.computer-iai-golden-bg {
+  background: radial-gradient(circle at 28% 24%, rgba(215,180,106,.20), transparent 34%),
+  radial-gradient(circle at 78% 38%, rgba(78,163,255,.18), transparent 30%),
+  linear-gradient(135deg, var(--computer-iai-obsidian), #0E1422 58%, var(--computer-iai-carbon));
+}

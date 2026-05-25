@@ -1,0 +1,2 @@
+export interface RuntimePolicyDecision { allowed: boolean; approvalRequired: boolean; reason: string; }
+export function evaluateRuntimePolicy(workerId: string, planId: string): RuntimePolicyDecision { if (workerId === "browser" && !["business", "enterprise"].includes(planId)) return { allowed: false, approvalRequired: true, reason: "browser_worker_requires_business" }; return { allowed: true, approvalRequired: false, reason: "allowed" }; }

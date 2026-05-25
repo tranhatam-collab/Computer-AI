@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+  - computer-os/*
+  - super-apps/*
+  - agents/*
+  - packages/*
+  - infrastructure/*

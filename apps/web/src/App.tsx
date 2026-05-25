@@ -11,10 +11,12 @@ import { products } from "./lib/products";
 import { ProductPage } from "./pages/ProductPage";
 import { PricingPage } from "./pages/PricingPage";
 import { LoginPage } from "./pages/LoginPage";
-import type { ProductId } from "@iai/product-registry";
+import { ComparePage } from "./pages/ComparePage";
+import { LanePage } from "./pages/LanePage";
+import type { ProductId, LaneId } from "@iai/product-registry";
 
 type Locale = "vi" | "en";
-type View = { type: "home" } | { type: "product"; id: ProductId } | { type: "pricing" } | { type: "login" };
+type View = { type: "home" } | { type: "product"; id: ProductId } | { type: "pricing" } | { type: "login" } | { type: "compare" } | { type: "lane"; id: LaneId };
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -35,8 +37,11 @@ function viewFromPath(pathname: string): View {
   const path = toAppPath(pathname);
   if (path === "/pricing") return { type: "pricing" };
   if (path === "/login") return { type: "login" };
+  if (path === "/compare") return { type: "compare" };
   const productMatch = path.match(/^\/products\/([^/]+)$/);
   if (productMatch) return { type: "product", id: productMatch[1] as ProductId };
+  const laneMatch = path.match(/^\/lanes\/([^/]+)$/);
+  if (laneMatch) return { type: "lane", id: laneMatch[1] as LaneId };
   return { type: "home" };
 }
 
@@ -113,6 +118,40 @@ export default function App() {
           onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
         />
         <LoginPage locale={locale} onLogin={(u) => { setUser(u); navigate("/"); }} />
+        <Footer locale={locale} />
+      </div>
+    );
+  }
+
+  if (view.type === "compare") {
+    return (
+      <div className="app-shell">
+        <Header
+          brand={content.site.brand}
+          links={[{ label: locale === "vi" ? "Trang chủ" : "Home", href: toHref("/") }]}
+          locale={locale}
+          onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
+          homeHref={toHref("/")}
+          onNavigate={(href) => navigate(toAppPath(href))}
+        />
+        <ComparePage locale={locale} />
+        <Footer locale={locale} />
+      </div>
+    );
+  }
+
+  if (view.type === "lane") {
+    return (
+      <div className="app-shell">
+        <Header
+          brand={content.site.brand}
+          links={[{ label: locale === "vi" ? "Trang chủ" : "Home", href: toHref("/") }]}
+          locale={locale}
+          onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
+          homeHref={toHref("/")}
+          onNavigate={(href) => navigate(toAppPath(href))}
+        />
+        <LanePage lane={view.id} locale={locale} />
         <Footer locale={locale} />
       </div>
     );

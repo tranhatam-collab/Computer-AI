@@ -1,0 +1,20 @@
+:root {
+  --computer-obsidian: #071014;
+  --computer-obsidian-2: #0B171D;
+  --computer-carbon: #101A20;
+  --computer-platinum: #F4F1E8;
+  --computer-warm-white: #FFFDF5;
+  --computer-gold: #D8B35A;
+  --computer-gold-light: #F2D98B;
+  --computer-gold-dark: #9A7134;
+  --computer-aqua: #48D6C8;
+  --computer-blue: #3E7BFF;
+  --computer-violet: #6F5BFF;
+  --computer-radius-card: 28px;
+  --computer-radius-button: 999px;
+  --computer-shadow-premium: 0 24px 80px rgba(0,0,0,0.34);
+}
+
+.computer-gradient-gold { background: linear-gradient(135deg, var(--computer-gold-light), var(--computer-gold), var(--computer-gold-dark)); }
+.computer-gradient-signal { background: linear-gradient(135deg, var(--computer-aqua), var(--computer-blue), var(--computer-violet)); }
+.computer-bg-dark { background: radial-gradient(circle at 30% 20%, #16333B 0%, #09151A 45%, var(--computer-obsidian) 100%); }

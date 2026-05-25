@@ -1,3 +1,5 @@
+import { getCached, setCache } from "../services/cache";
+
 declare const process:
   | { env?: { EXPO_PUBLIC_API_URL?: string } }
   | undefined;
@@ -49,15 +51,23 @@ export interface Session {
 let authToken: string | null = null;
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const cacheKey = `${path}::${JSON.stringify(options?.body || "")}`;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers,
-    ...options,
-  });
-  const json = await res.json();
-  if (!json.success) throw new Error(json.error || "API error");
-  return json.data as T;
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      headers,
+      ...options,
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || "API error");
+    await setCache(cacheKey, json.data);
+    return json.data as T;
+  } catch (err) {
+    const cached = await getCached<T>(cacheKey);
+    if (cached) return cached;
+    throw err;
+  }
 }
 
 export const api = {

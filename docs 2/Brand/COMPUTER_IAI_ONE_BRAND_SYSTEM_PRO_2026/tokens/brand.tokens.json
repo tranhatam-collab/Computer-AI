@@ -1,0 +1,35 @@
+{
+  "brand": "Computer.iai.one",
+  "system": "IAI.ONE synchronized identity",
+  "version": "PRO v1.0 2026",
+  "concept": "Personal AI Computer Instance, Super Apps, Agent Team, Security Kernel, Verification Engine",
+  "colors": {
+    "navy_950": "#06111F",
+    "navy_900": "#081A2E",
+    "navy_800": "#102A43",
+    "blue_700": "#1D4F7A",
+    "cyan_500": "#38BDF8",
+    "cyan_300": "#8BDFFF",
+    "gold_500": "#D9B56D",
+    "gold_300": "#F3DFA2",
+    "paper_50": "#F7F1E4",
+    "paper_100": "#EFE4CF",
+    "graphite_900": "#111827",
+    "graphite_700": "#374151",
+    "jade_500": "#2BB673",
+    "white": "#FFFFFF",
+    "black": "#000000"
+  },
+  "fonts": {
+    "display": "Source Serif 4 or Fraunces",
+    "ui": "Inter or system sans-serif",
+    "mono": "JetBrains Mono or SF Mono"
+  },
+  "logo_principles": [
+    "Instance frame",
+    "IAI core strokes",
+    "Agent orbit nodes",
+    "Verification grid",
+    "Premium navy and gold with technical cyan"
+  ]
+}

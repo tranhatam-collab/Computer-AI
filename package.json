@@ -18,6 +18,10 @@
     "typecheck": "pnpm run typecheck:web && pnpm run typecheck:mobile && pnpm run typecheck:api",
     "build": "pnpm run build:web && pnpm run build:api",
     "check": "pnpm run typecheck && pnpm run build",
-    "verify": "pnpm run check"
+    "verify": "pnpm run check",
+    "test": "tsx --test packages/**/test/*.test.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
   }
 }

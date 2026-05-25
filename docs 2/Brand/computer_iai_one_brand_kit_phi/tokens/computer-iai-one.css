@@ -1,0 +1,37 @@
+:root {
+  --c-obsidian: #0A0E14;
+  --c-midnight: #111827;
+  --c-ivory: #F5F1E8;
+  --c-cloud: #D9DEE8;
+  --c-gold: #C9A45C;
+  --c-gold-soft: #E8D4A0;
+  --c-signal: #6E7CFB;
+  --c-signal-soft: #AAB4FF;
+  --phi: 1.6180339887;
+  --phi-inverse: 0.6180339887;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --shadow-soft: 0 12px 30px rgba(0,0,0,0.22);
+  --shadow-premium: 0 18px 48px rgba(0,0,0,0.30);
+}
+
+.brand-shell {
+  background:
+    radial-gradient(circle at top right, rgba(110,124,251,.18), transparent 30%),
+    radial-gradient(circle at bottom left, rgba(201,164,92,.14), transparent 35%),
+    var(--c-obsidian);
+  color: var(--c-ivory);
+}
+
+.brand-premium-button {
+  background: linear-gradient(135deg, #E8D4A0, #C9A45C);
+  color: #0A0E14;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+}
+
+.brand-signal-chip {
+  background: rgba(110,124,251,.16);
+  color: #AAB4FF;
+  border: 1px solid rgba(110,124,251,.35);
+}

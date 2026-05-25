@@ -1,0 +1,35 @@
+{
+  "brand": {
+    "name": "computer.iai.one",
+    "displayName": "Computer.IAI.One",
+    "tagline": "Global AI Computer Infrastructure"
+  },
+  "goldenRatio": 1.618033988749895,
+  "colors": {
+    "obsidian": "#0A0E14",
+    "midnight": "#111827",
+    "ivory": "#F5F1E8",
+    "cloud": "#D9DEE8",
+    "gold": "#C9A45C",
+    "gold_soft": "#E8D4A0",
+    "signal": "#6E7CFB",
+    "signal_soft": "#AAB4FF",
+    "emerald": "#12A587"
+  },
+  "radius": {
+    "sm": "12px",
+    "md": "18px",
+    "lg": "28px",
+    "xl": "40px"
+  },
+  "spacing": {
+    "phi": "1.618",
+    "phiInverse": "0.618"
+  },
+  "usage": {
+    "primaryBackground": "obsidian",
+    "primaryTextOnDark": "ivory",
+    "primaryAccent": "gold",
+    "signalAccent": "signal"
+  }
+}

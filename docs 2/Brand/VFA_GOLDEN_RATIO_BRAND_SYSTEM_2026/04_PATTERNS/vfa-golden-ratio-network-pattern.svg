@@ -1,0 +1,17 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg">
+<rect width="1440" height="900" fill="#06101E"/>
+<g opacity=".20" stroke="#D6B25E" fill="none">
+<circle cx="-200" cy="450" r="111" stroke-width="1"/><circle cx="-110" cy="450" r="180" stroke-width="1"/>
+<circle cx="-20" cy="450" r="111" stroke-width="1"/><circle cx="70" cy="450" r="180" stroke-width="1"/>
+<circle cx="160" cy="450" r="111" stroke-width="1"/><circle cx="250" cy="450" r="180" stroke-width="1"/>
+<circle cx="340" cy="450" r="111" stroke-width="1"/><circle cx="430" cy="450" r="180" stroke-width="1"/>
+<circle cx="520" cy="450" r="111" stroke-width="1"/><circle cx="610" cy="450" r="180" stroke-width="1"/>
+<circle cx="700" cy="450" r="111" stroke-width="1"/><circle cx="790" cy="450" r="180" stroke-width="1"/>
+<circle cx="880" cy="450" r="111" stroke-width="1"/><circle cx="970" cy="450" r="180" stroke-width="1"/>
+<circle cx="1060" cy="450" r="111" stroke-width="1"/><circle cx="1150" cy="450" r="180" stroke-width="1"/>
+<circle cx="1240" cy="450" r="111" stroke-width="1"/><circle cx="1330" cy="450" r="180" stroke-width="1"/>
+<circle cx="1420" cy="450" r="111" stroke-width="1"/><circle cx="1510" cy="450" r="180" stroke-width="1"/>
+</g><g opacity=".24" stroke="#39D7FF" fill="none">
+<path d="M0 620 C260 430 410 760 720 520 S1180 350 1440 530" stroke-width="2"/>
+<path d="M0 300 C260 110 420 440 720 230 S1130 100 1440 300" stroke-width="1"/>
+</g></svg>

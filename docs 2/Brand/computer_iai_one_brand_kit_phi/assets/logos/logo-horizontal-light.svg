@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="520" viewBox="0 0 1800 520">
+  <rect width="1800" height="520" fill="#F5F1E8"/>
+  <g transform="translate(74,80)">
+  <defs>
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E8D4A0"/>
+      <stop offset="100%" stop-color="#C9A45C"/>
+    </linearGradient>
+    <linearGradient id="sigGrad" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#AAB4FF"/>
+      <stop offset="100%" stop-color="#6E7CFB"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="360" height="360" rx="92.71" fill="#F5F1E8"/>
+  <circle cx="180.0" cy="180.0" r="110.88" fill="none" stroke="url(#goldGrad)" stroke-width="8.64"/>
+  <circle cx="180.0" cy="180.0" r="68.53" fill="none" stroke="#0A0E14" stroke-opacity="0.96" stroke-width="5.34"/>
+  <circle cx="180.0" cy="180.0" r="42.35" fill="none" stroke="url(#sigGrad)" stroke-width="3.30"/>
+  <circle cx="180.0" cy="180.0" r="26.18" fill="#6E7CFB" fill-opacity="0.12" stroke="#0A0E14" stroke-opacity="0.14" stroke-width="1.65"/>
+  <circle cx="180.0" cy="180.0" r="18.32" fill="#0A0E14"/>
+  <circle cx="290.88" cy="180.0" r="11.32" fill="url(#goldGrad)"/>
+  <circle cx="131.54" cy="131.54" r="8.05" fill="#0A0E14"/>
+  <circle cx="133.41" cy="218.96" r="7.00" fill="url(#sigGrad)"/>
+  <path d="M 160.04 259.83 C 197.74 213.26, 226.57 177.78, 255.40 137.87" fill="none" stroke="#0A0E14" stroke-opacity="0.55" stroke-width="3.30" stroke-linecap="round"/>
+</g>
+  <text x="500" y="220" fill="#0A0E14" font-family="DejaVu Sans, Arial, sans-serif" font-size="118" font-weight="700" letter-spacing="1.2">computer.iai.one</text>
+  <text x="500" y="300" fill="#C9A45C" font-family="DejaVu Sans, Arial, sans-serif" font-size="42" font-weight="700" letter-spacing="3.71">GLOBAL AI COMPUTER</text>
+  <text x="500" y="370" fill="#4B5563" font-family="DejaVu Sans, Arial, sans-serif" font-size="34">Private AI Computer Instances with verified outputs</text>
+</svg>

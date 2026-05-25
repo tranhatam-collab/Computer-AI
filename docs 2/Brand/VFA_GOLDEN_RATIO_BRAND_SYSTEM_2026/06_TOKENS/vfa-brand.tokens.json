@@ -1,0 +1,30 @@
+{
+  "brand": "VFA",
+  "geometry": {
+    "golden_ratio": 1.61803398875,
+    "clear_space": "1x center seal radius",
+    "minimum_size_px": 24
+  },
+  "colors": {
+    "cosmic_navy": "#06101E",
+    "deep_navy": "#0B1728",
+    "royal_blue": "#123A5E",
+    "vfa_gold": "#D6B25E",
+    "vfa_gold_light": "#F1D487",
+    "intelligence_cyan": "#39D7FF",
+    "jade": "#36C58A",
+    "ivory": "#F3E9D2",
+    "slate": "#667386",
+    "white": "#FFFFFF",
+    "black": "#000000"
+  },
+  "typography": {
+    "display": "Source Serif 4 or Georgia fallback",
+    "ui": "Inter or system sans fallback",
+    "mono": "JetBrains Mono or system mono fallback"
+  },
+  "usage": {
+    "parent_endorsement": "A VFA Intelligence Initiative",
+    "digital_standard": "SVG first, PNG exports, no text in app icons"
+  }
+}

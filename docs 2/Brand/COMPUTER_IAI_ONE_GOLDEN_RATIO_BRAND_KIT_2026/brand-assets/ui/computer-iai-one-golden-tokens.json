@@ -1,0 +1,38 @@
+{
+  "brand": "Computer.iai.one",
+  "identity": "Golden Ratio Digital Brand System",
+  "phi": 1.618034,
+  "colors": {
+    "obsidian": "#080B12",
+    "obsidian2": "#0E1422",
+    "carbon": "#151C2C",
+    "gold": "#D7B46A",
+    "goldLight": "#F3D995",
+    "goldDeep": "#9E7B34",
+    "aqua": "#5EEAD4",
+    "blue": "#4EA3FF",
+    "violet": "#8B5CF6",
+    "platinum": "#EEF2F6",
+    "white": "#F8F5EC",
+    "muted": "#8A94A7"
+  },
+  "spacing": [
+    "8",
+    "13",
+    "21",
+    "34",
+    "55",
+    "89",
+    "144"
+  ],
+  "formats": [
+    "svg",
+    "png",
+    "ico",
+    "css",
+    "json",
+    "jsx",
+    "html",
+    "md"
+  ]
+}

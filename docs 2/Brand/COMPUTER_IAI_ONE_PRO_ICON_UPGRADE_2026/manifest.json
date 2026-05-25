@@ -1,0 +1,19 @@
+{
+  "name": "Computer.iai.one Professional Symbol Upgrade",
+  "version": "2026.1",
+  "primary_symbol": "svg/computer-iai-one-pro-symbol.svg",
+  "mobile_app_icon": "png/app-icons/app-icon-1024.png",
+  "adaptive_foreground": "png/adaptive/adaptive-foreground-1024.png",
+  "monochrome": "png/adaptive/monochrome-1024.png",
+  "colors": {
+    "navy": "#07111F",
+    "navy2": "#0B1728",
+    "cyan": "#39D7FF",
+    "cyan2": "#7CE8FF",
+    "gold": "#D6B25E",
+    "gold2": "#F0D58A",
+    "ivory": "#F3E9D2",
+    "slate": "#637083",
+    "white": "#FFFFFF"
+  }
+}
