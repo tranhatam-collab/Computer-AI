@@ -8,16 +8,33 @@ Mobile chỉ là Remote Control. Web chỉ là Console. Phần lõi thật là C
 
 ## Current status
 
+**INFRASTRUCTURE PLAN APPROVED WITH CONDITIONS**
+**HYBRID EDGE-CORE ARCHITECTURE SELECTED**
+**NOT PRODUCTION-READY**
+
 This repo is still a reviewable scaffold, not a production-ready system.
 
-Current implemented layer:
+### Infrastructure decisions (locked)
+
+- Cloudflare = Edge + Coordination (DNS, CDN, WAF, Durable Objects realtime, lightweight routing)
+- AWS Singapore = Core compute (Month 1)
+- PostgreSQL RDS = Source of truth (user data, computer instances, audit)
+- Redis = Session, cache, rate limit, hot state
+- S3 + R2 = Dual-write object storage
+- SES / Resend = Email
+- OpenAI + Anthropic = Multi-provider AI (circuit breaker mandatory)
+- D1/KV = Config only, NOT source of truth for user data
+- Workers = Routing only, NOT heavy business logic
+- Sandbox runtime = Separate from control plane
+
+### Current implemented layer
 
 - Web: product catalog, URL routes, pricing, and product detail pages.
 - API: local Fastify scaffold with product, command, and run endpoints.
 - Mobile: Expo command-center starter with API client, tasks, detail, approvals, and results screens.
 - Runtime: simulated workers only.
 
-Target architecture:
+### Target architecture
 
 - Computer OS: instance manager, command kernel, data vault, memory, security kernel, self-upgrade kernel.
 - Super Apps: browser, office, code, research, content, media, data, finance, sales, automation.
@@ -25,7 +42,7 @@ Target architecture:
 - Verification Court: evidence pack, confidence score, risk flags, truthful reporting.
 - Vietnamese-first language system: tiếng Việt là ngôn ngữ gốc, English là ngôn ngữ thứ hai.
 
-Production blockers:
+### Production blockers
 
 - Real AI provider integration.
 - PostgreSQL or production database.
