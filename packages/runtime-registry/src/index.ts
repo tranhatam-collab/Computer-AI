@@ -4,6 +4,7 @@ import { CodeWorker } from "./workers/code.js";
 import { ResearchWorker } from "./workers/research.js";
 import { ContentWorker } from "./workers/content.js";
 import { OfficeWorker } from "./workers/office.js";
+import type { LaneId, RuntimeClass } from "@iai/product-registry";
 
 export type { WorkerTask, WorkerResult } from "./base.js";
 export { BaseWorker };
@@ -20,11 +21,88 @@ const research = new ResearchWorker();
 const content = new ContentWorker();
 const office = new OfficeWorker();
 
-const registry = { browser, code, research, content, office };
+export interface RuntimeMetadata {
+  id: RuntimeClass | "office";
+  label: string;
+  laneIds: LaneId[];
+  capabilities: string[];
+  limits: {
+    maxConcurrentRuns: number;
+    timeoutMs: number;
+  };
+  simulated: boolean;
+}
+
+export interface RuntimeEntry {
+  metadata: RuntimeMetadata;
+  worker: BaseWorker;
+}
+
+const registry = {
+  browser: {
+    metadata: {
+      id: "browser",
+      label: "Browser runtime",
+      laneIds: ["basic"],
+      capabilities: browser.allowedTypes,
+      limits: { maxConcurrentRuns: 4, timeoutMs: 30000 },
+      simulated: true,
+    },
+    worker: browser,
+  },
+  code: {
+    metadata: {
+      id: "code",
+      label: "Code runtime",
+      laneIds: ["code", "data"],
+      capabilities: code.allowedTypes,
+      limits: { maxConcurrentRuns: 2, timeoutMs: 120000 },
+      simulated: true,
+    },
+    worker: code,
+  },
+  research: {
+    metadata: {
+      id: "research",
+      label: "Research runtime",
+      laneIds: ["research"],
+      capabilities: research.allowedTypes,
+      limits: { maxConcurrentRuns: 3, timeoutMs: 90000 },
+      simulated: true,
+    },
+    worker: research,
+  },
+  content: {
+    metadata: {
+      id: "content",
+      label: "Content runtime",
+      laneIds: ["content", "media"],
+      capabilities: content.allowedTypes,
+      limits: { maxConcurrentRuns: 4, timeoutMs: 60000 },
+      simulated: true,
+    },
+    worker: content,
+  },
+  office: {
+    metadata: {
+      id: "office",
+      label: "Office runtime",
+      laneIds: ["business", "finance", "sales"],
+      capabilities: office.allowedTypes,
+      limits: { maxConcurrentRuns: 2, timeoutMs: 90000 },
+      simulated: true,
+    },
+    worker: office,
+  },
+} satisfies Record<string, RuntimeEntry>;
+
+export function getRuntimeEntry(name: string): RuntimeEntry | null {
+  const entry = (registry as Record<string, RuntimeEntry>)[name];
+  return entry || null;
+}
 
 export function getWorker(name: string): BaseWorker | null {
-  const entry = (registry as Record<string, BaseWorker>)[name];
-  return entry || null;
+  return getRuntimeEntry(name)?.worker || null;
 }
 
 export function getWorkerNames(): string[] {
@@ -32,5 +110,13 @@ export function getWorkerNames(): string[] {
 }
 
 export function getAllWorkers(): BaseWorker[] {
-  return Object.values(registry);
+  return Object.values(registry).map((entry) => entry.worker);
+}
+
+export function getRuntimeMetadata(): RuntimeMetadata[] {
+  return Object.values(registry).map((entry) => entry.metadata);
+}
+
+export function getWorkerCapabilities(name: string): string[] {
+  return getRuntimeEntry(name)?.metadata.capabilities || [];
 }

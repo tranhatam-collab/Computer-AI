@@ -1,24 +1,14 @@
 /**
- * Run controller — creates and manages runs through their lifecycle.
+ * Run controller — uses a pluggable RunStore instead of in-memory Map.
  */
 
-import { transition, canTransition, isTerminal } from "./states.js";
+import { transition, isTerminal } from "./states.js";
 import type { RunState, RunEvent } from "./states.js";
 import type { RouteRequest, RouteResponse } from "@iai/routing-matrix";
+import type { RunRecord, RunStore } from "./store.js";
 
-export interface Run {
-  id: string;
-  state: RunState;
-  productId: string;
-  text: string;
-  routeResponse?: RouteResponse;
-  output?: RunOutput;
-  error?: string;
-  createdAt: number;
-  updatedAt: number;
-  completedAt?: number;
-  retryCount: number;
-}
+export type { RunRecord, RunStore } from "./store.js";
+export { createInMemoryRunStore } from "./in-memory-store.js";
 
 export interface RunOutput {
   body: string;
@@ -35,73 +25,63 @@ export interface RunArtifact {
   mimeType?: string;
 }
 
-const runs = new Map<string, Run>();
-
 let nextId = 1;
+let store: RunStore | null = null;
 
-export function createRun(productId: string, text: string): Run {
+export function useStore(s: RunStore): void {
+  store = s;
+}
+
+function getStore(): RunStore {
+  if (!store) throw new Error("RunStore not set. Call useStore() first.");
+  return store;
+}
+
+export function createRun(productId: string, text: string): RunRecord {
   const id = `run_${Date.now()}_${nextId++}`;
-  const run: Run = {
-    id,
-    state: "created",
-    productId,
-    text,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    retryCount: 0,
-  };
-  runs.set(id, run);
-  return run;
+  return getStore().create({ id, productId, text });
 }
 
-export function getRun(id: string): Run | undefined {
-  return runs.get(id);
+export function getRun(id: string): RunRecord | undefined {
+  return getStore().get(id);
 }
 
-export function listRuns(productId?: string): Run[] {
-  const all = Array.from(runs.values());
-  if (productId) return all.filter((r) => r.productId === productId);
-  return all.sort((a, b) => b.createdAt - a.createdAt);
+export function listRuns(productId?: string): RunRecord[] {
+  return getStore().list(productId);
 }
 
-export function updateRun(id: string, event: RunEvent, data?: Partial<Run>): Run {
-  const run = runs.get(id);
+export function updateRun(id: string, event: RunEvent, data?: Partial<RunRecord>): RunRecord {
+  const run = getStore().get(id);
   if (!run) throw new Error(`Run not found: ${id}`);
 
   const nextState = transition(run.state, event);
-  const updated: Run = {
-    ...run,
-    ...data,
-    state: nextState,
-    updatedAt: Date.now(),
-  };
+  const changes: Partial<RunRecord> = { ...data, state: nextState };
 
   if (isTerminal(nextState)) {
-    updated.completedAt = Date.now();
+    changes.completedAt = Date.now();
   }
 
-  runs.set(id, updated);
-  return updated;
+  return getStore().update(id, changes);
 }
 
 export function deleteRun(id: string): void {
-  runs.delete(id);
+  getStore().delete(id);
 }
 
-export function assignRoute(id: string, route: RouteResponse): Run {
+export function assignRoute(id: string, route: RouteResponse): RunRecord {
   return updateRun(id, "route", { routeResponse: route });
 }
 
-export function setOutput(id: string, output: RunOutput): Run {
+export function setOutput(id: string, output: RunOutput): RunRecord {
   return updateRun(id, "complete", { output });
 }
 
-export function setError(id: string, error: string): Run {
+export function setError(id: string, error: string): RunRecord {
   return updateRun(id, "fail", { error });
 }
 
-export function retryRun(id: string): Run {
-  const run = runs.get(id);
+export function retryRun(id: string): RunRecord {
+  const run = getStore().get(id);
   if (!run) throw new Error(`Run not found: ${id}`);
   return updateRun(id, "retry", { retryCount: run.retryCount + 1 });
 }

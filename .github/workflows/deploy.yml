@@ -21,7 +21,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Type check
-        run: pnpm --filter ./apps/web exec tsc --noEmit
+        run: pnpm -r exec tsc --noEmit
 
       - name: Build web
         run: pnpm --filter ./apps/web build

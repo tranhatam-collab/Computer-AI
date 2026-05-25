@@ -6,6 +6,7 @@ interface ProductGridProps {
   locale?: "vi" | "en";
   productCopy: Record<string, { tagline: string; audience: string[]; cta: string }>;
   onSelectProduct?: (id: string) => void;
+  productHref?: (id: string) => string;
 }
 
 const tierLabel: Record<string, { vi: string; en: string }> = {
@@ -15,7 +16,7 @@ const tierLabel: Record<string, { vi: string; en: string }> = {
   dedicated: { vi: "Tận tâm", en: "Dedicated" }
 };
 
-export function ProductGrid({ title, items, locale = "vi", productCopy, onSelectProduct }: ProductGridProps) {
+export function ProductGrid({ title, items, locale = "vi", productCopy, onSelectProduct, productHref }: ProductGridProps) {
   return (
     <div className="product-block">
       <h3>{title}</h3>
@@ -31,7 +32,17 @@ export function ProductGrid({ title, items, locale = "vi", productCopy, onSelect
                 {copy.audience.map((aud) => (<span key={aud} className="chip">{aud}</span>))}
               </div>
               <ul>{item.highlights.map((point) => (<li key={point}>{point}</li>))}</ul>
-              <a href="#products" onClick={(e) => { e.preventDefault(); onSelectProduct?.(item.id); }} className="card-link">{copy.cta}</a>
+              <a
+                href={productHref?.(item.id) || `/products/${item.id}`}
+                onClick={(e) => {
+                  if (!onSelectProduct) return;
+                  e.preventDefault();
+                  onSelectProduct(item.id);
+                }}
+                className="card-link"
+              >
+                {copy.cta}
+              </a>
             </article>
           );
         })}

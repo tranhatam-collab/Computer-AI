@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import vi from "./data/vi";
 import en from "./data/en";
 import { Header } from "./components/Header";
@@ -15,21 +15,69 @@ import type { ProductId } from "@iai/product-registry";
 type Locale = "vi" | "en";
 type View = { type: "home" } | { type: "product"; id: ProductId } | { type: "pricing" };
 
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+function toAppPath(pathname: string): string {
+  if (basePath && pathname.startsWith(basePath)) {
+    return pathname.slice(basePath.length) || "/";
+  }
+  return pathname || "/";
+}
+
+function toHref(path: string): string {
+  if (path.startsWith("#")) return path;
+  if (!basePath) return path;
+  return `${basePath}${path === "/" ? "" : path}`;
+}
+
+function viewFromPath(pathname: string): View {
+  const path = toAppPath(pathname);
+  if (path === "/pricing") return { type: "pricing" };
+  const productMatch = path.match(/^\/products\/([^/]+)$/);
+  if (productMatch) return { type: "product", id: productMatch[1] as ProductId };
+  return { type: "home" };
+}
+
 export default function App() {
   const [locale, setLocale] = useState<Locale>("vi");
-  const [view, setView] = useState<View>({ type: "home" });
+  const [view, setView] = useState<View>(() => viewFromPath(window.location.pathname));
   const content = useMemo(() => (locale === "vi" ? vi : en), [locale]);
+
+  useEffect(() => {
+    const onPopState = () => setView(viewFromPath(window.location.pathname));
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  const navigate = (path: string) => {
+    if (path.startsWith("#")) {
+      document.querySelector(path)?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    window.history.pushState({}, "", toHref(path));
+    setView(viewFromPath(window.location.pathname));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   if (view.type === "product") {
     return (
       <div className="app-shell">
         <Header
           brand={content.site.brand}
-          links={[{ label: locale === "vi" ? "Trang chủ" : "Home", href: "#" }]}
+          links={[{ label: locale === "vi" ? "Trang chủ" : "Home", href: toHref("/") }, { label: locale === "vi" ? "Bảng giá" : "Pricing", href: toHref("/pricing") }]}
           locale={locale}
           onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
+          homeHref={toHref("/")}
+          onNavigate={(href) => navigate(toAppPath(href))}
         />
-        <ProductPage productId={view.id} locale={locale} onBack={() => setView({ type: "home" })} />
+        <ProductPage
+          productId={view.id}
+          locale={locale}
+          backHref={toHref("/")}
+          pricingHref={toHref("/pricing")}
+          onBack={() => navigate("/")}
+          onNavigate={(href) => navigate(toAppPath(href))}
+        />
         <Footer locale={locale} />
       </div>
     );
@@ -40,9 +88,11 @@ export default function App() {
       <div className="app-shell">
         <Header
           brand={content.site.brand}
-          links={[{ label: locale === "vi" ? "Trang chủ" : "Home", href: "#" }]}
+          links={[{ label: locale === "vi" ? "Trang chủ" : "Home", href: toHref("/") }]}
           locale={locale}
           onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
+          homeHref={toHref("/")}
+          onNavigate={(href) => navigate(toAppPath(href))}
         />
         <PricingPage locale={locale} />
         <Footer locale={locale} />
@@ -54,9 +104,11 @@ export default function App() {
     <div className="app-shell">
       <Header
         brand={content.site.brand}
-        links={content.nav}
+        links={[...content.nav, { label: locale === "vi" ? "Bảng giá" : "Pricing", href: toHref("/pricing") }]}
         locale={locale}
         onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
+        homeHref={toHref("/")}
+        onNavigate={(href) => navigate(toAppPath(href))}
       />
       <Hero
         locale={locale}
@@ -72,7 +124,8 @@ export default function App() {
           items={products}
           locale={locale}
           productCopy={content.productCopy}
-          onSelectProduct={(id) => setView({ type: "product", id: id as ProductId })}
+          productHref={(id) => toHref(`/products/${id}`)}
+          onSelectProduct={(id) => navigate(`/products/${id}`)}
         />
       </Section>
       <Section

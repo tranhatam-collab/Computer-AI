@@ -2,7 +2,7 @@
  * Replay system — re-run with same context and compare outputs.
  */
 
-import type { Run } from "./run.js";
+import type { RunRecord } from "./run.js";
 import { createRun, getRun } from "./run.js";
 
 export interface ReplayResult {
@@ -14,7 +14,7 @@ export interface ReplayResult {
   matchScore: number;
 }
 
-export function createReplay(originalRunId: string): Run | null {
+export function createReplay(originalRunId: string): RunRecord | null {
   const original = getRun(originalRunId);
   if (!original) return null;
 

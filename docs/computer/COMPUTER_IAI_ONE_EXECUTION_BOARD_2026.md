@@ -86,14 +86,14 @@
 |---|------|--------|------|
 | 5.1 | Real mobile deps | ✅ COMPLETE | — |
 | 5.2 | Icon/splash design | ⚠️ PLACEHOLDER 1×1 PNGs | — |
-| 5.3 | API client layer | ❌ NOT STARTED | P1–3 |
+| 5.3 | API client layer | ⚠️ BASIC CLIENT | P1–3 |
 | 5.4 | Command screen | ❌ NOT STARTED | 5.3 |
-| 5.5 | Tasks screen | ❌ NOT STARTED | 5.3 |
-| 5.6 | Approval screen | ❌ NOT STARTED | 5.3 |
-| 5.7 | Results screen | ❌ NOT STARTED | 5.3 |
+| 5.5 | Tasks screen | ⚠️ STARTER SCREEN | 5.3 |
+| 5.6 | Approval screen | ⚠️ STARTER SCREEN | 5.3 |
+| 5.7 | Results screen | ⚠️ STARTER SCREEN | 5.3 |
 | 5.8 | Push notification | ❌ NOT STARTED | 5.3 |
 
-**Status:** ⚠️ STARTER ONLY — Expo shell exists, no real API client, no screens implemented.
+**Status:** ⚠️ STARTER COMMAND CENTER — Expo shell, basic API client, task detail/list, approvals, and results screens exist. No device build, push notifications, offline mode, auth session, or command creation UI.
 
 ---
 
@@ -121,7 +121,7 @@
 | 7.6 | Approval engine | ✅ COMPLETE | 7.3 |
 | 7.7 | CI/CD pipeline | ✅ COMPLETE (untested) | — |
 
-**Status:** ⚠️ DEV SCAFFOLD — API runs locally, all data in memory, no real persistence.
+**Status:** ⚠️ DEV SCAFFOLD — API runs locally, workflow store is abstracted, default data store is still in-memory, no PostgreSQL persistence.
 
 ---
 
@@ -162,11 +162,11 @@
 | 2 — AI Routing Matrix | ✅ COMPLETE | 8/8 |
 | 3 — Workflow Engine | ✅ COMPLETE | 6/6 |
 | 4 — Runtime Workers | ✅ SCAFFOLD (simulated) | 7/7 |
-| 5 — Mobile | ⚠️ STARTER ONLY | 1/8 |
+| 5 — Mobile | ⚠️ STARTER COMMAND CENTER | 5/8 |
 | 6 — Enterprise | ✅ PARTIAL | 2/5 |
 | 7 — Infrastructure | ⚠️ DEV SCAFFOLD | 4/7 |
 | 8 — Monetization | ⚠️ SDK SCAFFOLD | 2/5 |
-| **Overall** | ⚠️ **NOT PRODUCTION-READY** | **47/62** |
+| **Overall** | ⚠️ **NOT PRODUCTION-READY** | **51/62** |
 
 ---
 

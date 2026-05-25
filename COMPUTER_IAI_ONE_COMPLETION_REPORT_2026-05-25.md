@@ -14,7 +14,7 @@
 | Packages | 13 in `packages/` |
 | Apps | 3 in `apps/` (web, mobile, api) |
 | Git size | 1.2 MB |
-| Web build | ✅ passes (46 modules, ~350ms) |
+| Web build | ✅ passes (47 modules, ~437ms) |
 | GitHub Pages | ✅ live at `https://tranhatam-collab.github.io/Computer-AI/` |
 | Production-ready | ❌ blocked by external dependencies |
 
@@ -29,9 +29,9 @@
 | 2 — AI Routing Matrix | ✅ COMPLETE | Intent→Lane→Model→Tool, overload, fallback |
 | 3 — Workflow Engine | ✅ COMPLETE | State machine, run controller, verify, output, replay, score |
 | 4 — Runtime Workers | ✅ COMPLETE | 5 worker classes (simulated), concurrency policy |
-| 5 — Mobile | ⚠️ STARTER ONLY | Expo shell, no device build, no real API client |
+| 5 — Mobile | ⚠️ STARTER COMMAND CENTER | Expo shell, basic API client, task/detail/approval/result screens; no device build, command creation UI, push notifications |
 | 6 — Enterprise | ✅ COMPLETE | EnterpriseLaneView component, tier-filtered cards |
-| 7 — Infrastructure | ⚠️ DEV SCAFFOLD | API server runs locally, in-memory DB, no real persistence |
+| 7 — Infrastructure | ⚠️ DEV SCAFFOLD | API server runs locally, workflow store is abstracted, default persistence remains in-memory |
 | 8 — Monetization | ⚠️ SDK SCAFFOLD | Billing/invoice/usage SDKs exist, Stripe/PayOS NOT wired |
 
 ---
@@ -65,7 +65,7 @@
 | Auth UI (login/register pages) | User onboarding | SDK only |
 | Payment gateway (Stripe/PayOS) | Subscription billing | SDK scaffold, no API keys |
 | Email delivery (SendGrid/SES) | Invoice emails | console.log only |
-| Mobile device build (EAS) | iOS/Android app | Expo starter only |
+| Mobile device build (EAS) | iOS/Android app | Expo starter command center only |
 | CI/CD fully passing | Automated deploy | GitHub Actions configured, not tested |
 
 ---

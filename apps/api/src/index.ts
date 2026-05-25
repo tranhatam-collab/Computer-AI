@@ -1,10 +1,21 @@
 import Fastify from "fastify";
 import { products, getPricing, getAllShells } from "@iai/product-registry";
 import { route } from "@iai/routing-matrix";
-import { createRun, getRun, listRuns } from "@iai/workflow-engine";
+import {
+  assignRoute,
+  createInMemoryRunStore,
+  createRun,
+  getRun,
+  listRuns,
+  setOutput,
+  updateRun,
+  useStore
+} from "@iai/workflow-engine";
 
 const app = Fastify({ logger: true });
 const PORT = parseInt(process.env.PORT || "3001", 10);
+
+useStore(createInMemoryRunStore());
 
 // ── Product routes ──
 
@@ -39,6 +50,9 @@ app.post<{
   const product = products.find((p) => p.id === productId);
   if (!product) return { success: false, error: "Invalid productId" };
 
+  const run = createRun(productId, text);
+  updateRun(run.id, "queue");
+
   const routeResult = route({
     text,
     productId: productId as any,
@@ -46,8 +60,17 @@ app.post<{
     quotaLimits: { runsPerDay: 100, outputCredits: 50, storageMb: 500 },
     sessionKey,
   });
+  assignRoute(run.id, routeResult);
+  updateRun(run.id, "start");
+  const verifyingRun = setOutput(run.id, {
+    body: `Routed to ${routeResult.lane} via ${routeResult.model}`,
+    format: "text",
+    confidence: 0.65,
+    artifacts: [],
+  });
+  const completedRun = updateRun(verifyingRun.id, "verify-pass");
 
-  return { success: true, data: routeResult };
+  return { success: true, data: { run: completedRun, route: routeResult } };
 });
 
 // ── Run routes ──

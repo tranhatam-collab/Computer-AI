@@ -6,9 +6,12 @@ interface ProductPageProps {
   productId: string;
   locale?: "vi" | "en";
   onBack?: () => void;
+  backHref?: string;
+  pricingHref?: string;
+  onNavigate?: (href: string) => void;
 }
 
-export function ProductPage({ productId, locale = "vi", onBack }: ProductPageProps) {
+export function ProductPage({ productId, locale = "vi", onBack, backHref = "/", pricingHref = "/pricing", onNavigate }: ProductPageProps) {
   const product: ProductDef | undefined = useMemo(
     () => products.find((p) => p.id === productId),
     [productId]
@@ -20,7 +23,7 @@ export function ProductPage({ productId, locale = "vi", onBack }: ProductPagePro
         <div className="container">
           <h2>Product not found</h2>
           <p>{locale === "vi" ? "Product không tồn tại" : "Product not found"}</p>
-          <a href="#" onClick={(e) => { e.preventDefault(); onBack?.(); }} className="btn btn-primary">{locale === "vi" ? "Về trang chủ" : "Back to home"}</a>
+          <a href={backHref} onClick={(e) => { e.preventDefault(); onBack?.(); }} className="btn btn-primary">{locale === "vi" ? "Về trang chủ" : "Back to home"}</a>
         </div>
       </section>
     );
@@ -36,7 +39,7 @@ export function ProductPage({ productId, locale = "vi", onBack }: ProductPagePro
   return (
     <section className="section product-detail">
       <div className="container">
-        <a href="#" onClick={(e) => { e.preventDefault(); onBack?.(); }} className="back-link">← Back to catalog</a>
+        <a href={backHref} onClick={(e) => { e.preventDefault(); onBack?.(); }} className="back-link">← Back to catalog</a>
         <div className="product-detail-header">
           <div>
             <span className="product-tier">{product.tier}</span>
@@ -45,7 +48,17 @@ export function ProductPage({ productId, locale = "vi", onBack }: ProductPagePro
             <p>{t.description}</p>
           </div>
           <div className="product-detail-cta">
-            <a href="#pricing" className="btn btn-primary">{t.cta}</a>
+            <a
+              href={pricingHref}
+              onClick={(e) => {
+                if (!onNavigate) return;
+                e.preventDefault();
+                onNavigate(pricingHref);
+              }}
+              className="btn btn-primary"
+            >
+              {t.cta}
+            </a>
           </div>
         </div>
 
