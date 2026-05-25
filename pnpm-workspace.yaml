@@ -1,3 +1,10 @@
 packages:
-  - apps/*
-  - packages/*
+  - "apps/*"
+  - "computer-os/*"
+  - "super-apps/*"
+  - "agents/*"
+  - "runtimes/*"
+  - "governance/*"
+  - "protocols/*"
+  - "packages/*"
+  - "infrastructure/*"
