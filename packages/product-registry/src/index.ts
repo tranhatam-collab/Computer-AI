@@ -9,3 +9,9 @@ export { getShell, getAllShells } from "./shell.js";
 export { getEntitlements } from "./entitlement.js";
 export { getPricing, getVndPrice, getUsdPrice } from "./pricing.js";
 export { getAppMap, getAppMapByLane, getProductsByLane } from "./app-map.js";
+
+import { products } from "./products.js";
+import type { ProductId } from "./types.js";
+export function getProduct(id: ProductId) {
+  return products.find((p) => p.id === id);
+}

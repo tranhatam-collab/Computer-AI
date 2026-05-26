@@ -68,9 +68,29 @@ function migrate(db: Database.Database): void {
       timestamp INTEGER NOT NULL DEFAULT (unixepoch())
     );
 
+    CREATE TABLE IF NOT EXISTS invoices (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      product_id TEXT NOT NULL,
+      amount REAL NOT NULL,
+      currency TEXT NOT NULL DEFAULT 'USD',
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      paid_at INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS push_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token TEXT NOT NULL UNIQUE,
+      platform TEXT NOT NULL DEFAULT 'expo',
+      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+
     CREATE INDEX IF NOT EXISTS idx_runs_user ON runs(user_id);
     CREATE INDEX IF NOT EXISTS idx_runs_state ON runs(state);
     CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id);
+    CREATE INDEX IF NOT EXISTS idx_invoices_user ON invoices(user_id);
   `);
 }
 
@@ -82,3 +102,4 @@ export function closeDb(): void {
 
 
 export { createSqliteRunStore } from "./run-store.js";
+export * from "./pg.js";

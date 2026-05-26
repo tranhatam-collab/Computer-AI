@@ -9,6 +9,11 @@ import { ApprovalsScreen } from "./src/screens/ApprovalsScreen";
 import { ResultsScreen } from "./src/screens/ResultsScreen";
 import { CommandScreen } from "./src/screens/CommandScreen";
 import { LoginScreen } from "./src/screens/LoginScreen";
+import {
+  registerForPushNotificationsAsync,
+  addNotificationReceivedListener,
+  addNotificationResponseReceivedListener,
+} from "./src/services/notifications";
 
 type Locale = "vi" | "en";
 type Screen = { type: "tasks" } | { type: "task-detail"; id: string } | { type: "approvals" } | { type: "results" } | { type: "command" };
@@ -28,6 +33,29 @@ export default function App() {
       .then(() => setIsLoggedIn(true))
       .catch(() => setIsLoggedIn(false))
       .finally(() => setCheckingAuth(false));
+  }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    let cancelled = false;
+    registerForPushNotificationsAsync().then((token) => {
+      if (cancelled || !token) return;
+      api.registerPushToken(token).catch(() => {});
+    });
+    return () => { cancelled = true; };
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    const removeReceived = addNotificationReceivedListener((n) => {
+      console.log("[push] received:", n.request.content.title, n.request.content.body);
+    });
+    const removeResponse = addNotificationResponseReceivedListener((r) => {
+      console.log("[push] tapped:", r.notification.request.content.title);
+    });
+    return () => {
+      removeReceived();
+      removeResponse();
+    };
   }, []);
 
   const tabLabel = (key: string) => {

@@ -106,6 +106,11 @@ export const api = {
     return request<void>("/api/auth/logout", { method: "POST" });
   },
   me: () => request<User>("/api/me"),
+  registerPushToken: (token: string) =>
+    request<void>("/api/push-token", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
   setToken: (token: string | null) => { authToken = token; },
   getToken: () => authToken,
 };

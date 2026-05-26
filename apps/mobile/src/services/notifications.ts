@@ -1,23 +1,33 @@
-/**
- * Expo push notification service stub.
- *
- * To activate: run `npx expo install expo-notifications`
- * Then replace this file with real implementation.
- */
+import * as Notifications from "expo-notifications";
 
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
-  console.warn("[notifications] Stub — install expo-notifications to enable");
-  return null;
+  try {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") {
+      console.warn("[notifications] Push permission not granted");
+      return null;
+    }
+    const tokenData = await Notifications.getExpoPushTokenAsync();
+    return tokenData.data;
+  } catch (err) {
+    console.error("[notifications] Registration failed:", err);
+    return null;
+  }
 }
 
 export function addNotificationReceivedListener(
-  _callback: (notification: { request: { content: { body?: string; title?: string } } }) => void
-): (() => void) | null {
-  return null;
+  callback: (notification: Notifications.Notification) => void
+): () => void {
+  return Notifications.addNotificationReceivedListener(callback).remove;
 }
 
 export function addNotificationResponseReceivedListener(
-  _callback: (response: { notification: { request: { content: { body?: string; title?: string } } } }) => void
-): (() => void) | null {
-  return null;
+  callback: (response: Notifications.NotificationResponse) => void
+): () => void {
+  return Notifications.addNotificationResponseReceivedListener(callback).remove;
 }

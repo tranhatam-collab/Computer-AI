@@ -14,8 +14,18 @@ import { createSqliteRunStore } from "@iai/database";
 import { getPendingApprovals, approve, reject } from "@iai/approval-sdk";
 import { createUser, login, logout, authenticate } from "@iai/auth-sdk";
 import { getAppMap, getProductsByLane } from "@iai/product-registry";
-import { createSubscription, cancelSubscription, generateInvoice } from "@iai/billing-sdk";
+import {
+  createSubscription,
+  cancelSubscription,
+  generateInvoice,
+  getUserInvoices,
+  markInvoicePaid,
+  buildInvoiceEmail,
+  sendEmail,
+} from "@iai/billing-sdk";
 import { getCurrentUsage, getRemainingQuota } from "@iai/usage-sdk";
+import { getDb, getPgPool, closePgPool } from "@iai/database";
+import healthRoutes from "./routes/health.js";
 
 const app = Fastify({ logger: true });
 const PORT = parseInt(process.env.PORT || "3001", 10);
@@ -167,6 +177,40 @@ app.post<{ Body: { userId: string; productId: string; currency?: "USD" | "VND" }
   return { success: true, data: inv };
 });
 
+app.get<{ Params: { userId: string } }>("/api/invoices/:userId", async (req) => {
+  return { success: true, data: getUserInvoices(req.params.userId) };
+});
+
+app.post<{ Body: { invoiceId: string } }>("/api/invoices/pay", async (req) => {
+  markInvoicePaid(req.body.invoiceId);
+  return { success: true };
+});
+
+app.post<{ Body: { userId: string; invoiceId: string } }>("/api/invoices/send", async (req) => {
+  const invoices = getUserInvoices(req.body.userId);
+  const inv = invoices.find((i) => i.id === req.body.invoiceId);
+  if (!inv) return { success: false, error: "Invoice not found" };
+  // fetch user email from db for demo
+  const db = getDb();
+  const user = db.prepare(`SELECT email, name FROM users WHERE id = ?`).get(req.body.userId) as any;
+  if (!user) return { success: false, error: "User not found" };
+  const email = buildInvoiceEmail(inv, user.email, user.name);
+  await sendEmail(email);
+  return { success: true };
+});
+
+// ── Push token routes ──
+
+app.post<{ Body: { token: string }; Headers: { authorization?: string } }>("/api/push-token", async (req) => {
+  const authToken = (req.headers.authorization || "").replace("Bearer ", "");
+  const user = authToken ? authenticate(authToken) : null;
+  if (!user) return { success: false, error: "Unauthorized" };
+  const db = getDb();
+  db.prepare(`INSERT OR REPLACE INTO push_tokens (user_id, token, platform, created_at) VALUES (?, ?, ?, ?)`)
+    .run(user.id, req.body.token, "expo", Math.floor(Date.now() / 1000));
+  return { success: true };
+});
+
 // ── Usage routes ──
 
 app.get<{ Params: { userId: string; productId: string } }>("/api/usage/:userId/:productId", async (req) => {
@@ -176,12 +220,24 @@ app.get<{ Params: { userId: string; productId: string } }>("/api/usage/:userId/:
 });
 
 // ── Health ──
+app.register(healthRoutes, { prefix: "/api" });
 
-app.get("/api/health", async () => {
-  return {
-    success: true,
-    data: { status: "ok", products: products.length, timestamp: new Date().toISOString() },
-  };
+// ── Startup / Shutdown ──
+
+app.addHook("onReady", async () => {
+  // Initialize PostgreSQL connection pool
+  try {
+    getPgPool();
+    app.log.info("PostgreSQL pool initialized");
+  } catch (err) {
+    app.log.error({ err }, "Failed to initialize PostgreSQL pool");
+    // Phase 1: don't crash if DB not available (fallback to SQLite)
+  }
+});
+
+app.addHook("onClose", async () => {
+  await closePgPool();
+  app.log.info("PostgreSQL pool closed");
 });
 
 // ── Start ──
