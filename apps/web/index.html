@@ -17,6 +17,15 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="computer.iai.one — AI Computers dựng sẵn theo gói" />
     <link rel="canonical" href="https://computer.iai.one" />
+    <script type="text/javascript">
+      (function() {
+        var redirect = sessionStorage.getItem("redirect");
+        sessionStorage.removeItem("redirect");
+        if (redirect && redirect !== window.location.href) {
+          window.history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

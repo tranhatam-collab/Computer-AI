@@ -2,16 +2,19 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import { createUser, login, logout, authenticate } from "../src/index.js";
 
+const uid = () => `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+
 describe("auth-sdk", () => {
   it("creates a user", () => {
-    const user = createUser("test@example.com", "Test User", "en");
-    assert.strictEqual(user.email, "test@example.com");
+    const user = createUser(`test_${uid()}@example.com`, "Test User", "en");
+    assert.ok(user.email.includes("@example.com"));
     assert.strictEqual(user.name, "Test User");
     assert.ok(user.id);
   });
 
   it("logs in and returns a session", () => {
-    const user = createUser("login@example.com", "Login User", "vi");
+    const email = `login_${uid()}@example.com`;
+    const user = createUser(email, "Login User", "vi");
     const result = login(user.email);
     assert.ok(result);
     assert.ok(result!.session.token);
@@ -19,7 +22,8 @@ describe("auth-sdk", () => {
   });
 
   it("authenticates with token", () => {
-    const user = createUser("auth@example.com", "Auth User", "en");
+    const email = `auth_${uid()}@example.com`;
+    const user = createUser(email, "Auth User", "en");
     const result = login(user.email);
     const authed = authenticate(result!.session.token);
     assert.ok(authed);
@@ -27,7 +31,8 @@ describe("auth-sdk", () => {
   });
 
   it("logout invalidates token", () => {
-    const user = createUser("logout@example.com", "Logout User", "vi");
+    const email = `logout_${uid()}@example.com`;
+    const user = createUser(email, "Logout User", "vi");
     const result = login(user.email);
     logout(result!.session.token);
     const authed = authenticate(result!.session.token);

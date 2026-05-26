@@ -20,7 +20,9 @@
     "@iai/audit-sdk": "workspace:*",
     "@iai/auth-sdk": "workspace:*",
     "@iai/billing-sdk": "workspace:*",
-    "@iai/usage-sdk": "workspace:*"
+    "@iai/usage-sdk": "workspace:*",
+    "@iai/cost-governor": "workspace:*",
+    "@iai/providers": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.6.2",
