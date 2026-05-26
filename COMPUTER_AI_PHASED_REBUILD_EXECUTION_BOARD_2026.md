@@ -13,8 +13,8 @@
 | 0.2 | Existing files & gaps | ✅ DONE | `_AUDIT_02_FILES_AND_GAPS_2026.md` | Audit |
 | 0.3 | Migration plan | ✅ DONE | `_AUDIT_03_MIGRATION_PLAN_2026.md` | Audit |
 | 0.4 | Execution board | ✅ DONE | `_AUDIT_04_EXECUTION_BOARD_2026.md` | Audit |
-| 0.5 | Clean empty dirs | � IN PROGRESS | `content/`, `logs/` | Dev |
-| 0.6 | Write `.env.template` | � IN PROGRESS | `.env.template` | Dev |
+| 0.5 | Clean empty dirs | ✅ DONE | `content/`, `logs/` | Dev |
+| 0.6 | Write `.env.template` | ✅ DONE | `.env.template` | Dev |
 
 **Phase 0 acceptance:** 4 audit documents published. Repo state frozen for team.
 
@@ -30,7 +30,7 @@
 | 1.4 | Build shell router | ✅ DONE | `apps/web/src/lib/shell-router.ts` | 1.2 |
 | 1.5 | Update ProductGrid | ✅ DONE | `apps/web/src/components/ProductGrid.tsx` | 1.4 |
 | 1.6 | Build product detail page | ✅ DONE | `apps/web/src/pages/ProductPage.tsx` | 1.4 |
-| 1.7 | Build data-driven compare page | � IN PROGRESS | `apps/web/src/pages/ComparePage.tsx` | 1.2 |
+| 1.7 | Build data-driven compare page | ✅ DONE | `apps/web/src/pages/ComparePage.tsx` | 1.2 |
 | 1.8 | Add pricing + CTA logic | ✅ DONE | `apps/web/src/lib/pricing.ts` | 1.2 |
 
 **Phase 1 acceptance:** 12 products in registry. Compare page renders from data. Product detail pages route correctly.
@@ -95,7 +95,7 @@
 | 5.5 | Build task list | ✅ DONE | `apps/mobile/src/screens/TaskListScreen.tsx` | 5.3 |
 | 5.6 | Build approval screen | ✅ DONE | `apps/mobile/src/screens/ApprovalsScreen.tsx` | 5.3 |
 | 5.7 | Build results viewer | ✅ DONE | `apps/mobile/src/screens/ResultsScreen.tsx` | 5.3 |
-| 5.8 | Add push notification | � IN PROGRESS | `apps/mobile/src/services/notifications.ts` | 5.3 |
+| 5.8 | Add push notification | ✅ DONE | `apps/mobile/src/services/notifications.ts` | 5.3 |
 
 **Phase 5 acceptance:** Mobile app: login → list tasks → approve → view results.
 
@@ -138,7 +138,7 @@
 | 8.1 | Pricing page | ✅ DONE | P1 |
 | 8.2 | Subscription/billing | ✅ DONE | 7.2 |
 | 8.3 | Payment gateway | � IN PROGRESS | 7.2 |
-| 8.4 | Invoice/email system | � IN PROGRESS | 7.2 |
+| 8.4 | Invoice/email system | ✅ DONE | 7.2 |
 | 8.5 | Usage metering | ✅ DONE | P4 |
 
 **Phase 8 acceptance:** Users can purchase. Billing records. Usage metered.
