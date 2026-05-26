@@ -45,13 +45,37 @@ function viewFromPath(pathname: string): View {
   return { type: "home" };
 }
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
+async function apiFetch(path: string, options?: RequestInit) {
+  const token = localStorage.getItem("token");
+  return fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      ...(options?.headers || {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      "Content-Type": "application/json",
+    },
+  });
+}
+
 export default function App() {
   const [locale, setLocale] = useState<Locale>("vi");
   const [view, setView] = useState<View>(() => viewFromPath(window.location.pathname));
   const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
   const content = useMemo(() => (locale === "vi" ? vi : en), [locale]);
 
+  // Load user from token on mount
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      apiFetch("/api/auth/me").then(async (res) => {
+        const json = await res.json();
+        if (json.success) setUser(json.data);
+        else localStorage.removeItem("token");
+      });
+    }
+
     const onPopState = () => setView(viewFromPath(window.location.pathname));
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
@@ -67,6 +91,13 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleLogout = async () => {
+    await apiFetch("/api/auth/logout", { method: "POST" });
+    localStorage.removeItem("token");
+    setUser(null);
+    navigate("/");
+  };
+
   if (view.type === "product") {
     return (
       <div className="app-shell">
@@ -77,6 +108,8 @@ export default function App() {
           onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
           homeHref={toHref("/")}
           onNavigate={(href) => navigate(toAppPath(href))}
+          user={user}
+          onLogout={handleLogout}
         />
         <ProductPage
           productId={view.id}

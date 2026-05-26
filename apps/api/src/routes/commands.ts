@@ -75,7 +75,7 @@ export default async function commandRoutes(app: FastifyInstance) {
   });
 
   // Approve command
-  app.post<{ Params: { id: string } }>("/api/commands/:id/approve", async (req: FastifyRequest<{ Params: { id: string }; Body: { approved_by: string } }>) => {
+  app.post("/api/commands/:id/approve", async (req: FastifyRequest<{ Params: { id: string }; Body: { approved_by: string } }>) => {
     const { approved_by } = req.body;
 
     await query(
@@ -87,7 +87,7 @@ export default async function commandRoutes(app: FastifyInstance) {
   });
 
   // Reject command
-  app.post<{ Params: { id: string } }>("/api/commands/:id/reject", async (req: FastifyRequest<{ Params: { id: string }; Body: { reason?: string } }>) => {
+  app.post("/api/commands/:id/reject", async (req: FastifyRequest<{ Params: { id: string }; Body: { reason?: string } }>) => {
     await query(
       `UPDATE commands SET status = 'rejected', updated_at = NOW() WHERE id = $1`,
       [req.params.id]

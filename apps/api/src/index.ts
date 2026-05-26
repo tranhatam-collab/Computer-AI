@@ -29,6 +29,7 @@ import healthRoutes from "./routes/health.js";
 import computerRoutes from "./routes/computers.js";
 import commandRoutes from "./routes/commands.js";
 import runRoutes from "./routes/runs.js";
+import authRoutes from "./routes/auth.js";
 
 const app = Fastify({ logger: true });
 const PORT = parseInt(process.env.PORT || "3001", 10);
@@ -229,6 +230,7 @@ app.register(healthRoutes, { prefix: "/api" });
 app.register(computerRoutes, { prefix: "/api" });
 app.register(commandRoutes, { prefix: "/api" });
 app.register(runRoutes, { prefix: "/api" });
+app.register(authRoutes, { prefix: "/api" });
 
 // ── Startup / Shutdown ──
 

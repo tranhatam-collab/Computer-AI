@@ -66,7 +66,7 @@ export default async function runRoutes(app: FastifyInstance) {
   });
 
   // Complete run with AI output
-  app.post<{ Params: { id: string } }>("/api/runs/:id/complete", async (req: FastifyRequest<{ Params: { id: string }; Body: { output?: Record<string, unknown>; error?: string; cost_cents?: number; artifacts?: string[]; confidence_score?: number } }>) => {
+  app.post("/api/runs/:id/complete", async (req: FastifyRequest<{ Params: { id: string }; Body: { output?: Record<string, unknown>; error?: string; cost_cents?: number; artifacts?: string[]; confidence_score?: number } }>) => {
     const { output, error, cost_cents = 0, artifacts, confidence_score } = req.body;
     const runId = req.params.id;
 

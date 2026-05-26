@@ -88,7 +88,7 @@ export default async function computerRoutes(app: FastifyInstance) {
   });
 
   // Update instance status
-  app.patch<{ Params: { id: string } }>("/api/computers/:id", async (req: FastifyRequest<{ Params: { id: string }; Body: { status?: string; name?: string } }>) => {
+  app.patch("/api/computers/:id", async (req: FastifyRequest<{ Params: { id: string }; Body: { status?: string; name?: string } }>) => {
     const { status, name } = req.body;
     const sets: string[] = [];
     const vals: (string | null)[] = [];
