@@ -59,3 +59,10 @@ export interface PaymentProvider {
   readonly configured: boolean;
   charge(req: PaymentChargeRequest): Promise<PaymentChargeResponse>;
 }
+
+// Re-export new modules
+export { OpenAIProvider } from "./openai-provider.js";
+export { AnthropicProvider } from "./anthropic-provider.js";
+export { AIFallbackProvider, type FallbackResult, type CircuitState } from "./circuit-breaker.js";
+export { estimateCost, type CostEstimate } from "./cost-tracker.js";
+export { generateWithFallback, getAIFallbackProvider } from "./factory.js";
