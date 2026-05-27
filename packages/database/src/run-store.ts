@@ -10,7 +10,7 @@ export function createSqliteRunStore(): RunStore {
         INSERT INTO runs (id, product_id, text, state, created_at, updated_at, retry_count)
         VALUES (?, ?, ?, 'created', ?, ?, 0)
       `).run(data.id, data.productId, data.text, now, now);
-      return this.get(data.id)!;
+      return this.get(data.id) as RunRecord;
     },
 
     get(id) {
@@ -40,7 +40,7 @@ export function createSqliteRunStore(): RunStore {
       vals.push(Date.now());
       vals.push(id);
       db.prepare(`UPDATE runs SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
-      return this.get(id)!;
+      return this.get(id) as RunRecord;
     },
 
     delete(id) {

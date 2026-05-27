@@ -37,21 +37,21 @@ function getStore(): RunStore {
   return store;
 }
 
-export function createRun(productId: string, text: string): RunRecord {
+export async function createRun(productId: string, text: string): Promise<RunRecord> {
   const id = `run_${Date.now()}_${nextId++}`;
   return getStore().create({ id, productId, text });
 }
 
-export function getRun(id: string): RunRecord | undefined {
+export async function getRun(id: string): Promise<RunRecord | undefined> {
   return getStore().get(id);
 }
 
-export function listRuns(productId?: string): RunRecord[] {
+export async function listRuns(productId?: string): Promise<RunRecord[]> {
   return getStore().list(productId);
 }
 
-export function updateRun(id: string, event: RunEvent, data?: Partial<RunRecord>): RunRecord {
-  const run = getStore().get(id);
+export async function updateRun(id: string, event: RunEvent, data?: Partial<RunRecord>): Promise<RunRecord> {
+  const run = await getStore().get(id);
   if (!run) throw new Error(`Run not found: ${id}`);
 
   const nextState = transition(run.state, event);
@@ -64,24 +64,24 @@ export function updateRun(id: string, event: RunEvent, data?: Partial<RunRecord>
   return getStore().update(id, changes);
 }
 
-export function deleteRun(id: string): void {
-  getStore().delete(id);
+export async function deleteRun(id: string): Promise<void> {
+  await getStore().delete(id);
 }
 
-export function assignRoute(id: string, route: RouteResponse): RunRecord {
+export async function assignRoute(id: string, route: RouteResponse): Promise<RunRecord> {
   return updateRun(id, "route", { routeResponse: route });
 }
 
-export function setOutput(id: string, output: RunOutput): RunRecord {
+export async function setOutput(id: string, output: RunOutput): Promise<RunRecord> {
   return updateRun(id, "complete", { output });
 }
 
-export function setError(id: string, error: string): RunRecord {
+export async function setError(id: string, error: string): Promise<RunRecord> {
   return updateRun(id, "fail", { error });
 }
 
-export function retryRun(id: string): RunRecord {
-  const run = getStore().get(id);
+export async function retryRun(id: string): Promise<RunRecord> {
+  const run = await getStore().get(id);
   if (!run) throw new Error(`Run not found: ${id}`);
   return updateRun(id, "retry", { retryCount: run.retryCount + 1 });
 }

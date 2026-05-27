@@ -1,12 +1,6 @@
-import { Pool } from 'pg';
 import { createClient } from 'redis';
+import { getPgPool } from './pg.js';
 import { runMigrations as executeMigrations } from './migrate';
-
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/computer_iai_one',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
 
 // Redis connection for session caching
 let redisClient: any = null;
@@ -26,12 +20,16 @@ async function initRedis() {
 // Initialize Redis on startup
 initRedis();
 
-export { pool, redisClient };
+export { redisClient };
+
+// Re-export pool for backward compat
+export { getPgPool as pool } from './pg.js';
 
 // Database helper functions
 export async function pgQuery(text: string, params?: any[]) {
   const start = Date.now();
   try {
+    const pool = getPgPool();
     const res = await pool.query(text, params);
     const duration = Date.now() - start;
     console.log('Executed query', { text, duration, rows: res.rowCount });
@@ -43,7 +41,7 @@ export async function pgQuery(text: string, params?: any[]) {
 }
 
 export async function getClient() {
-  return pool.connect();
+  return getPgPool().connect();
 }
 
 // Redis helper functions

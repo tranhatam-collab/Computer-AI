@@ -102,6 +102,7 @@ export function closeDb(): void {
 
 
 export { createSqliteRunStore } from "./run-store.js";
+export { createPgRunStore } from "./pg-run-store.js";
 export * from "./pg.js";
 export * from "./connection";
 export * from "./migrate";

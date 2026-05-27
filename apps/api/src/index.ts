@@ -17,7 +17,7 @@ import {
   updateRun,
   useStore
 } from "@iai/workflow-engine";
-import { createSqliteRunStore } from "@iai/database";
+import { createSqliteRunStore, createPgRunStore } from "@iai/database";
 import { getPendingApprovals, approve, reject } from "@iai/approval-sdk";
 import { getAppMap, getProductsByLane } from "@iai/product-registry";
 import {
@@ -64,7 +64,16 @@ app.register(fastifyRateLimit, {
   timeWindow: "1 minute",
 });
 
-useStore(createSqliteRunStore());
+async function initStore() {
+  if (process.env.DATABASE_URL) {
+    const pgStore = await createPgRunStore();
+    useStore(pgStore);
+    console.log('✅ PostgreSQL run store initialized');
+  } else {
+    useStore(createSqliteRunStore());
+    console.log('⚠️ SQLite run store (fallback — no DATABASE_URL)');
+  }
+}
 
 // ── Product routes ──
 
@@ -99,8 +108,8 @@ app.post<{
   const product = products.find((p) => p.id === productId);
   if (!product) return { success: false, error: "Invalid productId" };
 
-  const run = createRun(productId, text);
-  updateRun(run.id, "queue");
+  const run = await createRun(productId, text);
+  await updateRun(run.id, "queue");
 
   const routeResult = route({
     text,
@@ -109,15 +118,15 @@ app.post<{
     quotaLimits: { runsPerDay: 100, outputCredits: 50, storageMb: 500 },
     sessionKey,
   });
-  assignRoute(run.id, routeResult);
-  updateRun(run.id, "start");
-  const verifyingRun = setOutput(run.id, {
+  await assignRoute(run.id, routeResult);
+  await updateRun(run.id, "start");
+  const verifyingRun = await setOutput(run.id, {
     body: `Routed to ${routeResult.lane} via ${routeResult.model}`,
     format: "text",
     confidence: 0.65,
     artifacts: [],
   });
-  const completedRun = updateRun(verifyingRun.id, "verify-pass");
+  const completedRun = await updateRun(verifyingRun.id, "verify-pass");
 
   return { success: true, data: { run: completedRun, route: routeResult } };
 });
@@ -125,18 +134,18 @@ app.post<{
 // ── Run routes ──
 
 app.post<{ Body: { productId: string; text: string } }>("/api/runs", async (req) => {
-  const run = createRun(req.body.productId, req.body.text);
+  const run = await createRun(req.body.productId, req.body.text);
   return { success: true, data: run };
 });
 
 app.get<{ Params: { id: string } }>("/api/runs/:id", async (req) => {
-  const run = getRun(req.params.id);
+  const run = await getRun(req.params.id);
   if (!run) return { success: false, error: "Run not found" };
   return { success: true, data: run };
 });
 
 app.get("/api/runs", async () => {
-  return { success: true, data: listRuns() };
+  return { success: true, data: await listRuns() };
 });
 
 // ── Approval routes ──
@@ -387,6 +396,9 @@ app.addHook("onClose", async () => {
 
 async function start() {
   try {
+    // Initialize run store (PostgreSQL preferred, SQLite fallback)
+    await initStore();
+    
     // Initialize database
     const { initDatabase } = await import('@iai/database');
     await initDatabase();

@@ -19,9 +19,9 @@ export interface RunStore {
     id: string;
     productId: string;
     text: string;
-  }): RunRecord;
-  get(id: string): RunRecord | undefined;
-  list(productId?: string): RunRecord[];
-  update(id: string, changes: Partial<RunRecord>): RunRecord;
-  delete(id: string): void;
+  }): RunRecord | Promise<RunRecord>;
+  get(id: string): RunRecord | undefined | Promise<RunRecord | undefined>;
+  list(productId?: string): RunRecord[] | Promise<RunRecord[]>;
+  update(id: string, changes: Partial<RunRecord>): RunRecord | Promise<RunRecord>;
+  delete(id: string): void | Promise<void>;
 }

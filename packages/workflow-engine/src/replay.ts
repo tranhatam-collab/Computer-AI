@@ -14,11 +14,11 @@ export interface ReplayResult {
   matchScore: number;
 }
 
-export function createReplay(originalRunId: string): RunRecord | null {
-  const original = getRun(originalRunId);
+export async function createReplay(originalRunId: string): Promise<RunRecord | null> {
+  const original = await getRun(originalRunId);
   if (!original) return null;
 
-  const replay = createRun(original.productId, original.text);
+  const replay = await createRun(original.productId, original.text);
   return replay;
 }
 
