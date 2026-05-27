@@ -32,7 +32,7 @@ import {
 import type { Invoice as BillingInvoice } from "@iai/billing-sdk";
 import { getCurrentUsage, getRemainingQuota } from "@iai/usage-sdk";
 import { getPgPool, closePgPool, getUserById, createPushToken } from "@iai/database";
-import healthRoutes from "./routes/health.js";
+import observabilityRoutes, { logRequest, logAuditFailure } from "./observability.js";
 import computerRoutes from "./routes/computers.js";
 import commandRoutes from "./routes/commands.js";
 import runRoutes from "./routes/runs.js";
@@ -78,6 +78,16 @@ app.addHook("onSend", async (request, reply, payload) => {
   return payload;
 });
 
+// Structured request logging (no PII)
+app.addHook("onResponse", async (request, reply) => {
+  logRequest(request, reply, (request as any).reqStartTime || Date.now());
+});
+
+// Attach start time for latency measurement
+app.addHook("onRequest", async (request) => {
+  (request as any).reqStartTime = Date.now();
+});
+
 // Audit logging for mutations
 const AUDIT_ACTIONS = ["POST", "PATCH", "DELETE", "PUT"];
 app.addHook("onResponse", async (request, reply) => {
@@ -99,8 +109,8 @@ app.addHook("onResponse", async (request, reply) => {
         ipAddress: request.ip,
         userAgent: request.headers["user-agent"],
       });
-    } catch {
-      // Silent fail — never block response for audit failure
+    } catch (err) {
+      logAuditFailure(request, err);
     }
   }
 });
@@ -430,8 +440,8 @@ app.get<{ Params: { userId: string; productId: string } }>("/api/usage/:userId/:
   return { success: true, data: { usage, quota } };
 });
 
-// ── Health ──
-app.register(healthRoutes, { prefix: "/api" });
+// ── Health / Observability ──
+app.register(observabilityRoutes, { prefix: "/api" });
 
 // ── Computer, Command, Run routes ──
 app.register(computerRoutes, { prefix: "/api" });
