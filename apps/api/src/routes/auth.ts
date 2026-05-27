@@ -15,7 +15,13 @@ function getJwtSecret(): string {
   return secret || "dev-secret-change-in-prod";
 }
 
-const JWT_SECRET = getJwtSecret();
+let _jwtSecret: string | undefined;
+function getLazyJwtSecret(): string {
+  if (!_jwtSecret) {
+    _jwtSecret = getJwtSecret();
+  }
+  return _jwtSecret;
+}
 
 interface JWTPayload {
   userId: string;
@@ -35,7 +41,7 @@ function signJWT(payload: Omit<JWTPayload, "iat" | "exp">): string {
     Buffer.from(JSON.stringify({ ...payload, iat: now, exp: now + SESSION_DAYS * 86400 }))
   );
   const signature = base64UrlEncode(
-    crypto.createHmac("sha256", JWT_SECRET).update(`${header}.${body}`).digest()
+    crypto.createHmac("sha256", getLazyJwtSecret()).update(`${header}.${body}`).digest()
   );
   return `${header}.${body}.${signature}`;
 }
@@ -45,7 +51,7 @@ function verifyJWT(token: string): JWTPayload | null {
     const [header, body, signature] = token.split(".");
     if (!header || !body || !signature) return null;
     const expected = base64UrlEncode(
-      crypto.createHmac("sha256", JWT_SECRET).update(`${header}.${body}`).digest()
+      crypto.createHmac("sha256", getLazyJwtSecret()).update(`${header}.${body}`).digest()
     );
     if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
     const payload = JSON.parse(Buffer.from(body, "base64url").toString()) as JWTPayload;
