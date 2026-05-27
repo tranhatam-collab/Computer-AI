@@ -103,3 +103,10 @@ export function closeDb(): void {
 
 export { createSqliteRunStore } from "./run-store.js";
 export * from "./pg.js";
+export * from "./connection";
+export * from "./migrate";
+export * from "./models/browser";
+export * from "./models/verification";
+export * from "./models/vault";
+export * from "./models/approval";
+export * from "./models/calendar";

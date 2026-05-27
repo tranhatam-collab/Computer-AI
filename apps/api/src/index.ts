@@ -36,6 +36,8 @@ import computerRoutes from "./routes/computers.js";
 import commandRoutes from "./routes/commands.js";
 import runRoutes from "./routes/runs.js";
 import authRoutes, { getUserFromToken } from "./routes/auth.js";
+import browserRoutes from "./routes/browser.js";
+import calendarRoutes from "./routes/calendar.js";
 import { authenticate } from "@iai/auth-sdk";
 
 const app = Fastify({ logger: true });
@@ -359,6 +361,10 @@ app.register(commandRoutes, { prefix: "/api" });
 app.register(runRoutes, { prefix: "/api" });
 app.register(authRoutes, { prefix: "/api" });
 
+// ── AI Browser and Smart Calendar routes ──
+app.register(browserRoutes, { prefix: "/api" });
+app.register(calendarRoutes, { prefix: "/api" });
+
 // ── Startup / Shutdown ──
 
 app.addHook("onReady", async () => {
@@ -381,6 +387,11 @@ app.addHook("onClose", async () => {
 
 async function start() {
   try {
+    // Initialize database
+    const { initDatabase } = await import('@iai/database');
+    await initDatabase();
+    console.log('✅ Database initialized');
+    
     await app.listen({ port: PORT, host: "0.0.0.0" });
     console.log(`API server running on http://localhost:${PORT}`);
   } catch (err) {
