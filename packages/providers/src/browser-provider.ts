@@ -56,7 +56,7 @@ export interface BrowserFetchResponse {
 }
 
 export interface BrowserAutomationProvider {
-  readonly kind: "search-api" | "playwright" | "mock";
+  readonly kind: "fetch-based" | "playwright" | "mock";
   readonly configured: boolean;
   search(req: BrowserSearchRequest): Promise<BrowserSearchResponse>;
   browse(req: BrowserBrowseRequest): Promise<BrowserBrowseResponse>;
@@ -64,37 +64,65 @@ export interface BrowserAutomationProvider {
   fetch(req: BrowserFetchRequest): Promise<BrowserFetchResponse>;
 }
 
-// ── Deny/allow lists ──
+// ── SSRF / private IP guards ──
 
-const DEFAULT_DENYLIST = [
-  "localhost",
-  "127.0.0.1",
-  "0.0.0.0",
-  "::1",
-  "169.254",
-  "10.",
-  "192.168.",
-  "172.16.",
-  "172.17.",
-  "172.18.",
-  "172.19.",
-  "172.20.",
-  "172.21.",
-  "172.22.",
-  "172.23.",
-  "172.24.",
-  "172.25.",
-  "172.26.",
-  "172.27.",
-  "172.28.",
-  "172.29.",
-  "172.30.",
-  "172.31.",
-  "file://",
-];
+import dns from "node:dns/promises";
 
-function isDenied(url: string): boolean {
-  return DEFAULT_DENYLIST.some((d) => url.includes(d));
+function isPrivateIPv4(ip: string): boolean {
+  const parts = ip.split(".").map(Number);
+  if (parts.length !== 4 || parts.some((n) => isNaN(n) || n < 0 || n > 255)) return false;
+  const [a, b] = parts;
+  if (a === 10) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 127) return true;
+  if (a === 0) return true;
+  if (a === 169 && b === 254) return true; // link-local
+  return false;
+}
+
+function isPrivateIPv6(ip: string): boolean {
+  const lower = ip.toLowerCase();
+  if (lower === "::1" || lower.startsWith("fe80:") || lower.startsWith("fc00:") || lower.startsWith("fd00:")) return true;
+  return false;
+}
+
+function isPrivateIP(ip: string): boolean {
+  return isPrivateIPv4(ip) || isPrivateIPv6(ip);
+}
+
+async function resolveHost(urlStr: string): Promise<string> {
+  const url = new URL(urlStr);
+  const hostname = url.hostname;
+  // If already an IP, return it directly
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname) || /^[0-9a-fA-F:]+$/.test(hostname)) {
+    return hostname;
+  }
+  try {
+    const { address } = await dns.lookup(hostname);
+    return address;
+  } catch {
+    throw new Error(`DNS resolution failed for ${hostname}`);
+  }
+}
+
+function assertPublicUrl(urlStr: string): void {
+  const url = new URL(urlStr);
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error(`Protocol not allowed: ${url.protocol}`);
+  }
+  // localhost string guard (fast path before DNS)
+  if (url.hostname === "localhost" || url.hostname.endsWith(".localhost")) {
+    throw new Error(`Host not allowed: ${url.hostname}`);
+  }
+}
+
+async function assertPublicHost(urlStr: string): Promise<void> {
+  assertPublicUrl(urlStr);
+  const resolvedIP = await resolveHost(urlStr);
+  if (isPrivateIP(resolvedIP)) {
+    throw new Error(`Resolved IP is private/reserved: ${resolvedIP}`);
+  }
 }
 
 // ── Mock Provider ──
@@ -145,7 +173,7 @@ export class MockBrowserProvider implements BrowserAutomationProvider {
 // ── Real Provider (fetch-based, no external browser engine) ──
 
 export class RealBrowserProvider implements BrowserAutomationProvider {
-  readonly kind = "search-api";
+  readonly kind = "fetch-based";
   readonly configured: boolean;
   private apiKey?: string;
 
@@ -154,22 +182,40 @@ export class RealBrowserProvider implements BrowserAutomationProvider {
     this.configured = !!apiKey;
   }
 
-  private async safeFetch(url: string, timeoutMs = 15000, maxRedirects = 5): Promise<Response> {
-    if (isDenied(url)) {
-      throw new Error(`URL denied by security policy: ${url}`);
-    }
+  private async safeFetch(initialUrl: string, timeoutMs = 15000, maxRedirects = 5): Promise<Response> {
+    await assertPublicHost(initialUrl);
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let redirects = 0;
+    let currentUrl = initialUrl;
+
     try {
-      const res = await fetch(url, {
-        redirect: "follow",
-        signal: controller.signal,
-        headers: { "User-Agent": "ComputerIAI-Bot/1.0" },
-      });
-      if (res.redirected && maxRedirects <= 0) {
-        throw new Error("Max redirects exceeded");
+      while (redirects <= maxRedirects) {
+        const res = await fetch(currentUrl, {
+          redirect: "manual",
+          signal: controller.signal,
+          headers: { "User-Agent": "ComputerIAI-Bot/1.0" },
+        });
+
+        if (res.status >= 300 && res.status < 400) {
+          const location = res.headers.get("location");
+          if (!location) break;
+          const nextUrl = new URL(location, currentUrl).toString();
+          await assertPublicHost(nextUrl); // SSRF guard on redirect target
+          redirects++;
+          if (redirects > maxRedirects) {
+            throw new Error("Max redirects exceeded");
+          }
+          currentUrl = nextUrl;
+          continue;
+        }
+
+        // Attach final resolved URL so callers know where we landed
+        Object.defineProperty(res, "url", { value: currentUrl });
+        return res;
       }
-      return res;
+      throw new Error("Max redirects exceeded");
     } finally {
       clearTimeout(timer);
     }
@@ -179,7 +225,6 @@ export class RealBrowserProvider implements BrowserAutomationProvider {
     if (!this.configured) {
       throw new Error("Search API key not configured");
     }
-    // Brave Search API fallback contract
     const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(req.query)}&count=${req.limit || 10}`;
     const res = await this.safeFetch(url, 15000);
     if (!res.ok) {
@@ -206,7 +251,7 @@ export class RealBrowserProvider implements BrowserAutomationProvider {
       links.push({ href: m[1], text: m[2].trim() });
     }
     return {
-      url: req.url,
+      url: (res as any).url || req.url,
       title: titleMatch?.[1]?.trim() || "",
       description: descMatch?.[1],
       bodyText: text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().substring(0, 10000),
@@ -219,14 +264,13 @@ export class RealBrowserProvider implements BrowserAutomationProvider {
     const res = await this.safeFetch(req.url, req.timeoutMs || 15000);
     const text = await res.text();
     const matches: string[] = [];
-    // Simple regex-based selector matching for class/id/tag
     const escaped = req.selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(`<[^>]*${escaped}[^>]*>([^<]*)<\\/[^>]+>`, "gi");
     let m;
     while ((m = regex.exec(text)) !== null) {
       matches.push(m[1].trim());
     }
-    return { url: req.url, selector: req.selector, matches };
+    return { url: (res as any).url || req.url, selector: req.selector, matches };
   }
 
   async fetch(req: BrowserFetchRequest): Promise<BrowserFetchResponse> {
@@ -237,6 +281,6 @@ export class RealBrowserProvider implements BrowserAutomationProvider {
     }
     const headers: Record<string, string> = {};
     res.headers.forEach((v, k) => { headers[k] = v; });
-    return { url: req.url, status: res.status, headers, text };
+    return { url: (res as any).url || req.url, status: res.status, headers, text };
   }
 }
