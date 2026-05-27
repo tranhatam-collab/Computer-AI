@@ -1,4 +1,4 @@
-import type { AIProvider, EmailProvider, PaymentProvider } from "./index.js";
+import type { AIProvider, EmailProvider, PaymentProvider, BrowserAutomationProvider } from "./index.js";
 import { MockAIProvider, MockEmailProvider, MockPaymentProvider } from "./mock.js";
 import { OpenAIProvider } from "./openai-provider.js";
 import { AnthropicProvider } from "./anthropic-provider.js";
@@ -7,10 +7,12 @@ import { PayOSProvider } from "./payos-provider.js";
 import { StripeProvider } from "./stripe-provider.js";
 import { AIFallbackProvider } from "./circuit-breaker.js";
 import type { FallbackResult } from "./circuit-breaker.js";
+import { MockBrowserProvider, RealBrowserProvider } from "./browser-provider.js";
 
 let aiProvider: AIProvider | AIFallbackProvider | null = null;
 let emailProvider: EmailProvider | null = null;
 let paymentProvider: PaymentProvider | null = null;
+let browserProvider: BrowserAutomationProvider | null = null;
 
 export function getAIProvider(): AIProvider {
   if (!aiProvider) {
@@ -96,9 +98,22 @@ export function getPaymentProvider(): PaymentProvider {
   return paymentProvider;
 }
 
+export function getBrowserProvider(): BrowserAutomationProvider {
+  if (!browserProvider) {
+    const searchApiKey = process.env.BRAVE_SEARCH_API_KEY || process.env.SERP_API_KEY;
+    if (searchApiKey) {
+      browserProvider = new RealBrowserProvider(searchApiKey);
+    } else {
+      browserProvider = new MockBrowserProvider();
+    }
+  }
+  return browserProvider;
+}
+
 export function resetProviders(): void {
   aiProvider = null;
   emailProvider = null;
   paymentProvider = null;
+  browserProvider = null;
 }
 

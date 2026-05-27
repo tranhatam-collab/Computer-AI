@@ -1,4 +1,5 @@
 import { BaseWorker, type WorkerTask, type WorkerResult } from "../base.js";
+import { getBrowserProvider } from "@iai/providers";
 
 export class BrowserWorker extends BaseWorker {
   name = "browser";
@@ -15,29 +16,57 @@ export class BrowserWorker extends BaseWorker {
       );
     }
 
-    if (task.type === "fetch") {
-      try {
-        const url = new URL(task.input);
-        const res = await fetch(url.toString());
-        const text = await res.text();
-        return this.result(
-          `# Fetch Result\n\n**URL:** ${url.toString()}\n**Status:** ${res.status}\n**Content-Type:** ${res.headers.get("content-type")}\n\n## Content Preview\n\n${text.substring(0, 2000)}...`,
-          "markdown",
-          { durationMs: Date.now() - start }
-        );
-      } catch (error) {
-        return this.error(
-          `Fetch failed: ${error instanceof Error ? error.message : String(error)}`,
-          { durationMs: Date.now() - start }
-        );
-      }
-    }
+    const provider = getBrowserProvider();
 
-    // search, browse, scrape require additional infrastructure (SerpApi, Puppeteer, etc.)
-    return this.result(
-      `[Browser Worker] Task: ${task.id}\nType: ${task.type}\nInput: ${task.input.substring(0, 200)}\n\nStatus: ${task.type === "fetch" ? "Use fetch type for HTTP requests" : "Requires additional infrastructure (SerpApi/Puppeteer) for production"}`,
-      "markdown",
-      { durationMs: Date.now() - start }
-    );
+    try {
+      switch (task.type) {
+        case "fetch": {
+          const res = await provider.fetch({ url: task.input, timeoutMs: 15000, maxRedirects: 5, maxBytes: 500_000 });
+          return this.result(
+            `# Fetch Result\n\n**URL:** ${res.url}\n**Status:** ${res.status}\n**Content-Type:** ${res.headers["content-type"] || "unknown"}\n\n## Content Preview\n\n${res.text.substring(0, 2000)}...`,
+            "markdown",
+            { durationMs: Date.now() - start }
+          );
+        }
+        case "search": {
+          const res = await provider.search({ query: task.input, limit: 10 });
+          const results = res.results.map((r, i) => `${i + 1}. [${r.title}](${r.url})\n   ${r.snippet}`).join("\n\n");
+          return this.result(
+            `# Search Results: "${task.input}"\n\n${results}`,
+            "markdown",
+            { durationMs: Date.now() - start, sourceCount: res.results.length }
+          );
+        }
+        case "browse": {
+          const res = await provider.browse({ url: task.input, timeoutMs: 15000 });
+          const links = res.links.slice(0, 20).map((l) => `- [${l.text || "link"}](${l.href})`).join("\n");
+          return this.result(
+            `# Browse: ${res.url}\n\n**Title:** ${res.title}\n**Status:** ${res.status}\n\n## Description\n${res.description || "N/A"}\n\n## Body Preview\n${res.bodyText.substring(0, 2000)}...\n\n## Links (${res.links.length})\n${links}`,
+            "markdown",
+            { durationMs: Date.now() - start, sourceCount: res.links.length }
+          );
+        }
+        case "scrape": {
+          const { selector, url } = task.options as { selector: string; url: string };
+          if (!selector || !url) {
+            return this.error("scrape requires options.selector and options.url", { durationMs: Date.now() - start });
+          }
+          const res = await provider.scrape({ url, selector, timeoutMs: 15000 });
+          const matches = res.matches.map((m) => `- ${m}`).join("\n");
+          return this.result(
+            `# Scrape: ${res.url}\n\n**Selector:** ${res.selector}\n**Matches:** ${res.matches.length}\n\n${matches}`,
+            "markdown",
+            { durationMs: Date.now() - start }
+          );
+        }
+        default:
+          return this.error(`Unsupported browser task type: ${task.type}`, { durationMs: Date.now() - start });
+      }
+    } catch (error) {
+      return this.error(
+        `Browser worker error (${task.type}): ${error instanceof Error ? error.message : String(error)}`,
+        { durationMs: Date.now() - start }
+      );
+    }
   }
 }

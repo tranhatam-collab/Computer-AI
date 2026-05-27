@@ -54,12 +54,46 @@ describe("Runtime Workers", () => {
       assert.ok(result.output.includes("Simulated"));
     });
 
-    it("BrowserWorker returns deterministic mock output", async () => {
+    it("BrowserWorker fetch returns deterministic mock output", async () => {
       const worker = new BrowserWorker();
       const result = await worker.execute({
         id: "test-4",
         type: "fetch",
         input: "https://example.com",
+      });
+      assert.ok(result.success);
+      assert.ok(result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+    });
+
+    it("BrowserWorker search returns deterministic mock output", async () => {
+      const worker = new BrowserWorker();
+      const result = await worker.execute({
+        id: "test-s4",
+        type: "search",
+        input: "AI automation",
+      });
+      assert.ok(result.success);
+      assert.ok(result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+    });
+
+    it("BrowserWorker browse returns deterministic mock output", async () => {
+      const worker = new BrowserWorker();
+      const result = await worker.execute({
+        id: "test-b4",
+        type: "browse",
+        input: "https://example.com",
+      });
+      assert.ok(result.success);
+      assert.ok(result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+    });
+
+    it("BrowserWorker scrape returns deterministic mock output", async () => {
+      const worker = new BrowserWorker();
+      const result = await worker.execute({
+        id: "test-sc4",
+        type: "scrape",
+        input: "",
+        options: { selector: "h1", url: "https://example.com" },
       });
       assert.ok(result.success);
       assert.ok(result.output.includes("ENABLE_RUNTIME_MOCK=true"));
@@ -160,6 +194,40 @@ describe("Runtime Workers", () => {
         input: "https://example.com",
       });
       assert.ok(!result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+    });
+
+    it("BrowserWorker search does not include mock marker", async () => {
+      const worker = new BrowserWorker();
+      const result = await worker.execute({
+        id: "test-s7",
+        type: "search",
+        input: "test query",
+      });
+      assert.ok(!result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+      assert.ok(result.output.includes("Search Results"));
+    });
+
+    it("BrowserWorker browse does not include mock marker", async () => {
+      const worker = new BrowserWorker();
+      const result = await worker.execute({
+        id: "test-b7",
+        type: "browse",
+        input: "https://example.com",
+      });
+      assert.ok(!result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+      assert.ok(result.output.includes("Browse:"));
+    });
+
+    it("BrowserWorker scrape does not include mock marker", async () => {
+      const worker = new BrowserWorker();
+      const result = await worker.execute({
+        id: "test-sc7",
+        type: "scrape",
+        input: "",
+        options: { selector: "h1", url: "https://example.com" },
+      });
+      assert.ok(!result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+      assert.ok(result.output.includes("Scrape:"));
     });
 
     it("OfficeWorker does not include mock marker when provider available", async () => {
