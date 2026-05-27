@@ -1,6 +1,6 @@
 # P9 Deploy Preflight Report
 
-> **Status:** P9.1 Dockerfile fixed — chưa deploy production  
+> **Status:** P9.1 DONE — P9.2..P9.5 pending — chưa deploy production  
 > **Date:** 2026-05-28  
 > **Target:** API = Render, Web = Cloudflare Pages  
 
