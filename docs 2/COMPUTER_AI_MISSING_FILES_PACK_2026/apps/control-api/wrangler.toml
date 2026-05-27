@@ -1,8 +1,0 @@
-name = "computer-iai-one-control-api"
-main = "src/index.ts"
-compatibility_date = "2026-05-24"
-
-[vars]
-CONTROL_API_ENV = "local"
-ENABLE_RUNTIME_MOCK = "true"
-ENABLE_EXTERNAL_ACTIONS = "false"

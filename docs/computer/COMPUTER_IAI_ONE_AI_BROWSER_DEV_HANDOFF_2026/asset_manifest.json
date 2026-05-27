@@ -1,0 +1,106 @@
+[
+  {
+    "path": "00_README_MASTER_INDEX.md",
+    "size": 1362
+  },
+  {
+    "path": "COMPUTER_IAI_ONE_AI_BROWSER_COMPLETE_MASTER_2026.md",
+    "size": 32412
+  },
+  {
+    "path": "database/AI_BROWSER_DATABASE_SCHEMA.sql",
+    "size": 6768
+  },
+  {
+    "path": "api/AI_BROWSER_API_SPEC.md",
+    "size": 1453
+  },
+  {
+    "path": "policies/AI_BROWSER_PLATFORM_COMPLIANCE_POLICY.md",
+    "size": 810
+  },
+  {
+    "path": "execution/AI_BROWSER_PHASED_EXECUTION_BOARD_2026.md",
+    "size": 2372
+  },
+  {
+    "path": "patches/PNPM_WORKSPACE_BROWSER_ADDITION.yaml",
+    "size": 115
+  },
+  {
+    "path": "patches/REPO_TREE_ADDITION.md",
+    "size": 953
+  },
+  {
+    "path": "contracts/browser/browser-profile.schema.ts",
+    "size": 355
+  },
+  {
+    "path": "contracts/browser/connected-account.schema.ts",
+    "size": 445
+  },
+  {
+    "path": "contracts/browser/session-vault-record.schema.ts",
+    "size": 404
+  },
+  {
+    "path": "contracts/browser/browser-action.schema.ts",
+    "size": 999
+  },
+  {
+    "path": "contracts/browser/human-verification-request.schema.ts",
+    "size": 316
+  },
+  {
+    "path": "contracts/browser/evidence-pack.schema.ts",
+    "size": 320
+  },
+  {
+    "path": "contracts/browser/approval-request.schema.ts",
+    "size": 463
+  },
+  {
+    "path": "contracts/browser/vault-item.schema.ts",
+    "size": 495
+  },
+  {
+    "path": "docs/browser/AI_BROWSER_MASTER_SPEC_2026.md",
+    "size": 9155
+  },
+  {
+    "path": "docs/browser/AI_BROWSER_VERIFY_FIRST_ACCESS_MODEL.md",
+    "size": 1189
+  },
+  {
+    "path": "docs/browser/AI_BROWSER_CONNECTED_ACCOUNTS_AND_OAUTH_SPEC.md",
+    "size": 1247
+  },
+  {
+    "path": "docs/browser/AI_BROWSER_CREDENTIAL_AND_SESSION_VAULT_SPEC.md",
+    "size": 1437
+  },
+  {
+    "path": "docs/browser/AI_BROWSER_PERMISSION_AND_APPROVAL_MATRIX.md",
+    "size": 1221
+  },
+  {
+    "path": "docs/browser/AI_BROWSER_USER_IN_LOOP_CAPTCHA_POLICY.md",
+    "size": 769
+  },
+  {
+    "path": "docs/browser/AI_BROWSER_RUNTIME_SANDBOX_SPEC.md",
+    "size": 1491
+  },
+  {
+    "path": "docs/browser/AI_BROWSER_SOCIAL_SUPER_APPS_ROADMAP.md",
+    "size": 730
+  },
+  {
+    "path": "docs/browser/AI_BROWSER_MOBILE_REMOTE_CONTROL_SPEC.md",
+    "size": 698
+  },
+  {
+    "path": "docs/browser/AI_BROWSER_SECURITY_AND_AUDIT_CHECKLIST.md",
+    "size": 690
+  }
+]

@@ -18,7 +18,7 @@ export interface ApprovalRequest {
 
 const approvals = new Map<string, ApprovalRequest>();
 
-export function createApproval(userId: string, assigneeId: string, action: string, resource: string, details: string): ApprovalRequest {
+export async function createApproval(userId: string, assigneeId: string, action: string, resource: string, details: string): Promise<ApprovalRequest> {
   const request: ApprovalRequest = {
     id: `appr_${crypto.randomUUID().substring(0, 8)}`,
     userId, assigneeId, action, resource, details,
@@ -26,37 +26,37 @@ export function createApproval(userId: string, assigneeId: string, action: strin
     createdAt: Date.now(),
   };
   approvals.set(request.id, request);
-  writeAuditLog(userId, "approval.created", request.id, `Created approval for ${action} on ${resource}`);
+  await writeAuditLog(userId, "approval.created", request.id, `Created approval for ${action} on ${resource}`);
   return request;
 }
 
-export function approve(id: string, userId: string): ApprovalRequest | null {
+export async function approve(id: string, userId: string): Promise<ApprovalRequest | null> {
   const request = approvals.get(id);
   if (!request || request.assigneeId !== userId) return null;
   if (request.state !== "pending") return null;
   request.state = "approved";
   request.resolvedAt = Date.now();
-  writeAuditLog(userId, "approval.approved", id, "Approved");
+  await writeAuditLog(userId, "approval.approved", id, "Approved");
   return request;
 }
 
-export function reject(id: string, userId: string, reason: string): ApprovalRequest | null {
+export async function reject(id: string, userId: string, reason: string): Promise<ApprovalRequest | null> {
   const request = approvals.get(id);
   if (!request || request.assigneeId !== userId) return null;
   if (request.state !== "pending") return null;
   request.state = "rejected";
   request.resolvedAt = Date.now();
   request.reason = reason;
-  writeAuditLog(userId, "approval.rejected", id, `Rejected: ${reason}`);
+  await writeAuditLog(userId, "approval.rejected", id, `Rejected: ${reason}`);
   return request;
 }
 
-export function escalate(id: string, newAssigneeId: string): ApprovalRequest | null {
+export async function escalate(id: string, newAssigneeId: string): Promise<ApprovalRequest | null> {
   const request = approvals.get(id);
   if (!request || request.state !== "pending") return null;
   request.state = "escalated";
   request.assigneeId = newAssigneeId;
-  writeAuditLog(request.userId, "approval.escalated", id, `Escalated to ${newAssigneeId}`);
+  await writeAuditLog(request.userId, "approval.escalated", id, `Escalated to ${newAssigneeId}`);
   return request;
 }
 

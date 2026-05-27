@@ -153,22 +153,22 @@
 
 ---
 
-## STATUS SUMMARY
+## STATUS SUMMARY (AUDITED 2026-05-27)
 
-| Phase | Status | Tasks Complete |
-|-------|--------|:--------------:|
-| 0 — Documentation | ✅ COMPLETE | 9/9 |
-| 1 — Product Catalog | ✅ COMPLETE | 8/8 |
-| 2 — AI Routing Matrix | ✅ COMPLETE | 8/8 |
-| 3 — Workflow Engine | ✅ COMPLETE | 6/6 |
-| 4 — Runtime Workers | ✅ SCAFFOLD (simulated) | 7/7 |
-| 5 — Mobile | ⚠️ STARTER COMMAND CENTER | 5/8 |
-| 6 — Enterprise | ✅ PARTIAL | 2/5 |
-| 7 — Infrastructure | ⚠️ DEV SCAFFOLD | 4/7 |
-| 8 — Monetization | ⚠️ SDK SCAFFOLD | 2/5 |
-| 9 — AI Browser | ✅ SPEC READY | 10/10 |
-| 10 — Smart Work Calendar | ✅ SPEC READY | 11/11 |
-| **Overall** | ⚠️ **NOT PRODUCTION-READY** | **72/83** |
+| Phase | Status | Tasks Complete | Honest Assessment |
+|-------|--------|:--------------:|-------------------|
+| 0 — Documentation | ✅ COMPLETE | 9/9 | Docs exist |
+| 1 — Product Catalog | ✅ WORKING | 8/8 | Actually functional |
+| 2 — AI Routing Matrix | ✅ SCAFFOLD | 8/8 | Types exist, routes to mocks |
+| 3 — Workflow Engine | ✅ SCAFFOLD | 6/6 | State machine works, SQLite only |
+| 4 — Runtime Workers | ❌ SIMULATED | 7/7 | No real AI calls |
+| 5 — Mobile | ⚠️ STARTER SHELL | 5/8 | Expo only, no device build |
+| 6 — Enterprise | ⚠️ PARTIAL | 2/5 | Mostly not started |
+| 7 — Infrastructure | ⚠️ DUAL DB CHAOS | 4/7 | SQLite + PG conflict, mocks everywhere |
+| 8 — Monetization | ❌ ALL MOCK | 2/5 | Payment/email always mocked |
+| 9 — AI Browser | ⚠️ API SCAFFOLD | 10/10 | Routes exist, many stubs |
+| 10 — Smart Work Calendar | ⚠️ API SCAFFOLD | 11/11 | Routes exist, many stubs |
+| **Overall** | ⚠️ **NOT PRODUCTION-READY** | **72/83** | **Production readiness: 33%** |
 
 ---
 
@@ -189,6 +189,23 @@
 
 **Phase 9 acceptance:** All AI Browser specs ready in `Docs/browser/`, `packages/contracts/src/browser/`, `Docs/api/AI_BROWSER_API_SPEC.md`, `Docs/infrastructure/sql/002_ai_browser_schema.sql`, `Docs/execution/AI_BROWSER_PHASED_EXECUTION_BOARD_2026.md`. NOT PRODUCTION-READY.
 
+### Phase 9.1 — Implementation Sprint 1 (NEW — Added 2026-05-27)
+
+| # | Task | Status | Deps |
+|---|------|--------|------|
+| 9.1.1 | Database migration 002_ai_browser_schema | ✅ CREATED (not verified on PG) | 9.1 |
+| 9.1.2 | API routes structure for browser | ✅ CREATED | 9.1 |
+| 9.1.3 | Browser session management implementation | ✅ SCAFFOLD (DB models + routes) | 9.1.1 |
+| 9.1.4 | Browser profile management implementation | ✅ SCAFFOLD (DB models + routes) | 9.1.2 |
+| 9.1.5 | User verification and device trust | ✅ SCAFFOLD (DB models + routes) | 9.1.3 |
+| 9.1.6 | Basic vault encryption implementation | ✅ SCAFFOLD (DB models + routes, no crypto) | 9.1.5 |
+| 9.1.7 | Approval flow for high-risk actions | ✅ SCAFFOLD (DB models + routes) | 9.1.6 |
+| 9.1.8 | Connected accounts OAuth setup | ❌ STUB (authUrl: null) | 9.1.7 |
+| 9.1.9 | Browser actions framework | ⚠️ PARTIAL (routes exist, no real automation) | 9.1.8 |
+| 9.1.10 | Evidence collection system | ❌ STUB ("not yet implemented") | 9.1.9 |
+
+**Phase 9.1 acceptance**: Core API endpoints scaffolded, database schema written, build passes. OAuth, evidence, and real browser automation are stubs. NOT production-ready.
+
 ---
 
 ## PHASE 10 — SMART WORK CALENDAR (NEW — Added 2026-05-27)
@@ -208,6 +225,23 @@
 | 10.11 | Execution board | ✅ SPEC READY | 10.1 |
 
 **Phase 10 acceptance:** All Smart Calendar specs ready in `Docs/calendar/`, `packages/contracts/src/calendar/`, `Docs/api/SMART_WORK_CALENDAR_API_SPEC.md`, `Docs/infrastructure/sql/003_smart_work_calendar_schema.sql`, `Docs/execution/SMART_WORK_CALENDAR_EXECUTION_BOARD_2026.md`. NOT PRODUCTION-READY.
+
+### Phase 10.1 — Implementation Sprint 1 (NEW — Added 2026-05-27)
+
+| # | Task | Status | Deps |
+|---|------|--------|------|
+| 10.1.1 | Database migration 003_smart_work_calendar_schema | ✅ CREATED (not verified on PG) | 10.1 |
+| 10.1.2 | API routes structure for calendar | ✅ CREATED | 10.1 |
+| 10.1.3 | Calendar events CRUD implementation | ✅ SCAFFOLD (DB models + routes) | 10.1.1 |
+| 10.1.4 | Smart tasks state machine implementation | ✅ SCAFFOLD (DB models + routes) | 10.1.2 |
+| 10.1.5 | Reminder engine basic implementation | ✅ SCAFFOLD (DB models + routes) | 10.1.3 |
+| 10.1.6 | Calendar integration OAuth setup | ❌ STUB (authUrl: null) | 10.1.4 |
+| 10.1.7 | Work queue and approval flow | ✅ SCAFFOLD (routes + DB queries) | 10.1.5 |
+| 10.1.8 | Daily/weekly reporting implementation | ⚠️ PARTIAL (routes exist, no export) | 10.1.6 |
+| 10.1.9 | Timezone and recurrence support | ❌ STUB (field stored, no logic) | 10.1.7 |
+| 10.1.10 | Conflict detection and resolution | ❌ STUB (no overlap checking) | 10.1.8 |
+
+**Phase 10.1 acceptance**: Core calendar API scaffolded, task management routes exist, reminders basic. OAuth, sync, report export, timezone logic, conflict detection are stubs. NOT production-ready.
 
 ---
 

@@ -72,7 +72,7 @@ export async function runMigrations() {
     console.log(`Already executed migrations: ${executed.join(', ')}`);
     
     // Load available migrations
-    const migrationFiles = ['002_ai_browser_schema.sql', '003_smart_work_calendar_schema.sql'];
+    const migrationFiles = ['002_ai_browser_schema.sql', '003_smart_work_calendar_schema.sql', '004_core_user_schema.sql'];
     const availableMigrations = migrationFiles.map(loadMigration);
     
     // Filter pending migrations
@@ -115,7 +115,7 @@ export async function getMigrationStatus() {
     await createMigrationTable();
     const executed = await getExecutedMigrations();
     
-    const migrationFiles = ['002_ai_browser_schema.sql', '003_smart_work_calendar_schema.sql'];
+    const migrationFiles = ['002_ai_browser_schema.sql', '003_smart_work_calendar_schema.sql', '004_core_user_schema.sql'];
     const available = migrationFiles.map(f => f.replace('.sql', ''));
     
     return {

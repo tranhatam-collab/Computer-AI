@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - computer-os/*
+  - super-apps/*
+  - agents/*
+  - runtimes/*
+  - packages/*
+  - contracts/*

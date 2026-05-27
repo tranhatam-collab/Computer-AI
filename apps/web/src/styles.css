@@ -142,3 +142,11 @@ h1 { margin: 0 0 18px; font-size: clamp(34px,5vw,60px); line-height: 1.04; }
   .footer-inner { flex-direction: column; gap: 12px; }
   .nav { width: 100%; }
 }
+
+/* Header user actions */
+.header-actions { display: flex; align-items: center; gap: 12px; }
+.header-user { display: flex; align-items: center; gap: 10px; }
+.user-name { font-size: 14px; color: var(--muted); }
+.btn-sm { padding: 6px 10px; font-size: 13px; border-radius: 8px; }
+.btn-ghost { background: transparent; color: var(--muted); border-color: var(--line); }
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }

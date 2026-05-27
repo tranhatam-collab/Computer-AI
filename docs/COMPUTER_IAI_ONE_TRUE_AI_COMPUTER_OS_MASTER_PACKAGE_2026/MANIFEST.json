@@ -1,0 +1,172 @@
+{
+  "package": "COMPUTER_IAI_ONE_TRUE_AI_COMPUTER_OS_MASTER_PACKAGE_2026",
+  "created_at": "2026-05-27T04:22:56.946778Z",
+  "status": [
+    "TRUE AI COMPUTER OS MASTER SPEC READY",
+    "NOT PRODUCTION-READY",
+    "DEV REVIEW REQUIRED"
+  ],
+  "file_count": 42,
+  "files": [
+    {
+      "path": "README.md",
+      "size": 3168
+    },
+    {
+      "path": "patches/README_PATCH_TRUE_AI_COMPUTER.md",
+      "size": 1076
+    },
+    {
+      "path": "patches/TEAM_COMMAND_STOP_BUILDING_APP.md",
+      "size": 860
+    },
+    {
+      "path": "scripts/APPLY_TRUE_AI_COMPUTER_OS_DOCS.sh",
+      "size": 405
+    },
+    {
+      "path": "docs/true-ai-computer-os/00_MASTER_VISION_AND_NON_NEGOTIABLES.md",
+      "size": 1914
+    },
+    {
+      "path": "docs/true-ai-computer-os/01_NORMAL_COMPUTER_VS_AI_COMPUTER.md",
+      "size": 1707
+    },
+    {
+      "path": "docs/true-ai-computer-os/02_AI_COMPUTER_INSTANCE_OS_ARCHITECTURE.md",
+      "size": 1987
+    },
+    {
+      "path": "docs/true-ai-computer-os/03_COMMAND_KERNEL_AND_WORK_MATRIX.md",
+      "size": 2595
+    },
+    {
+      "path": "docs/true-ai-computer-os/04_MODEL_MESH_AND_PROVIDER_RESILIENCE.md",
+      "size": 2586
+    },
+    {
+      "path": "docs/true-ai-computer-os/05_TOOL_KERNEL_AND_CONNECTOR_REGISTRY.md",
+      "size": 1839
+    },
+    {
+      "path": "docs/true-ai-computer-os/06_SUPER_APPS_OPERATING_SYSTEM.md",
+      "size": 1574
+    },
+    {
+      "path": "docs/true-ai-computer-os/07_VAULT_MEMORY_AND_LOCAL_SYNC.md",
+      "size": 1593
+    },
+    {
+      "path": "docs/true-ai-computer-os/08_RUNTIME_SANDBOX_AND_SECURITY_BOUNDARY.md",
+      "size": 1175
+    },
+    {
+      "path": "docs/true-ai-computer-os/09_VERIFICATION_EVIDENCE_AND_REPORTING_ENGINE.md",
+      "size": 1408
+    },
+    {
+      "path": "docs/true-ai-computer-os/10_ERROR_RECOVERY_AND_SELF_HEALING_KERNEL.md",
+      "size": 1789
+    },
+    {
+      "path": "docs/true-ai-computer-os/11_COST_GOVERNOR_AND_QUOTA_SYSTEM.md",
+      "size": 1391
+    },
+    {
+      "path": "docs/true-ai-computer-os/12_MOBILE_REMOTE_AND_APPROVAL_CENTER.md",
+      "size": 1245
+    },
+    {
+      "path": "docs/true-ai-computer-os/13_SMART_CALENDAR_AND_WORK_OS.md",
+      "size": 1146
+    },
+    {
+      "path": "docs/true-ai-computer-os/14_AI_BROWSER_SECURE_RUNTIME.md",
+      "size": 1216
+    },
+    {
+      "path": "docs/true-ai-computer-os/15_SELF_UPGRADING_KERNEL.md",
+      "size": 1162
+    },
+    {
+      "path": "docs/true-ai-computer-os/16_COMPLIANCE_DATA_SOVEREIGNTY_AND_EXPORT.md",
+      "size": 1164
+    },
+    {
+      "path": "docs/true-ai-computer-os/17_ENTERPRISE_GOVERNANCE_AND_DEDICATED_RUNTIME.md",
+      "size": 1140
+    },
+    {
+      "path": "docs/true-ai-computer-os/18_MARKETPLACE_SKILLS_CONNECTORS_AND_WORKFLOWS.md",
+      "size": 1148
+    },
+    {
+      "path": "docs/true-ai-computer-os/19_FLOW_AIAGENT_PAY_VERIFY_TRUST_ECOSYSTEM_BRIDGE.md",
+      "size": 1369
+    },
+    {
+      "path": "docs/true-ai-computer-os/20_PRODUCTION_READINESS_GATE_100.md",
+      "size": 1448
+    },
+    {
+      "path": "docs/model-mesh/MODEL_MESH_PROVIDER_REGISTRY_SPEC.md",
+      "size": 1072
+    },
+    {
+      "path": "docs/model-mesh/MODEL_ROUTER_GOVERNOR_SPEC.md",
+      "size": 798
+    },
+    {
+      "path": "docs/model-mesh/PROVIDER_FAILURE_AND_DEGRADED_MODE_POLICY.md",
+      "size": 764
+    },
+    {
+      "path": "docs/tool-matrix/TOOL_KERNEL_ACTION_PERMISSION_MATRIX.md",
+      "size": 811
+    },
+    {
+      "path": "docs/tool-matrix/CONNECTOR_REGISTRY_AND_MCP_GATEWAY_SPEC.md",
+      "size": 662
+    },
+    {
+      "path": "docs/tool-matrix/A2A_AGENT_NETWORK_FUTURE_BRIDGE.md",
+      "size": 658
+    },
+    {
+      "path": "docs/super-apps/SUPER_APP_REGISTRY_SPEC.md",
+      "size": 680
+    },
+    {
+      "path": "docs/super-apps/REQUIRED_SUPER_APPS_MVP_TO_ENTERPRISE.md",
+      "size": 741
+    },
+    {
+      "path": "docs/super-apps/APP_STORE_SKILL_WORKFLOW_TEMPLATE_POLICY.md",
+      "size": 656
+    },
+    {
+      "path": "docs/error-recovery/ERROR_TAXONOMY_AND_RECOVERY_ACTIONS.md",
+      "size": 1789
+    },
+    {
+      "path": "docs/error-recovery/SELF_HEALING_INCIDENT_RCA_TEMPLATE.md",
+      "size": 812
+    },
+    {
+      "path": "docs/error-recovery/PARTIAL_RESULT_AND_HUMAN_HANDOFF_POLICY.md",
+      "size": 773
+    },
+    {
+      "path": "docs/production-gates/PRODUCTION_GATE_SCORECARD.md",
+      "size": 1448
+    },
+    {
+      "path": "docs/production-gates/TRUE_AI_COMPUTER_PHASED_EXECUTION_BOARD_2026.md",
+      "size": 2350
+    },
+    {
+      "path": "docs/production-gates/TRUE_AI_COMPUTER_DEFINITION_OF_DONE.md",
+      "size": 772
+    }
+  ]
+}

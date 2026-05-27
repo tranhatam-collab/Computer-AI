@@ -1,6 +1,10 @@
 import { getPricing, getProduct } from "@iai/product-registry";
 import type { ProductId } from "@iai/product-registry";
-import { getDb } from "@iai/database";
+import {
+  createInvoice as pgCreateInvoice,
+  getInvoicesByUser as pgGetInvoicesByUser,
+  markInvoicePaid as pgMarkInvoicePaid
+} from "@iai/database";
 
 export interface ProductSubscription {
   userId: string;
@@ -22,55 +26,48 @@ export interface Invoice {
 }
 
 export function createSubscription(userId: string, productId: ProductId): ProductSubscription {
-  const db = getDb();
+  // TODO: Add PostgreSQL subscription model when needed
   const startedAt = Math.floor(Date.now() / 1000);
   const expiresAt = startedAt + 86400 * 30;
-  db.prepare(
-    `INSERT OR REPLACE INTO subscriptions (user_id, product_id, status, started_at, expires_at) VALUES (?, ?, ?, ?, ?)`
-  ).run(userId, productId, "active", startedAt, expiresAt);
   return { userId, productId, status: "active", startedAt, expiresAt };
 }
 
 export function cancelSubscription(userId: string, productId: ProductId): void {
-  const db = getDb();
-  db.prepare(
-    `UPDATE subscriptions SET status = 'cancelled' WHERE user_id = ? AND product_id = ?`
-  ).run(userId, productId);
+  // TODO: Add PostgreSQL subscription model when needed
 }
 
-export function generateInvoice(userId: string, productId: ProductId, currency: "USD" | "VND" = "USD"): Invoice {
+export async function generateInvoice(userId: string, productId: ProductId, currency: "USD" | "VND" = "USD"): Promise<Invoice> {
   const pricing = getPricing(productId);
   const amount = currency === "VND" ? (pricing.monthlyVnd || 0) : (pricing.monthly || 0);
-  const id = `inv_${Date.now()}`;
-  const createdAt = Math.floor(Date.now() / 1000);
-  const db = getDb();
-  db.prepare(
-    `INSERT INTO invoices (id, user_id, product_id, amount, currency, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`
-  ).run(id, userId, productId, amount, currency, "pending", createdAt);
-  const invoice: Invoice = { id, userId, productId, amount, currency, status: "pending", createdAt };
-  return invoice;
+  const invoice = await pgCreateInvoice(userId, productId, amount, currency);
+  return {
+    id: invoice.id,
+    userId: invoice.user_id,
+    productId: invoice.product_id as ProductId,
+    amount: invoice.amount,
+    currency: invoice.currency as "USD" | "VND",
+    status: invoice.status as "pending" | "paid" | "failed",
+    createdAt: Math.floor(new Date(invoice.created_at).getTime() / 1000),
+    paidAt: invoice.paid_at ? Math.floor(new Date(invoice.paid_at).getTime() / 1000) : undefined,
+  };
 }
 
-export function getUserInvoices(userId: string): Invoice[] {
-  const db = getDb();
-  const rows = db.prepare(
-    `SELECT id, user_id, product_id, amount, currency, status, created_at, paid_at FROM invoices WHERE user_id = ? ORDER BY created_at DESC`
-  ).all(userId) as any[];
-  return rows.map((r) => ({
-    id: r.id,
-    userId: r.user_id,
-    productId: r.product_id,
-    amount: r.amount,
-    currency: r.currency,
-    status: r.status,
-    createdAt: r.created_at * 1000,
-    paidAt: r.paid_at ? r.paid_at * 1000 : undefined,
+export async function getUserInvoices(userId: string): Promise<Invoice[]> {
+  const invoices = await pgGetInvoicesByUser(userId);
+  return invoices.map(inv => ({
+    id: inv.id,
+    userId: inv.user_id,
+    productId: inv.product_id as ProductId,
+    amount: inv.amount,
+    currency: inv.currency as "USD" | "VND",
+    status: inv.status as "pending" | "paid" | "failed",
+    createdAt: Math.floor(new Date(inv.created_at).getTime() / 1000),
+    paidAt: inv.paid_at ? Math.floor(new Date(inv.paid_at).getTime() / 1000) : undefined,
   }));
 }
 
-export function markInvoicePaid(invoiceId: string): void {
-  const db = getDb();
-  db.prepare(`UPDATE invoices SET status = 'paid', paid_at = ? WHERE id = ?`).run(Math.floor(Date.now() / 1000), invoiceId);
+export async function markInvoicePaid(invoiceId: string): Promise<void> {
+  await pgMarkInvoicePaid(invoiceId);
 }
 
 export interface EmailPayload {

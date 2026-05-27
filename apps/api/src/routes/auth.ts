@@ -2,8 +2,20 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import crypto from "crypto";
 import { query } from "@iai/database/pg";
 
-const JWT_SECRET = process.env.JWT_SIGNING_SECRET || "dev-secret-change-in-prod";
 const SESSION_DAYS = 7;
+
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SIGNING_SECRET;
+  if (process.env.NODE_ENV === "production") {
+    if (!secret) {
+      throw new Error("JWT_SIGNING_SECRET_NOT_CONFIGURED");
+    }
+    return secret;
+  }
+  return secret || "dev-secret-change-in-prod";
+}
+
+const JWT_SECRET = getJwtSecret();
 
 interface JWTPayload {
   userId: string;
@@ -56,7 +68,7 @@ export async function getUserFromToken(token: string | undefined) {
 }
 
 export default async function authRoutes(app: FastifyInstance) {
-  app.post("/api/auth/register", async (req: FastifyRequest<{ Body: { email: string; name: string; locale?: string } }>) => {
+  app.post("/auth/register", async (req: FastifyRequest<{ Body: { email: string; name: string; locale?: string } }>) => {
     const { email, name, locale = "vi" } = req.body;
 
     // Check if email exists
@@ -74,7 +86,7 @@ export default async function authRoutes(app: FastifyInstance) {
     return { success: true, data: { id, email, name } };
   });
 
-  app.post("/api/auth/login", async (req: FastifyRequest<{ Body: { email: string } }>) => {
+  app.post("/auth/login", async (req: FastifyRequest<{ Body: { email: string } }>) => {
     const { email } = req.body;
 
     const userRes = await query<{ id: string; email: string; name: string }>(
@@ -100,14 +112,14 @@ export default async function authRoutes(app: FastifyInstance) {
     };
   });
 
-  app.get("/api/auth/me", async (req: FastifyRequest<{ Headers: { authorization?: string } }>) => {
+  app.get("/auth/me", async (req: FastifyRequest<{ Headers: { authorization?: string } }>) => {
     const token = req.headers.authorization?.replace("Bearer ", "");
     const user = await getUserFromToken(token);
     if (!user) return { success: false, error: "Unauthorized" };
     return { success: true, data: user };
   });
 
-  app.post("/api/auth/logout", async (req: FastifyRequest<{ Headers: { authorization?: string } }>) => {
+  app.post("/auth/logout", async (req: FastifyRequest<{ Headers: { authorization?: string } }>) => {
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (token) {
       await query(`DELETE FROM sessions WHERE token = $1`, [token]);

@@ -26,10 +26,27 @@
         }
       })();
     </script>
-    <script type="module" crossorigin src="/Computer-AI/assets/index-BYVBL-mS.js"></script>
-    <link rel="stylesheet" crossorigin href="/Computer-AI/assets/index-yPm07pb6.css">
+    <script type="text/javascript">
+      window.addEventListener("error", function(e) {
+        var el = document.getElementById("root");
+        if (el) el.innerHTML = "<pre style='padding:20px;color:red;'>JS Error: " + e.message + " at " + e.filename + ":" + e.lineno + "</pre>";
+      });
+      window.addEventListener("unhandledrejection", function(e) {
+        var el = document.getElementById("root");
+        if (el) el.innerHTML = "<pre style='padding:20px;color:red;'>Promise Error: " + (e.reason && e.reason.message ? e.reason.message : e.reason) + "</pre>";
+      });
+      setTimeout(function() {
+        var el = document.getElementById("root");
+        if (el && el.children.length === 0) {
+          el.innerHTML = "<pre style='padding:20px;color:orange;'>Debug: React mounted but root has 0 children. Check console for warnings.</pre>";
+        }
+      }, 2000);
+    </script>
+    <script type="module" crossorigin src="/assets/index-DK_mNiAJ.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-zhl2P-0T.css">
   </head>
   <body>
-    <div id="root"></div>
+    <noscript><p style="padding:20px">JavaScript is required to view this app.</p></noscript>
+    <div id="root">Loading...</div>
   </body>
 </html>

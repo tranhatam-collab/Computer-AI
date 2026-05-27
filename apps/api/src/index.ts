@@ -30,7 +30,7 @@ import {
   sendEmail,
 } from "@iai/billing-sdk";
 import { getCurrentUsage, getRemainingQuota } from "@iai/usage-sdk";
-import { getDb, getPgPool, closePgPool } from "@iai/database";
+import { getPgPool, closePgPool, getUserById, createPushToken } from "@iai/database";
 import healthRoutes from "./routes/health.js";
 import computerRoutes from "./routes/computers.js";
 import commandRoutes from "./routes/commands.js";
@@ -316,26 +316,25 @@ app.post<{ Body: { userId: string; productId: string } }>("/api/subscriptions/ca
 });
 
 app.post<{ Body: { userId: string; productId: string; currency?: "USD" | "VND" } }>("/api/invoices", async (req) => {
-  const inv = generateInvoice(req.body.userId, req.body.productId as any, req.body.currency);
+  const inv = await generateInvoice(req.body.userId, req.body.productId as any, req.body.currency);
   return { success: true, data: inv };
 });
 
 app.get<{ Params: { userId: string } }>("/api/invoices/:userId", async (req) => {
-  return { success: true, data: getUserInvoices(req.params.userId) };
+  return { success: true, data: await getUserInvoices(req.params.userId) };
 });
 
 app.post<{ Body: { invoiceId: string } }>("/api/invoices/pay", async (req) => {
-  markInvoicePaid(req.body.invoiceId);
+  await markInvoicePaid(req.body.invoiceId);
   return { success: true };
 });
 
 app.post<{ Body: { userId: string; invoiceId: string } }>("/api/invoices/send", async (req) => {
-  const invoices = getUserInvoices(req.body.userId);
+  const invoices = await getUserInvoices(req.body.userId);
   const inv = invoices.find((i) => i.id === req.body.invoiceId);
   if (!inv) return { success: false, error: "Invoice not found" };
   // fetch user email from db for demo
-  const db = getDb();
-  const user = db.prepare(`SELECT email, name FROM users WHERE id = ?`).get(req.body.userId) as any;
+  const user = await getUserById(req.body.userId);
   if (!user) return { success: false, error: "User not found" };
   const email = buildInvoiceEmail(inv, user.email, user.name);
   await sendEmail(email);
@@ -348,9 +347,7 @@ app.post<{ Body: { token: string }; Headers: { authorization?: string } }>("/api
   const authToken = (req.headers.authorization || "").replace("Bearer ", "");
   const user = authToken ? await getUserFromToken(authToken) : null;
   if (!user) return { success: false, error: "Unauthorized" };
-  const db = getDb();
-  db.prepare(`INSERT OR REPLACE INTO push_tokens (user_id, token, platform, created_at) VALUES (?, ?, ?, ?)`)
-    .run(user.id, req.body.token, "expo", Math.floor(Date.now() / 1000));
+  await createPushToken(user.id, req.body.token, "expo");
   return { success: true };
 });
 

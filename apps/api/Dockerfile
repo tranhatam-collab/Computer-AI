@@ -33,17 +33,19 @@ WORKDIR /app
 
 COPY --from=base /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/tsconfig.base.json ./
 COPY --from=base /app/apps/api/package.json /app/apps/api/tsconfig.json ./apps/api/
+COPY --from=base /app/apps/api/src ./apps/api/src
 COPY --from=base /app/packages ./packages
-COPY --from=base /app/apps/api/dist ./apps/api/dist
 
-RUN pnpm install --frozen-lockfile --prod
+# Workspace packages currently export TypeScript source. Keep dev tooling in
+# this proof container until package-level dist builds are introduced.
+RUN pnpm install --frozen-lockfile
 
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=10000
 
-EXPOSE 3001
+EXPOSE 10000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3001/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
+  CMD node -e "require('http').get(`http://localhost:${process.env.PORT || 10000}/api/health`, (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1)).on('error', () => process.exit(1))"
 
-CMD ["node", "apps/api/dist/index.js"]
+CMD ["pnpm", "--filter", "./apps/api", "exec", "tsx", "src/index.ts"]

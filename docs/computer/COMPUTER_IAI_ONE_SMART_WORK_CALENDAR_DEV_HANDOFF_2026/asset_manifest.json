@@ -1,0 +1,62 @@
+[
+  {
+    "path": "00_README_MASTER_INDEX.md",
+    "size": 839
+  },
+  {
+    "path": "COMPUTER_IAI_ONE_SMART_WORK_CALENDAR_COMPLETE_MASTER_2026.md",
+    "size": 30598
+  },
+  {
+    "path": "database/SMART_WORK_CALENDAR_DATABASE_SCHEMA.sql",
+    "size": 4058
+  },
+  {
+    "path": "api/SMART_WORK_CALENDAR_API_SPEC.md",
+    "size": 1269
+  },
+  {
+    "path": "execution/SMART_WORK_CALENDAR_EXECUTION_BOARD_2026.md",
+    "size": 1929
+  },
+  {
+    "path": "patches/REPO_TREE_SMART_CALENDAR_ADDITION.md",
+    "size": 901
+  },
+  {
+    "path": "contracts/calendar/smart-calendar.types.ts",
+    "size": 2414
+  },
+  {
+    "path": "docs/calendar/SMART_WORK_CALENDAR_MASTER_SPEC_2026.md",
+    "size": 9771
+  },
+  {
+    "path": "docs/calendar/SMART_WORK_CALENDAR_SYNC_ARCHITECTURE_2026.md",
+    "size": 2594
+  },
+  {
+    "path": "docs/calendar/SMART_WORK_CALENDAR_TASK_ORCHESTRATION_SPEC_2026.md",
+    "size": 2314
+  },
+  {
+    "path": "docs/calendar/SMART_WORK_CALENDAR_REMINDER_NOTIFICATION_SPEC_2026.md",
+    "size": 1868
+  },
+  {
+    "path": "docs/calendar/SMART_WORK_CALENDAR_CONNECTED_WORKSPACES_SPEC_2026.md",
+    "size": 1524
+  },
+  {
+    "path": "docs/calendar/SMART_WORK_CALENDAR_MOBILE_APP_SPEC_2026.md",
+    "size": 1154
+  },
+  {
+    "path": "docs/calendar/SMART_WORK_CALENDAR_APPROVAL_AND_REPORTING_SPEC_2026.md",
+    "size": 1318
+  },
+  {
+    "path": "docs/calendar/SMART_WORK_CALENDAR_SECURITY_POLICY_2026.md",
+    "size": 1067
+  }
+]

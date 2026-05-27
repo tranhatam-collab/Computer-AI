@@ -1,2 +1,0 @@
-export interface ConfidenceScore { overall: number; sourceConfidence: number; modelConfidence: number; toolConfidence: number; riskLevel: "low" | "medium" | "high"; }
-export function scoreConfidence(input: Partial<ConfidenceScore> = {}): ConfidenceScore { return { overall: input.overall ?? 0.7, sourceConfidence: input.sourceConfidence ?? 0.7, modelConfidence: input.modelConfidence ?? 0.7, toolConfidence: input.toolConfidence ?? 0.7, riskLevel: input.riskLevel ?? "medium" }; }

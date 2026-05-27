@@ -1,2 +1,0 @@
-export interface OutputPackage { id: string; runId: string; type: "text" | "document" | "report" | "artifact" | "approval_record"; title: string; payload: unknown; createdAt: string; }
-export function packageOutput(runId: string, title: string, payload: unknown): OutputPackage { return { id: `out_${crypto.randomUUID()}`, runId, type: "report", title, payload, createdAt: new Date().toISOString() }; }

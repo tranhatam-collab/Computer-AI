@@ -1,0 +1,1 @@
+export type EvidencePack = { id:string; tenantId:string; userId:string; computerId:string; runId:string; userCommand:string; platforms:string[]; screenshots:string[]; actionsTaken:string[]; approvals:string[]; finalUrls:string[]; riskFlags:string[]; status:"completed"|"partial"|"blocked"|"failed"; createdAt:string; };

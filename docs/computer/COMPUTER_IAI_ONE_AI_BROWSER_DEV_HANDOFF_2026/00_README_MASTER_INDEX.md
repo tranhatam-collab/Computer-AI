@@ -1,0 +1,46 @@
+# COMPUTER.IAI.ONE AI BROWSER DEV HANDOFF 2026
+
+This package converts the approved AI Browser plan into implementation-ready files for the Computer.iai.one dev team.
+
+## Includes
+
+```text
+docs/browser/AI_BROWSER_MASTER_SPEC_2026.md
+docs/browser/AI_BROWSER_VERIFY_FIRST_ACCESS_MODEL.md
+docs/browser/AI_BROWSER_CONNECTED_ACCOUNTS_AND_OAUTH_SPEC.md
+docs/browser/AI_BROWSER_CREDENTIAL_AND_SESSION_VAULT_SPEC.md
+docs/browser/AI_BROWSER_PERMISSION_AND_APPROVAL_MATRIX.md
+docs/browser/AI_BROWSER_USER_IN_LOOP_CAPTCHA_POLICY.md
+docs/browser/AI_BROWSER_RUNTIME_SANDBOX_SPEC.md
+docs/browser/AI_BROWSER_SOCIAL_SUPER_APPS_ROADMAP.md
+docs/browser/AI_BROWSER_MOBILE_REMOTE_CONTROL_SPEC.md
+docs/browser/AI_BROWSER_SECURITY_AND_AUDIT_CHECKLIST.md
+api/AI_BROWSER_API_SPEC.md
+database/AI_BROWSER_DATABASE_SCHEMA.sql
+policies/AI_BROWSER_PLATFORM_COMPLIANCE_POLICY.md
+execution/AI_BROWSER_PHASED_EXECUTION_BOARD_2026.md
+contracts/browser/*.schema.ts
+patches/*
+```
+
+## Non-negotiable
+
+```text
+NO CAPTCHA BYPASS
+NO ANTI-BOT BYPASS
+NO UNAUTHORIZED LOGIN
+USER VERIFICATION REQUIRED BEFORE BROWSER ACCESS
+AI MAY PREPARE, DRAFT AND PREVIEW
+AI MUST NOT PUBLISH, SEND, DELETE, PAY OR CHANGE SECURITY WITHOUT APPROVAL
+```
+
+## Apply to repo
+
+Copy folders to repository root and update workspace if needed.
+
+## Completion phrase
+
+```text
+AI BROWSER SPEC READY FOR DEV
+NOT PRODUCTION-READY
+```
