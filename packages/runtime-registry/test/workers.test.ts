@@ -1,6 +1,6 @@
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert";
-import { ResearchWorker, ContentWorker, CodeWorker, BrowserWorker } from "../src/index.js";
+import { ResearchWorker, ContentWorker, CodeWorker, BrowserWorker, OfficeWorker, SalesWorker, FinanceWorker, EnterpriseWorker } from "../src/index.js";
 
 describe("Runtime Workers", () => {
   const originalMock = process.env.ENABLE_RUNTIME_MOCK;
@@ -64,6 +64,54 @@ describe("Runtime Workers", () => {
       assert.ok(result.success);
       assert.ok(result.output.includes("ENABLE_RUNTIME_MOCK=true"));
     });
+
+    it("OfficeWorker returns deterministic mock output", async () => {
+      const worker = new OfficeWorker();
+      const result = await worker.execute({
+        id: "test-o1",
+        type: "document",
+        input: "Draft a memo",
+      });
+      assert.ok(result.success);
+      assert.ok(result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+      assert.ok(result.output.includes("Simulated"));
+    });
+
+    it("SalesWorker returns deterministic mock output", async () => {
+      const worker = new SalesWorker();
+      const result = await worker.execute({
+        id: "test-s1",
+        type: "proposal",
+        input: "Create a proposal",
+      });
+      assert.ok(result.success);
+      assert.ok(result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+      assert.ok(result.output.includes("Simulated"));
+    });
+
+    it("FinanceWorker returns deterministic mock output", async () => {
+      const worker = new FinanceWorker();
+      const result = await worker.execute({
+        id: "test-f1",
+        type: "report",
+        input: "Q1 financial report",
+      });
+      assert.ok(result.success);
+      assert.ok(result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+      assert.ok(result.output.includes("Simulated"));
+    });
+
+    it("EnterpriseWorker returns deterministic mock output", async () => {
+      const worker = new EnterpriseWorker();
+      const result = await worker.execute({
+        id: "test-e1",
+        type: "strategy",
+        input: "Digital transformation strategy",
+      });
+      assert.ok(result.success);
+      assert.ok(result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+      assert.ok(result.output.includes("Simulated"));
+    });
   });
 
   describe("with ENABLE_RUNTIME_MOCK=false", () => {
@@ -110,6 +158,46 @@ describe("Runtime Workers", () => {
         id: "test-7",
         type: "fetch",
         input: "https://example.com",
+      });
+      assert.ok(!result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+    });
+
+    it("OfficeWorker does not include mock marker when provider available", async () => {
+      const worker = new OfficeWorker();
+      const result = await worker.execute({
+        id: "test-o2",
+        type: "document",
+        input: "Draft a memo",
+      });
+      assert.ok(!result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+    });
+
+    it("SalesWorker does not include mock marker when provider available", async () => {
+      const worker = new SalesWorker();
+      const result = await worker.execute({
+        id: "test-s2",
+        type: "proposal",
+        input: "Create a proposal",
+      });
+      assert.ok(!result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+    });
+
+    it("FinanceWorker does not include mock marker when provider available", async () => {
+      const worker = new FinanceWorker();
+      const result = await worker.execute({
+        id: "test-f2",
+        type: "report",
+        input: "Q1 financial report",
+      });
+      assert.ok(!result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+    });
+
+    it("EnterpriseWorker does not include mock marker when provider available", async () => {
+      const worker = new EnterpriseWorker();
+      const result = await worker.execute({
+        id: "test-e2",
+        type: "strategy",
+        input: "Digital transformation strategy",
       });
       assert.ok(!result.output.includes("ENABLE_RUNTIME_MOCK=true"));
     });
