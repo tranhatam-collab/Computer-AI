@@ -19,6 +19,7 @@
     "build": "pnpm run build:web && pnpm run build:api",
     "check": "pnpm run typecheck && pnpm run build",
     "verify": "pnpm run check",
+    "smoke:render-api": "bash scripts/smoke-render-api.sh",
     "test": "tsx --test packages/**/test/*.test.ts",
     "test:db": "bash -c 'if [ -z \"$TEST_DATABASE_URL\" ] && [ -z \"$DATABASE_URL\" ]; then echo \"ERROR: TEST_DATABASE_URL or DATABASE_URL must be set\"; exit 1; fi; tsx --test packages/**/test/*.test.ts'"
   },

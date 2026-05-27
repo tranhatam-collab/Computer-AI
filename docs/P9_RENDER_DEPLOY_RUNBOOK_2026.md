@@ -110,6 +110,21 @@ Step 15/15 : CMD ["node", "apps/api/dist/index.js"]
 
 Chạy sau khi deploy thành công và health check = Healthy.
 
+### 5.0 Automated API smoke
+
+```bash
+ENDPOINT=https://api.computer.iai.one pnpm run smoke:render-api
+```
+
+Expected:
+
+```text
+PASS /api/health
+PASS /api/health/deep
+PASS /api/metrics
+SMOKE_PASS endpoint=https://api.computer.iai.one
+```
+
 ### 5.1 Basic connectivity
 
 ```bash
@@ -119,7 +134,7 @@ curl -s "$ENDPOINT/api/health" | jq .
 # Expected: {"status":"ok"}
 
 curl -s "$ENDPOINT/api/health/deep" | jq .
-# Expected: database=true, redis=(true|false), migrations.count>0
+# Expected: checks.database.status="pass", checks.migrations.count>=5
 
 curl -s "$ENDPOINT/api/metrics" | head -20
 # Expected: prometheus text format
@@ -153,7 +168,7 @@ curl -s "$ENDPOINT/api/browser/fetch?url=https://example.com" \
 
 ```bash
 curl -s "$ENDPOINT/api/health/deep" | jq '.migrations'
-# Expected: { "count": 2, "latest": "002_ai_browser_schema.sql" }
+# Expected: use `.checks.migrations`; count >= 5
 ```
 
 ### 5.5 Observability verification
