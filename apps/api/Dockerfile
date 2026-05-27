@@ -1,51 +1,37 @@
 # ============================================================
 # COMPUTER.IAI.ONE — API Dockerfile
-# Phase 1: Local dev + ECS/Hetzner deploy
+# Render production image
 # ============================================================
 
-FROM node:20-alpine AS base
-
-# Install pnpm
-RUN npm install -g pnpm@9
-
+FROM node:20-alpine AS deps
+RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
 
-# Copy workspace files
+# Copy manifests first for deterministic dependency caching.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps/api/package.json apps/api/tsconfig.json ./apps/api/
 COPY packages ./packages
 
-# Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy source
-COPY apps/api/src ./apps/api/src
-
-# Build
-WORKDIR /app/apps/api
-RUN pnpm build
-
-# Production stage
-FROM node:20-alpine AS production
-
-RUN npm install -g pnpm@9
+FROM deps AS builder
 WORKDIR /app
+COPY apps/api/src ./apps/api/src
+COPY apps/api/scripts ./apps/api/scripts
+RUN pnpm --filter ./apps/api build:production
 
-COPY --from=base /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/tsconfig.base.json ./
-COPY --from=base /app/apps/api/package.json /app/apps/api/tsconfig.json ./apps/api/
-COPY --from=base /app/apps/api/src ./apps/api/src
-COPY --from=base /app/packages ./packages
-
-# Workspace packages currently export TypeScript source. Keep dev tooling in
-# this proof container until package-level dist builds are introduced.
-RUN pnpm install --frozen-lockfile
+FROM node:20-alpine AS production
+WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=10000
 
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+
 EXPOSE 10000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get(`http://localhost:${process.env.PORT || 10000}/api/health`, (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1)).on('error', () => process.exit(1))"
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 10000) + '/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 
-CMD ["pnpm", "--filter", "./apps/api", "exec", "tsx", "src/index.ts"]
+CMD ["node", "apps/api/dist/index.js"]

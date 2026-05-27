@@ -1,7 +1,7 @@
-# P9.0 Deploy Preflight Report
+# P9 Deploy Preflight Report
 
-> **Status:** PREFLIGHT — chưa deploy production  
-> **Date:** 2026-05-27  
+> **Status:** P9.1 Dockerfile fixed — chưa deploy production  
+> **Date:** 2026-05-28  
 > **Target:** API = Render, Web = Cloudflare Pages  
 
 ---
@@ -25,18 +25,19 @@
 
 | Check | Status | Note |
 |-------|--------|------|
-| Multi-stage build | ✅ | `base` + `production` |
+| Multi-stage build | ✅ | `deps` + `builder` + `production` |
 | Node version | ✅ | `node:20-alpine` |
-| pnpm version | ✅ | `pnpm@9` |
+| pnpm version | ✅ | `corepack prepare pnpm@9 --activate` trong build stages |
 | PORT | ⚠️ | Hardcoded `PORT=10000` (`.env` có `API_PORT=3001` — không được dùng) |
-| Start command | ⚠️ | `tsx src/index.ts` — cần devDependencies trong production |
+| Start command | ✅ | `node apps/api/dist/index.js` |
 | Health check | ✅ | `/api/health` via HTTP GET |
-| Build artifacts | ❌ | Production stage copy `src/` không copy `dist/` |
+| Build artifacts | ✅ | Production stage copy bundled `apps/api/dist/` |
 
-**Blocker Dockerfile:**
-- CMD dùng `tsx src/index.ts` thay vì `node dist/index.js`
-- Production stage không copy `dist/` từ base stage
-- Cần fix để production chỉ cần runtime dependencies
+**P9.1 Dockerfile fix:**
+- API production bundle dùng `apps/api/scripts/build-production.mjs` với `esbuild`
+- Workspace TypeScript packages được bundle vào `apps/api/dist/index.js`
+- SQLite native dependency được lazy-load để production PostgreSQL path không cần `better-sqlite3`
+- Runtime import check trong thư mục không có `node_modules` chỉ fail đúng ở `DATABASE_URL is required`, không fail vì thiếu package
 
 ---
 
@@ -164,8 +165,8 @@ curl -H "Authorization: Bearer <token>" \
 | # | Blocker | Severity | Action Required |
 |---|---------|----------|-----------------|
 | 1 | **DATABASE_URL chưa set** | 🔴 Critical | Set trong Render dashboard hoặc env production |
-| 2 | **Dockerfile production stage không copy dist/** | 🔴 Critical | Fix Dockerfile: copy `dist/` và chạy `node dist/index.js` |
-| 3 | **Dockerfile CMD dùng tsx** | 🔴 Critical | Đổi thành `node dist/index.js` để bỏ devDependencies trong production |
+| 2 | **PAY_IAI_ONE_SITE_KEY chưa set** | 🔴 Critical | Set key hợp lệ trong Render dashboard |
+| 3 | **PAY_IAI_ONE_WEBHOOK_SECRET chưa set** | 🔴 Critical | Set secret hợp lệ trong Render dashboard |
 | 4 | **JWT_SECRET không được dùng** | 🟡 Medium | Xoá hoặc đổi thành JWT_SIGNING_SECRET nếu cần |
 | 5 | **GOOGLE_REDIRECT_URI = localhost** | 🟡 Medium | Đổi thành `https://api.computer.iai.one/api/auth/google/callback` |
 | 6 | **MS OAuth config thiếu** | 🟡 Medium | Bổ sung MS_CLIENT_ID, MS_CLIENT_SECRET, MS_REDIRECT_URI |
@@ -179,7 +180,7 @@ curl -H "Authorization: Bearer <token>" \
 ## 8. Recommended Fix Order
 
 ```
-P9.1: Fix Dockerfile (copy dist, node dist/index.js)
+P9.1: Fix Dockerfile (copy dist, node dist/index.js) — DONE
 P9.2: Set DATABASE_URL trong Render dashboard
 P9.3: Set payment secrets (PAY_IAI_ONE_SITE_KEY, PAY_IAI_ONE_WEBHOOK_SECRET)
 P9.4: Set AI provider keys (OPENAI_API_KEY, ANTHROPIC_API_KEY)
@@ -202,8 +203,9 @@ P6=PASS_CLOSED
 P7=PASS_WITH_PROD_LIMITATIONS
 P8=PASS
 P9.0=PASS_PREFLIGHT_WITH_BLOCKERS
+P9.1=PASS_DOCKERFILE_FIXED
 
-BLOCKERS_REMAINING=3 (Dockerfile fix, DATABASE_URL, Payment keys)
+BLOCKERS_REMAINING=3 (DATABASE_URL, PAY_IAI_ONE_SITE_KEY, PAY_IAI_ONE_WEBHOOK_SECRET)
 PRODUCTION_READY=NO
-NEXT=P9.1_DOCKERFILE_FIX
+NEXT=P9.2_RENDER_ENV_SETUP
 ```

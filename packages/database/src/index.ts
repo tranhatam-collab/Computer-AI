@@ -1,17 +1,20 @@
-import Database from "better-sqlite3";
+import type BetterSqlite3 from "better-sqlite3";
+import { createRequire } from "node:module";
 import path from "path";
 import fs from "fs";
 
 const DB_DIR = process.env.DB_DIR || path.resolve(process.cwd(), ".data");
 const DB_PATH = path.join(DB_DIR, "computer-iai.db");
+const require = createRequire(import.meta.url);
 
-let db: Database.Database;
+let db: BetterSqlite3.Database;
 
-export function getDb(): Database.Database {
+export function getDb(): BetterSqlite3.Database {
   if (process.env.DATABASE_URL) {
     throw new Error("SQLite blocked: DATABASE_URL is set. PostgreSQL-only production path enforced.");
   }
   if (!db) {
+    const Database = require("better-sqlite3") as typeof BetterSqlite3;
     fs.mkdirSync(DB_DIR, { recursive: true });
     db = new Database(DB_PATH);
     db.pragma("journal_mode = WAL");
@@ -21,7 +24,7 @@ export function getDb(): Database.Database {
   return db;
 }
 
-function migrate(db: Database.Database): void {
+function migrate(db: BetterSqlite3.Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
