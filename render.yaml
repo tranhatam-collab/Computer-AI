@@ -3,7 +3,7 @@ services:
     name: computer-api
     runtime: docker
     plan: free
-    region: oregon
+    region: singapore
     branch: main
     autoDeploy: true
     dockerfilePath: ./apps/api/Dockerfile
