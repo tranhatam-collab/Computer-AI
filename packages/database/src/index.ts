@@ -101,7 +101,13 @@ export function closeDb(): void {
 }
 
 
-export { createSqliteRunStore } from "./run-store.js";
+export async function createSqliteRunStore() {
+  if (process.env.DATABASE_URL) {
+    throw new Error("SQLite fallback blocked: DATABASE_URL is set. Use createPgRunStore() instead.");
+  }
+  const { createSqliteRunStore: factory } = await import("./run-store.js");
+  return factory();
+}
 export { createPgRunStore } from "./pg-run-store.js";
 export * from "./pg.js";
 export * from "./connection";

@@ -70,7 +70,8 @@ async function initStore() {
     useStore(pgStore);
     console.log('✅ PostgreSQL run store initialized');
   } else {
-    useStore(createSqliteRunStore());
+    const sqliteStore = await createSqliteRunStore();
+    useStore(sqliteStore);
     console.log('⚠️ SQLite run store (fallback — no DATABASE_URL)');
   }
 }
