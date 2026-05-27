@@ -198,17 +198,62 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('Delete reminder error:', error); return reply.status(500).send({ success: false, error: 'Failed to delete reminder' }); }
   });
 
-  // Calendar Integrations (stubs - OAuth requires external setup)
+  // Calendar Integrations (OAuth via auth-sdk)
   fastify.get("/api/calendar/connections", async (request, reply) => {
-    return { success: true, data: { message: 'Calendar integration connections - OAuth setup required', connections: [] } };
+    const { getOAuthStatus } = await import("@iai/auth-sdk");
+    const google = getOAuthStatus("google");
+    const microsoft = getOAuthStatus("microsoft");
+    return {
+      success: true,
+      data: {
+        providers: [
+          { provider: "google", configured: google.configured, missing: google.missing },
+          { provider: "microsoft", configured: microsoft.configured, missing: microsoft.missing },
+        ],
+      },
+    };
   });
 
-  fastify.post("/api/calendar/connections/google", async (request, reply) => {
-    return { success: true, data: { message: 'Google Calendar OAuth - configure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env', authUrl: null } };
+  fastify.post("/api/calendar/connections/:provider", async (request, reply) => {
+    const { provider } = request.params as any;
+    const { tenant_id, user_id, computer_id } = request.query as any;
+    if (!tenant_id || !user_id || !computer_id) {
+      return reply.status(400).send({ success: false, error: "Missing tenant_id, user_id, or computer_id" });
+    }
+    const { generateOAuthUrl } = await import("@iai/auth-sdk");
+    const result = generateOAuthUrl(provider, tenant_id, user_id, computer_id);
+    if (!result) {
+      return reply.status(400).send({ success: false, error: `OAuth not configured for provider: ${provider}` });
+    }
+    return { success: true, data: { authUrl: result.url, state: result.state } };
   });
 
-  fastify.post("/api/calendar/connections/microsoft", async (request, reply) => {
-    return { success: true, data: { message: 'Microsoft Graph OAuth - configure MS_CLIENT_ID and MS_CLIENT_SECRET in .env', authUrl: null } };
+  fastify.get("/api/oauth/callback/:provider", async (request, reply) => {
+    const { provider } = request.params as any;
+    const { code, state } = request.query as any;
+    if (!code || !state) {
+      return reply.status(400).send({ success: false, error: "Missing code or state" });
+    }
+    const { exchangeOAuthCode, verifyOAuthState } = await import("@iai/auth-sdk");
+    const stateData = verifyOAuthState(state);
+    if (!stateData) {
+      return reply.status(400).send({ success: false, error: "Invalid or expired state" });
+    }
+    const tokenResult = await exchangeOAuthCode(provider, code, state);
+    if (!tokenResult) {
+      return reply.status(400).send({ success: false, error: "Failed to exchange OAuth code" });
+    }
+    return {
+      success: true,
+      data: {
+        provider,
+        userId: stateData.userId,
+        tenantId: stateData.tenantId,
+        accessToken: tokenResult.accessToken,
+        refreshToken: tokenResult.refreshToken,
+        expiresIn: tokenResult.expiresIn,
+      },
+    };
   });
 
   fastify.delete("/api/calendar/connections/:connectionId", async (request, reply) => {

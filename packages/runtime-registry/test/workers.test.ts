@@ -1,6 +1,6 @@
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert";
-import { ResearchWorker, ContentWorker, CodeWorker, BrowserWorker, OfficeWorker, SalesWorker, FinanceWorker, EnterpriseWorker } from "../src/index.js";
+import { ResearchWorker, ContentWorker, CodeWorker, BrowserWorker, OfficeWorker, SalesWorker, FinanceWorker, EnterpriseWorker, NlpWorker } from "../src/index.js";
 
 describe("Runtime Workers", () => {
   const originalMock = process.env.ENABLE_RUNTIME_MOCK;
@@ -146,6 +146,18 @@ describe("Runtime Workers", () => {
       assert.ok(result.output.includes("ENABLE_RUNTIME_MOCK=true"));
       assert.ok(result.output.includes("Simulated"));
     });
+
+    it("NlpWorker returns deterministic mock output", async () => {
+      const worker = new NlpWorker();
+      const result = await worker.execute({
+        id: "test-n1",
+        type: "sentiment",
+        input: "This product is amazing and works perfectly!",
+      });
+      assert.ok(result.success);
+      assert.ok(result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+      assert.ok(result.output.includes("Simulated"));
+    });
   });
 
   describe("with ENABLE_RUNTIME_MOCK=false", () => {
@@ -266,6 +278,16 @@ describe("Runtime Workers", () => {
         id: "test-e2",
         type: "strategy",
         input: "Digital transformation strategy",
+      });
+      assert.ok(!result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+    });
+
+    it("NlpWorker does not include mock marker when provider available", async () => {
+      const worker = new NlpWorker();
+      const result = await worker.execute({
+        id: "test-n2",
+        type: "sentiment",
+        input: "This product is amazing!",
       });
       assert.ok(!result.output.includes("ENABLE_RUNTIME_MOCK=true"));
     });

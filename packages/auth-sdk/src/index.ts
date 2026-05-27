@@ -69,3 +69,12 @@ export async function login(email: string): Promise<{ user: User; session: Sessi
 export async function logout(token: string): Promise<void> {
   await pgDeleteSession(token);
 }
+
+export {
+  getOAuthConfig,
+  generateOAuthUrl,
+  verifyOAuthState,
+  exchangeOAuthCode,
+  getOAuthStatus,
+} from "./oauth.js";
+export type { OAuthConfig, OAuthState } from "./oauth.js";

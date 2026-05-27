@@ -7,6 +7,7 @@ import { OfficeWorker } from "./workers/office.js";
 import { SalesWorker } from "./workers/sales.js";
 import { FinanceWorker } from "./workers/finance.js";
 import { EnterpriseWorker } from "./workers/enterprise.js";
+import { NlpWorker } from "./workers/nlp.js";
 import type { LaneId, RuntimeClass } from "@iai/product-registry";
 
 export type { WorkerTask, WorkerResult } from "./base.js";
@@ -19,6 +20,7 @@ export { OfficeWorker };
 export { SalesWorker };
 export { FinanceWorker };
 export { EnterpriseWorker };
+export { NlpWorker };
 export { checkConcurrency, acquireSlot, releaseSlot, getTimeoutMs } from "./policy.js";
 
 const ENABLE_RUNTIME_MOCK = process.env.ENABLE_RUNTIME_MOCK === "true";
@@ -31,9 +33,10 @@ const office = new OfficeWorker();
 const sales = new SalesWorker();
 const finance = new FinanceWorker();
 const enterprise = new EnterpriseWorker();
+const nlp = new NlpWorker();
 
 export interface RuntimeMetadata {
-  id: RuntimeClass | "office" | "sales" | "finance" | "enterprise";
+  id: RuntimeClass | "office" | "sales" | "finance" | "enterprise" | "nlp";
   label: string;
   laneIds: LaneId[];
   capabilities: string[];
@@ -137,6 +140,17 @@ const registry = {
       simulated: ENABLE_RUNTIME_MOCK,
     },
     worker: enterprise,
+  },
+  nlp: {
+    metadata: {
+      id: "nlp",
+      label: "NLP runtime",
+      laneIds: ["research", "content"],
+      capabilities: nlp.allowedTypes,
+      limits: { maxConcurrentRuns: 3, timeoutMs: 60000 },
+      simulated: ENABLE_RUNTIME_MOCK,
+    },
+    worker: nlp,
   },
 } satisfies Record<string, RuntimeEntry>;
 

@@ -39,6 +39,7 @@ import runRoutes from "./routes/runs.js";
 import authRoutes, { getUserFromToken } from "./routes/auth.js";
 import browserRoutes from "./routes/browser.js";
 import calendarRoutes from "./routes/calendar.js";
+import exportRoutes from "./routes/export.js";
 import { authenticate } from "@iai/auth-sdk";
 
 const app = Fastify({ logger: true });
@@ -402,6 +403,7 @@ app.register(authRoutes, { prefix: "/api" });
 // ── AI Browser and Smart Calendar routes ──
 app.register(browserRoutes, { prefix: "/api" });
 app.register(calendarRoutes, { prefix: "/api" });
+app.register(exportRoutes, { prefix: "/api" });
 
 // ── Startup / Shutdown ──
 

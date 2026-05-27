@@ -184,4 +184,5 @@ export * from "./models/verification";
 export * from "./models/vault";
 export * from "./models/approval";
 export * from "./models/calendar";
+export * from "./models/evidence";
 export * from "./models/users";
