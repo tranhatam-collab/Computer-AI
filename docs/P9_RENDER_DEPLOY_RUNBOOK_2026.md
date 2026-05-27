@@ -106,6 +106,30 @@ Step 15/15 : CMD ["node", "apps/api/dist/index.js"]
 
 ---
 
+## P9.4a — DNS / Custom Domain
+
+Hiện `api.computer.iai.one` phải resolve trước khi smoke test chạy được.
+
+Render flow chuẩn:
+
+1. Render Dashboard → service `computer-api` → Settings → Custom Domains.
+2. Add domain: `api.computer.iai.one`.
+3. Render sẽ trả về target hostname dạng `*.onrender.com`.
+4. Cloudflare DNS → tạo record:
+   - Type: `CNAME`
+   - Name: `api.computer`
+   - Target: hostname Render cung cấp
+   - Proxy: DNS only trước khi health/smoke pass
+5. Chờ DNS propagate, kiểm tra:
+
+```bash
+dig +short api.computer.iai.one
+```
+
+Nếu lệnh không trả gì, chưa chạy P9.5 smoke.
+
+---
+
 ## P9.5 — Smoke Test Checklist
 
 Chạy sau khi deploy thành công và health check = Healthy.
@@ -119,6 +143,7 @@ ENDPOINT=https://api.computer.iai.one pnpm run smoke:render-api
 Expected:
 
 ```text
+PASS DNS api.computer.iai.one -> <ip>
 PASS /api/health
 PASS /api/health/deep
 PASS /api/metrics
@@ -131,7 +156,7 @@ SMOKE_PASS endpoint=https://api.computer.iai.one
 ENDPOINT=https://api.computer.iai.one
 
 curl -s "$ENDPOINT/api/health" | jq .
-# Expected: {"status":"ok"}
+# Expected: status="healthy"; redis may be warn if REDIS_URL is intentionally not set
 
 curl -s "$ENDPOINT/api/health/deep" | jq .
 # Expected: checks.database.status="pass", checks.migrations.count>=5

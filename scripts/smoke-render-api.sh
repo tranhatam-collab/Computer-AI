@@ -17,6 +17,32 @@ fi
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 
+host="$(node - "$ENDPOINT" <<'NODE'
+const endpoint = process.argv[2];
+try {
+  console.log(new URL(endpoint).hostname);
+} catch {
+  process.exit(1);
+}
+NODE
+)"
+
+if ! node - "$host" <<'NODE'
+const dns = require("node:dns");
+const host = process.argv[2];
+dns.lookup(host, (err, address) => {
+  if (err) {
+    console.error(`ERROR: DNS lookup failed for ${host}: ${err.code || err.message}`);
+    console.error("ACTION: create the DNS/custom-domain mapping before running API smoke.");
+    process.exit(1);
+  }
+  console.log(`PASS DNS ${host} -> ${address}`);
+});
+NODE
+then
+  exit 1
+fi
+
 request_json() {
   local path="$1"
   local output="$2"

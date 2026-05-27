@@ -185,10 +185,11 @@ P9.2: Set DATABASE_URL trong Render dashboard
 P9.3: Set payment secrets (PAY_IAI_ONE_SITE_KEY, PAY_IAI_ONE_WEBHOOK_SECRET)
 P9.4: Set AI provider keys (OPENAI_API_KEY, ANTHROPIC_API_KEY)
 P9.5: Set browser search key (BRAVE_SEARCH_API_KEY)
-P9.6: Fix OAuth redirect URIs
-P9.7: Create Cloudflare Pages project + config
-P9.8: Deploy API → smoke test
-P9.9: Deploy Web → verify CORS
+P9.6: Add Render custom domain + Cloudflare DNS for api.computer.iai.one
+P9.7: Fix OAuth redirect URIs
+P9.8: Create Cloudflare Pages project + config
+P9.9: Deploy API → smoke test
+P9.10: Deploy Web → verify CORS
 ```
 
 ---
@@ -206,7 +207,7 @@ P9.0=PASS_PREFLIGHT_WITH_BLOCKERS
 P9.1=PASS_DOCKERFILE_FIXED
 P9.1a=PASS_SMOKE_SCRIPT_ADDED (scripts/smoke-render-api.sh)
 
-BLOCKERS_REMAINING=3 (DATABASE_URL, PAY_IAI_ONE_SITE_KEY, PAY_IAI_ONE_WEBHOOK_SECRET)
+BLOCKERS_REMAINING=4 (DATABASE_URL, PAY_IAI_ONE_SITE_KEY, PAY_IAI_ONE_WEBHOOK_SECRET, api.computer.iai.one DNS/custom domain)
 PRODUCTION_READY=NO
-NEXT=P9.2_RENDER_ENV_SETUP
+NEXT=P9.2_RENDER_ENV_SETUP_THEN_P9.4A_DNS
 ```

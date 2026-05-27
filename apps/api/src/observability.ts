@@ -54,7 +54,7 @@ export default async function observabilityRoutes(fastify: FastifyInstance) {
   fastify.get("/health", async () => {
     const pg = await pgHealth();
     const redis = await checkRedis();
-    const overall = pg.ok && redis.ok ? "healthy" : "unhealthy";
+    const overall = pg.ok ? "healthy" : "unhealthy";
 
     return {
       status: overall,
@@ -62,7 +62,7 @@ export default async function observabilityRoutes(fastify: FastifyInstance) {
       version: process.env.npm_package_version || "0.1.0",
       checks: {
         database: { status: pg.ok ? "pass" : "fail", latencyMs: pg.latencyMs, error: pg.error },
-        redis: { status: redis.ok ? "pass" : "fail", latencyMs: redis.latencyMs, error: redis.error },
+        redis: { status: redis.ok ? "pass" : "warn", latencyMs: redis.latencyMs, error: redis.error },
       },
     };
   });
