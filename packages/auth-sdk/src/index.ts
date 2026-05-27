@@ -78,3 +78,12 @@ export {
   getOAuthStatus,
 } from "./oauth.js";
 export type { OAuthConfig, OAuthState } from "./oauth.js";
+
+export { assertPermission, getMembership, hasPermission, hasRoleLevel, PERMISSIONS, ROLE_HIERARCHY } from "./rbac.js";
+export type { Role, Membership } from "./rbac.js";
+
+export { createAuditEntry, getAuditLogs, getAuditLogsByActor, computeAuditHash } from "./audit.js";
+export type { AuditEntry, ActorType } from "./audit.js";
+
+export { checkRateLimit, rateLimitMiddleware } from "./rate-limit.js";
+export type { RateLimitConfig } from "./rate-limit.js";

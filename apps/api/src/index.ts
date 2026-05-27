@@ -66,6 +66,45 @@ app.register(fastifyRateLimit, {
   timeWindow: "1 minute",
 });
 
+// Security headers
+app.addHook("onSend", async (request, reply, payload) => {
+  reply.header("X-Content-Type-Options", "nosniff");
+  reply.header("X-Frame-Options", "DENY");
+  reply.header("X-XSS-Protection", "1; mode=block");
+  reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
+  reply.header("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+  reply.header("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+  reply.header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'");
+  return payload;
+});
+
+// Audit logging for mutations
+const AUDIT_ACTIONS = ["POST", "PATCH", "DELETE", "PUT"];
+app.addHook("onResponse", async (request, reply) => {
+  if (AUDIT_ACTIONS.includes(request.method)) {
+    try {
+      const { createAuditEntry } = await import("@iai/auth-sdk");
+      const actorId = (request as any).user?.id;
+      await createAuditEntry({
+        entityType: "api_request",
+        entityId: request.id as string,
+        action: `${request.method} ${request.routerPath || request.url}`,
+        actorId,
+        actorType: actorId ? "user" : "system",
+        metadata: {
+          statusCode: reply.statusCode,
+          params: request.params,
+          query: request.query,
+        },
+        ipAddress: request.ip,
+        userAgent: request.headers["user-agent"],
+      });
+    } catch {
+      // Silent fail — never block response for audit failure
+    }
+  }
+});
+
 async function initStore() {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required for PostgreSQL run store.");
