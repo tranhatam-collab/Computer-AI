@@ -8,6 +8,9 @@ const DB_PATH = path.join(DB_DIR, "computer-iai.db");
 let db: Database.Database;
 
 export function getDb(): Database.Database {
+  if (process.env.DATABASE_URL) {
+    throw new Error("SQLite blocked: DATABASE_URL is set. PostgreSQL-only production path enforced.");
+  }
   if (!db) {
     fs.mkdirSync(DB_DIR, { recursive: true });
     db = new Database(DB_PATH);

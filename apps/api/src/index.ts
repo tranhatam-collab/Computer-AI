@@ -17,7 +17,7 @@ import {
   updateRun,
   useStore
 } from "@iai/workflow-engine";
-import { createSqliteRunStore, createPgRunStore } from "@iai/database";
+import { createPgRunStore } from "@iai/database";
 import { getPendingApprovals, approve, reject } from "@iai/approval-sdk";
 import { getAppMap, getProductsByLane } from "@iai/product-registry";
 import {
@@ -31,7 +31,7 @@ import {
 } from "@iai/billing-sdk";
 import type { Invoice as BillingInvoice } from "@iai/billing-sdk";
 import { getCurrentUsage, getRemainingQuota } from "@iai/usage-sdk";
-import { getDb, getPgPool, closePgPool, getUserById, createPushToken } from "@iai/database";
+import { getPgPool, closePgPool, getUserById, createPushToken } from "@iai/database";
 import healthRoutes from "./routes/health.js";
 import computerRoutes from "./routes/computers.js";
 import commandRoutes from "./routes/commands.js";
@@ -66,27 +66,21 @@ app.register(fastifyRateLimit, {
 });
 
 async function initStore() {
-  if (process.env.DATABASE_URL) {
-    const pgStore = await createPgRunStore();
-    useStore(pgStore);
-    console.log('✅ PostgreSQL run store initialized');
-  } else {
-    const sqliteStore = await createSqliteRunStore();
-    useStore(sqliteStore);
-    console.log('⚠️ SQLite run store (fallback — no DATABASE_URL)');
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is required for PostgreSQL run store.");
   }
+  const pgStore = await createPgRunStore();
+  useStore(pgStore);
+  console.log('✅ PostgreSQL run store initialized');
 }
 
 async function initializeDatabase() {
-  if (process.env.DATABASE_URL) {
-    const { initDatabase } = await import('@iai/database');
-    await initDatabase();
-    console.log('✅ PostgreSQL database initialized');
-    return;
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is required. PostgreSQL-only production path enforced.");
   }
-
-  getDb();
-  console.log('✅ SQLite database initialized');
+  const { initDatabase } = await import('@iai/database');
+  await initDatabase();
+  console.log('✅ PostgreSQL database initialized');
 }
 
 async function generateInvoiceForUser(
@@ -94,94 +88,23 @@ async function generateInvoiceForUser(
   productId: string,
   currency: "USD" | "VND" = "USD"
 ): Promise<BillingInvoice> {
-  if (process.env.DATABASE_URL) {
-    return generateInvoice(userId, productId as any, currency);
-  }
-
-  const pricing = getPricing(productId as any);
-  const amount = currency === "VND" ? (pricing.monthlyVnd || 0) : (pricing.monthly || 0);
-  const createdAt = Math.floor(Date.now() / 1000);
-  const invoiceId = randomUUID();
-  getDb().prepare(
-    `INSERT INTO invoices (id, user_id, product_id, amount, currency, status, created_at)
-     VALUES (?, ?, ?, ?, ?, 'pending', ?)`
-  ).run(invoiceId, userId, productId, amount, currency, createdAt);
-
-  return {
-    id: invoiceId,
-    userId,
-    productId: productId as any,
-    amount,
-    currency,
-    status: "pending",
-    createdAt,
-  };
+  return generateInvoice(userId, productId as any, currency);
 }
 
 async function getInvoicesForUser(userId: string): Promise<BillingInvoice[]> {
-  if (process.env.DATABASE_URL) {
-    return getUserInvoices(userId);
-  }
-
-  const rows = getDb().prepare(
-    `SELECT id, user_id, product_id, amount, currency, status, created_at, paid_at
-     FROM invoices
-     WHERE user_id = ?
-     ORDER BY created_at DESC`
-  ).all(userId) as Array<{
-    id: string;
-    user_id: string;
-    product_id: string;
-    amount: number;
-    currency: "USD" | "VND";
-    status: "pending" | "paid" | "failed";
-    created_at: number;
-    paid_at?: number | null;
-  }>;
-
-  return rows.map((row) => ({
-    id: row.id,
-    userId: row.user_id,
-    productId: row.product_id as any,
-    amount: row.amount,
-    currency: row.currency,
-    status: row.status,
-    createdAt: row.created_at,
-    paidAt: row.paid_at || undefined,
-  }));
+  return getUserInvoices(userId);
 }
 
 async function markInvoicePaidById(invoiceId: string): Promise<void> {
-  if (process.env.DATABASE_URL) {
-    await markInvoicePaid(invoiceId);
-    return;
-  }
-
-  getDb().prepare(
-    `UPDATE invoices SET status = 'paid', paid_at = ? WHERE id = ?`
-  ).run(Math.floor(Date.now() / 1000), invoiceId);
+  await markInvoicePaid(invoiceId);
 }
 
 async function getUserForInvoice(userId: string): Promise<{ email: string; name: string } | null> {
-  if (process.env.DATABASE_URL) {
-    return getUserById(userId);
-  }
-
-  return getDb().prepare(
-    `SELECT email, name FROM users WHERE id = ?`
-  ).get(userId) as { email: string; name: string } | undefined || null;
+  return getUserById(userId);
 }
 
 async function savePushToken(userId: string, token: string): Promise<void> {
-  if (process.env.DATABASE_URL) {
-    await createPushToken(userId, token, "expo");
-    return;
-  }
-
-  getDb().prepare(
-    `INSERT OR REPLACE INTO push_tokens (user_id, token, platform, created_at)
-     VALUES (?, ?, ?, ?)`
-  ).run(userId, token, "expo", Math.floor(Date.now() / 1000));
+  await createPushToken(userId, token, "expo");
 }
 
 // ── Product routes ──
