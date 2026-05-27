@@ -29,8 +29,9 @@ import {
   buildInvoiceEmail,
   sendEmail,
 } from "@iai/billing-sdk";
+import type { Invoice as BillingInvoice } from "@iai/billing-sdk";
 import { getCurrentUsage, getRemainingQuota } from "@iai/usage-sdk";
-import { getPgPool, closePgPool, getUserById, createPushToken } from "@iai/database";
+import { getDb, getPgPool, closePgPool, getUserById, createPushToken } from "@iai/database";
 import healthRoutes from "./routes/health.js";
 import computerRoutes from "./routes/computers.js";
 import commandRoutes from "./routes/commands.js";
@@ -74,6 +75,113 @@ async function initStore() {
     useStore(sqliteStore);
     console.log('⚠️ SQLite run store (fallback — no DATABASE_URL)');
   }
+}
+
+async function initializeDatabase() {
+  if (process.env.DATABASE_URL) {
+    const { initDatabase } = await import('@iai/database');
+    await initDatabase();
+    console.log('✅ PostgreSQL database initialized');
+    return;
+  }
+
+  getDb();
+  console.log('✅ SQLite database initialized');
+}
+
+async function generateInvoiceForUser(
+  userId: string,
+  productId: string,
+  currency: "USD" | "VND" = "USD"
+): Promise<BillingInvoice> {
+  if (process.env.DATABASE_URL) {
+    return generateInvoice(userId, productId as any, currency);
+  }
+
+  const pricing = getPricing(productId as any);
+  const amount = currency === "VND" ? (pricing.monthlyVnd || 0) : (pricing.monthly || 0);
+  const createdAt = Math.floor(Date.now() / 1000);
+  const invoiceId = randomUUID();
+  getDb().prepare(
+    `INSERT INTO invoices (id, user_id, product_id, amount, currency, status, created_at)
+     VALUES (?, ?, ?, ?, ?, 'pending', ?)`
+  ).run(invoiceId, userId, productId, amount, currency, createdAt);
+
+  return {
+    id: invoiceId,
+    userId,
+    productId: productId as any,
+    amount,
+    currency,
+    status: "pending",
+    createdAt,
+  };
+}
+
+async function getInvoicesForUser(userId: string): Promise<BillingInvoice[]> {
+  if (process.env.DATABASE_URL) {
+    return getUserInvoices(userId);
+  }
+
+  const rows = getDb().prepare(
+    `SELECT id, user_id, product_id, amount, currency, status, created_at, paid_at
+     FROM invoices
+     WHERE user_id = ?
+     ORDER BY created_at DESC`
+  ).all(userId) as Array<{
+    id: string;
+    user_id: string;
+    product_id: string;
+    amount: number;
+    currency: "USD" | "VND";
+    status: "pending" | "paid" | "failed";
+    created_at: number;
+    paid_at?: number | null;
+  }>;
+
+  return rows.map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    productId: row.product_id as any,
+    amount: row.amount,
+    currency: row.currency,
+    status: row.status,
+    createdAt: row.created_at,
+    paidAt: row.paid_at || undefined,
+  }));
+}
+
+async function markInvoicePaidById(invoiceId: string): Promise<void> {
+  if (process.env.DATABASE_URL) {
+    await markInvoicePaid(invoiceId);
+    return;
+  }
+
+  getDb().prepare(
+    `UPDATE invoices SET status = 'paid', paid_at = ? WHERE id = ?`
+  ).run(Math.floor(Date.now() / 1000), invoiceId);
+}
+
+async function getUserForInvoice(userId: string): Promise<{ email: string; name: string } | null> {
+  if (process.env.DATABASE_URL) {
+    return getUserById(userId);
+  }
+
+  return getDb().prepare(
+    `SELECT email, name FROM users WHERE id = ?`
+  ).get(userId) as { email: string; name: string } | undefined || null;
+}
+
+async function savePushToken(userId: string, token: string): Promise<void> {
+  if (process.env.DATABASE_URL) {
+    await createPushToken(userId, token, "expo");
+    return;
+  }
+
+  getDb().prepare(
+    `INSERT OR REPLACE INTO push_tokens (user_id, token, platform, created_at)
+     VALUES (?, ?, ?, ?)`
+  ).run(userId, token, "expo", Math.floor(Date.now() / 1000));
 }
 
 // ── Product routes ──
@@ -316,25 +424,25 @@ app.post<{ Body: { userId: string; productId: string } }>("/api/subscriptions/ca
 });
 
 app.post<{ Body: { userId: string; productId: string; currency?: "USD" | "VND" } }>("/api/invoices", async (req) => {
-  const inv = await generateInvoice(req.body.userId, req.body.productId as any, req.body.currency);
+  const inv = await generateInvoiceForUser(req.body.userId, req.body.productId, req.body.currency);
   return { success: true, data: inv };
 });
 
 app.get<{ Params: { userId: string } }>("/api/invoices/:userId", async (req) => {
-  return { success: true, data: await getUserInvoices(req.params.userId) };
+  return { success: true, data: await getInvoicesForUser(req.params.userId) };
 });
 
 app.post<{ Body: { invoiceId: string } }>("/api/invoices/pay", async (req) => {
-  await markInvoicePaid(req.body.invoiceId);
+  await markInvoicePaidById(req.body.invoiceId);
   return { success: true };
 });
 
 app.post<{ Body: { userId: string; invoiceId: string } }>("/api/invoices/send", async (req) => {
-  const invoices = await getUserInvoices(req.body.userId);
+  const invoices = await getInvoicesForUser(req.body.userId);
   const inv = invoices.find((i) => i.id === req.body.invoiceId);
   if (!inv) return { success: false, error: "Invoice not found" };
   // fetch user email from db for demo
-  const user = await getUserById(req.body.userId);
+  const user = await getUserForInvoice(req.body.userId);
   if (!user) return { success: false, error: "User not found" };
   const email = buildInvoiceEmail(inv, user.email, user.name);
   await sendEmail(email);
@@ -347,7 +455,7 @@ app.post<{ Body: { token: string }; Headers: { authorization?: string } }>("/api
   const authToken = (req.headers.authorization || "").replace("Bearer ", "");
   const user = authToken ? await getUserFromToken(authToken) : null;
   if (!user) return { success: false, error: "Unauthorized" };
-  await createPushToken(user.id, req.body.token, "expo");
+  await savePushToken(user.id, req.body.token);
   return { success: true };
 });
 
@@ -375,7 +483,11 @@ app.register(calendarRoutes, { prefix: "/api" });
 // ── Startup / Shutdown ──
 
 app.addHook("onReady", async () => {
-  // Initialize PostgreSQL connection pool
+  if (!process.env.DATABASE_URL) {
+    app.log.info("PostgreSQL pool skipped (SQLite fallback)");
+    return;
+  }
+
   try {
     getPgPool();
     app.log.info("PostgreSQL pool initialized");
@@ -397,10 +509,7 @@ async function start() {
     // Initialize run store (PostgreSQL preferred, SQLite fallback)
     await initStore();
     
-    // Initialize database
-    const { initDatabase } = await import('@iai/database');
-    await initDatabase();
-    console.log('✅ Database initialized');
+    await initializeDatabase();
     
     await app.listen({ port: PORT, host: "0.0.0.0" });
     console.log(`API server running on http://localhost:${PORT}`);

@@ -39,22 +39,6 @@ CREATE TABLE IF NOT EXISTS trusted_devices (
     UNIQUE(tenant_id, user_id, computer_id, device_id)
 );
 
--- Computer instances for browser runtime
-CREATE TABLE IF NOT EXISTS computer_instances (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id VARCHAR(255) NOT NULL,
-    user_id VARCHAR(255) NOT NULL,
-    computer_id VARCHAR(255) NOT NULL,
-    instance_type VARCHAR(50) NOT NULL DEFAULT 'personal',
-    status VARCHAR(50) NOT NULL DEFAULT 'inactive',
-    region VARCHAR(100),
-    runtime_endpoint VARCHAR(500),
-    storage_region VARCHAR(100),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(tenant_id, user_id, computer_id)
-);
-
 -- Browser profiles for different browsing contexts
 CREATE TABLE IF NOT EXISTS browser_profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -164,26 +148,6 @@ CREATE TABLE IF NOT EXISTS approval_requests (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Evidence packs for audit and compliance
-CREATE TABLE IF NOT EXISTS evidence_packs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id VARCHAR(255) NOT NULL,
-    user_id VARCHAR(255) NOT NULL,
-    computer_id VARCHAR(255) NOT NULL,
-    run_id VARCHAR(255) NOT NULL,
-    user_command TEXT NOT NULL,
-    platforms TEXT[],
-    screenshots TEXT[],
-    actions_taken TEXT[],
-    approvals TEXT[],
-    final_urls TEXT[],
-    risk_flags TEXT[],
-    status VARCHAR(50) NOT NULL DEFAULT 'completed',
-    evidence_data JSONB,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Human verification requests
 CREATE TABLE IF NOT EXISTS human_verification_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -223,13 +187,11 @@ CREATE TABLE IF NOT EXISTS session_vault_records (
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_verified_users_tenant_user ON verified_users(tenant_id, user_id);
 CREATE INDEX IF NOT EXISTS idx_trusted_devices_user ON trusted_devices(tenant_id, user_id, computer_id);
-CREATE INDEX IF NOT EXISTS idx_computer_instances_tenant ON computer_instances(tenant_id, user_id);
 CREATE INDEX IF NOT EXISTS idx_browser_profiles_user ON browser_profiles(tenant_id, user_id, computer_id);
 CREATE INDEX IF NOT EXISTS idx_connected_accounts_user ON connected_accounts(tenant_id, user_id, computer_id);
 CREATE INDEX IF NOT EXISTS idx_vault_items_owner ON vault_items(tenant_id, owner_id, computer_id);
 CREATE INDEX IF NOT EXISTS idx_browser_action_records_run ON browser_action_records(run_id);
 CREATE INDEX IF NOT EXISTS idx_approval_requests_pending ON approval_requests(status, created_at);
-CREATE INDEX IF NOT EXISTS idx_evidence_packs_run ON evidence_packs(run_id);
 CREATE INDEX IF NOT EXISTS idx_human_verification_requests_pending ON human_verification_requests(status, expires_at);
 CREATE INDEX IF NOT EXISTS idx_session_vault_records_profile ON session_vault_records(browser_profile_id);
 
@@ -245,13 +207,11 @@ $$ language 'plpgsql';
 -- Create triggers for updated_at
 CREATE TRIGGER update_verified_users_updated_at BEFORE UPDATE ON verified_users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_trusted_devices_updated_at BEFORE UPDATE ON trusted_devices FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_computer_instances_updated_at BEFORE UPDATE ON computer_instances FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_browser_profiles_updated_at BEFORE UPDATE ON browser_profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_connected_accounts_updated_at BEFORE UPDATE ON connected_accounts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_vault_items_updated_at BEFORE UPDATE ON vault_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_browser_action_records_updated_at BEFORE UPDATE ON browser_action_records FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_approval_requests_updated_at BEFORE UPDATE ON approval_requests FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_evidence_packs_updated_at BEFORE UPDATE ON evidence_packs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_human_verification_requests_updated_at BEFORE UPDATE ON human_verification_requests FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_session_vault_records_updated_at BEFORE UPDATE ON session_vault_records FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 

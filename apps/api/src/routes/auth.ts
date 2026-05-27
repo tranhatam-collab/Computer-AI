@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import crypto from "crypto";
-import { query } from "@iai/database/pg";
+import { getUserById, getUserByEmail, createUser, createSession, deleteSession } from "@iai/database";
 
 const SESSION_DAYS = 7;
 
@@ -60,55 +60,36 @@ export async function getUserFromToken(token: string | undefined) {
   if (!token) return null;
   const payload = verifyJWT(token);
   if (!payload) return null;
-  const res = await query<{ id: string; email: string; name: string; locale: string }>(
-    `SELECT id, email, name, locale FROM users WHERE id = $1`,
-    [payload.userId]
-  );
-  return res.rows[0] || null;
+  return getUserById(payload.userId);
 }
 
 export default async function authRoutes(app: FastifyInstance) {
-  app.post("/auth/register", async (req: FastifyRequest<{ Body: { email: string; name: string; locale?: string } }>) => {
+  app.post("/auth/register", async (req: FastifyRequest<{ Body: { email: string; name: string; locale?: 'vi' | 'en' } }>) => {
     const { email, name, locale = "vi" } = req.body;
 
-    // Check if email exists
-    const existing = await query(`SELECT id FROM users WHERE email = $1`, [email.trim()]);
-    if (existing.rows.length > 0) {
+    const existing = await getUserByEmail(email.trim());
+    if (existing) {
       return { success: false, error: "Email already registered" };
     }
 
-    const id = `usr_${crypto.randomUUID().replace(/-/g, "").substring(0, 12)}`;
-    await query(
-      `INSERT INTO users (id, email, name, locale) VALUES ($1, $2, $3, $4)`,
-      [id, email.trim(), name.trim(), locale]
-    );
-
-    return { success: true, data: { id, email, name } };
+    const user = await createUser(email.trim(), name.trim(), locale);
+    return { success: true, data: { id: user.id, email: user.email, name: user.name } };
   });
 
   app.post("/auth/login", async (req: FastifyRequest<{ Body: { email: string } }>) => {
     const { email } = req.body;
 
-    const userRes = await query<{ id: string; email: string; name: string }>(
-      `SELECT id, email, name FROM users WHERE email = $1`,
-      [email.trim()]
-    );
-    if (userRes.rows.length === 0) {
+    const user = await getUserByEmail(email.trim());
+    if (!user) {
       return { success: false, error: "User not found" };
     }
-    const user = userRes.rows[0];
 
     const token = signJWT({ userId: user.id, email: user.email });
-    const expiresAt = new Date(Date.now() + SESSION_DAYS * 86400 * 1000);
-
-    await query(
-      `INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, $3)`,
-      [token, user.id, expiresAt.toISOString()]
-    );
+    const session = await createSession(user.id);
 
     return {
       success: true,
-      data: { user, session: { token, expires_at: expiresAt.toISOString() } },
+      data: { user, session: { token: session.token, expires_at: session.expires_at } },
     };
   });
 
@@ -122,7 +103,7 @@ export default async function authRoutes(app: FastifyInstance) {
   app.post("/auth/logout", async (req: FastifyRequest<{ Headers: { authorization?: string } }>) => {
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (token) {
-      await query(`DELETE FROM sessions WHERE token = $1`, [token]);
+      await deleteSession(token);
     }
     return { success: true };
   });

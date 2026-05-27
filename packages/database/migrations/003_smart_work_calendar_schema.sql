@@ -237,12 +237,12 @@ DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_updated_at_column') THEN
         CREATE OR REPLACE FUNCTION update_updated_at_column()
-        RETURNS TRIGGER AS $$
+        RETURNS TRIGGER AS $func$
         BEGIN
             NEW.updated_at = CURRENT_TIMESTAMP;
             RETURN NEW;
         END;
-        $$ language 'plpgsql';
+        $func$ language 'plpgsql';
     END IF;
 END
 $$;
@@ -262,10 +262,3 @@ INSERT INTO calendars (tenant_id, user_id, computer_id, name, description, timez
 VALUES ('default', 'system', 'computer_001', 'Primary Calendar', 'Main calendar for system tasks', 'UTC')
 ON CONFLICT (tenant_id, user_id, computer_id, name) DO NOTHING;
 
--- Create default reminder types
-INSERT INTO reminder_rules (tenant_id, user_id, computer_id, rule_type, schedule_expression, channels, priority, status)
-VALUES 
-    ('default', 'system', 'computer_001', 'relative_before_due', '15 minutes before', '{"mobile_push","email"}', 'normal', 'active'),
-    ('default', 'system', 'computer_001', 'relative_before_due', '1 hour before', '{"mobile_push","email"}', 'normal', 'active'),
-    ('default', 'system', 'computer_001', 'relative_before_due', '1 day before', '{"mobile_push","email"}', 'normal', 'active')
-ON CONFLICT DO NOTHING;

@@ -259,3 +259,29 @@ export async function getActiveSessionCount(tenantId: string, userId: string, co
   );
   return parseInt(result.rows[0].count);
 }
+
+// Browser Session (lightweight table for tests)
+export interface BrowserSession {
+  id: string;
+  user_id: string;
+  session_type: string;
+  status: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export async function createBrowserSession(data: { user_id: string; session_type?: string; status?: string }): Promise<BrowserSession> {
+  const id = uuidv4();
+  const now = new Date();
+  const result = await pgQuery(
+    `INSERT INTO browser_sessions (id, user_id, session_type, status, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+    [id, data.user_id, data.session_type || 'manual', data.status || 'active', now, now]
+  );
+  return result.rows[0];
+}
+
+export async function getBrowserSession(id: string): Promise<BrowserSession | null> {
+  const result = await pgQuery('SELECT * FROM browser_sessions WHERE id = $1', [id]);
+  return result.rows[0] || null;
+}

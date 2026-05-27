@@ -27,7 +27,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
       const err = requireFields({ tenant_id, user_id, computer_id, calendar_id, title, start_time, end_time, timezone }, ['tenant_id','user_id','computer_id','calendar_id','title','start_time','end_time','timezone']);
       if (err) return reply.status(400).send({ success: false, error: err });
       const { createCalendarEvent } = await import('@iai/database');
-      const event = await createCalendarEvent({ tenant_id, user_id, computer_id, calendar_id, title, description, location, start_time: new Date(start_time), end_time: new Date(end_time), timezone, recurrence_rule, status: 'confirmed', visibility: visibility || 'default', attendees, provider_sync_status: 'pending' });
+      const event = await createCalendarEvent({ tenant_id, user_id, computer_id, calendar_id, title, description, location, start_at: new Date(start_time), end_at: new Date(end_time), timezone, recurrence_rule, status: 'confirmed', visibility: visibility || 'default', attendees } as any);
       return { success: true, data: event };
     } catch (error) { console.error('Create event error:', error); return reply.status(500).send({ success: false, error: 'Failed to create event' }); }
   });
@@ -164,11 +164,15 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
 
   fastify.post("/api/reminders", async (request, reply) => {
     try {
-      const { tenant_id, user_id, computer_id, name, condition_type, condition_config, action_type, action_config } = request.body as any;
-      const err = requireFields({ tenant_id, user_id, computer_id, name, condition_type, action_type }, ['tenant_id','user_id','computer_id','name','condition_type','action_type']);
+      const body = request.body as any;
+      const { tenant_id, user_id, computer_id, task_id, event_id, rule_type, schedule_expression, timezone, channels, priority } = body;
+      const err = requireFields({ tenant_id, user_id, computer_id, rule_type }, ['tenant_id','user_id','computer_id','rule_type']);
       if (err) return reply.status(400).send({ success: false, error: err });
+      if (!task_id && !event_id) {
+        return reply.status(400).send({ success: false, error: 'Either task_id or event_id is required' });
+      }
       const { createReminderRule } = await import('@iai/database');
-      const rule = await createReminderRule({ tenant_id, user_id, computer_id, name, condition_type, condition_config, action_type, action_config, is_active: true });
+      const rule = await createReminderRule({ tenant_id, user_id, computer_id, task_id, event_id, rule_type, schedule_expression, timezone, channels, priority, status: 'active' } as any);
       return { success: true, data: rule };
     } catch (error) { console.error('Create reminder error:', error); return reply.status(500).send({ success: false, error: 'Failed to create reminder' }); }
   });

@@ -1,5 +1,14 @@
 import { pgQuery } from '../connection';
 import { v4 as uuidv4 } from 'uuid';
+import { createHash } from 'node:crypto';
+
+function sha256(input: string): string {
+  return createHash('sha256').update(input).digest('hex');
+}
+
+function mapLocale(locale: 'vi' | 'en'): string {
+  return locale === 'vi' ? 'vi-VN' : 'en-US';
+}
 
 export interface User {
   id: string;
@@ -44,44 +53,77 @@ export interface PushToken {
   created_at: Date;
 }
 
+function rowToUser(row: any): User {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.display_name || row.name || '',
+    locale: row.locale === 'vi-VN' ? 'vi' : 'en',
+    created_at: row.created_at,
+  };
+}
+
 // User Management
 export async function createUser(email: string, name: string, locale: 'vi' | 'en' = 'vi'): Promise<User> {
-  const id = `user_${uuidv4().substring(0, 8)}`;
+  const id = uuidv4();
   const now = new Date();
-  
+  const emailHash = sha256(email);
+  const mappedLocale = mapLocale(locale);
+  const timezone = mappedLocale === 'vi-VN' ? 'Asia/Ho_Chi_Minh' : 'UTC';
+
   const result = await pgQuery(
-    `INSERT INTO users (id, email, name, locale, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-    [id, email, name, locale, now]
+    `INSERT INTO users (id, email, email_hash, display_name, locale, timezone, tier, status, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+     RETURNING id, email, display_name as name, locale, created_at`,
+    [id, email, emailHash, name, mappedLocale, timezone, 'free', 'active', now, now]
   );
-  
+
   return result.rows[0];
 }
 
 export async function getUserById(id: string): Promise<User | null> {
-  const result = await pgQuery('SELECT * FROM users WHERE id = $1', [id]);
+  const result = await pgQuery(
+    'SELECT id, email, display_name as name, locale, created_at FROM users WHERE id = $1',
+    [id]
+  );
   return result.rows[0] || null;
 }
 
 export async function getUserByEmail(email: string): Promise<User | null> {
-  const result = await pgQuery('SELECT * FROM users WHERE email = $1', [email]);
+  const result = await pgQuery(
+    'SELECT id, email, display_name as name, locale, created_at FROM users WHERE email = $1',
+    [email]
+  );
   return result.rows[0] || null;
 }
 
 export async function updateUser(id: string, updates: Partial<Pick<User, 'name' | 'locale'>>): Promise<User> {
-  const fields = Object.keys(updates).filter(key => key !== 'id' && key !== 'created_at');
-  const values = Object.values(updates);
-  
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  if (updates.name !== undefined) {
+    fields.push('display_name');
+    values.push(updates.name);
+  }
+  if (updates.locale !== undefined) {
+    fields.push('locale');
+    values.push(mapLocale(updates.locale));
+  }
+
   if (fields.length === 0) {
     throw new Error('No fields to update');
   }
-  
-  const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
-  
+
+  fields.push('updated_at');
+  values.push(new Date());
+
+  const setClause = fields.map((field, index) => `${field} = $${index + 1}`).join(', ');
+
   const result = await pgQuery(
-    `UPDATE users SET ${setClause} WHERE id = $${fields.length + 2} RETURNING *`,
+    `UPDATE users SET ${setClause} WHERE id = $${fields.length + 1} RETURNING id, email, display_name as name, locale, created_at`,
     [...values, id]
   );
-  
+
   return result.rows[0];
 }
 

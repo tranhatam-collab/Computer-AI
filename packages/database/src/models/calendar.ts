@@ -10,15 +10,17 @@ export interface CalendarEvent {
   title: string;
   description?: string;
   location?: string;
-  start_time: Date;
-  end_time: Date;
+  start_at: Date;
+  end_at: Date;
   timezone: string;
   recurrence_rule?: string;
   status: 'confirmed' | 'tentative' | 'cancelled';
   visibility: 'default' | 'public' | 'private';
   attendees?: any[];
-  provider_event_id?: string;
-  provider_sync_status: 'pending' | 'synced' | 'failed';
+  provider?: string;
+  external_id?: string;
+  all_day?: boolean;
+  source_version?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -48,12 +50,20 @@ export interface ReminderRule {
   tenant_id: string;
   user_id: string;
   computer_id: string;
-  name: string;
-  condition_type: 'time_before' | 'time_after' | 'location_based' | 'status_change';
-  condition_config: any;
-  action_type: 'notification' | 'email' | 'sms' | 'browser_alert';
-  action_config: any;
-  is_active: boolean;
+  task_id?: string;
+  event_id?: string;
+  rule_type: string;
+  schedule_expression?: string;
+  condition_expression?: string;
+  timezone: string;
+  channels: string[];
+  priority: string;
+  status: string;
+  last_triggered_at?: Date;
+  next_trigger_at?: Date;
+  trigger_count?: number;
+  max_triggers?: number;
+  metadata?: any;
   created_at: Date;
   updated_at: Date;
 }
@@ -62,9 +72,9 @@ export async function createCalendarEvent(data: Omit<CalendarEvent, 'id' | 'crea
   const id = uuidv4();
   const now = new Date();
   const result = await pgQuery(
-    `INSERT INTO calendar_events (id, tenant_id, user_id, computer_id, calendar_id, title, description, location, start_time, end_time, timezone, recurrence_rule, status, visibility, attendees, provider_event_id, provider_sync_status, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING *`,
-    [id, data.tenant_id, data.user_id, data.computer_id, data.calendar_id, data.title, data.description, data.location, data.start_time, data.end_time, data.timezone, data.recurrence_rule, data.status, data.visibility, JSON.stringify(data.attendees || []), data.provider_event_id, data.provider_sync_status, now, now]
+    `INSERT INTO calendar_events (id, tenant_id, user_id, computer_id, calendar_id, provider, external_id, title, description, location, start_at, end_at, timezone, all_day, attendees, recurrence_rule, visibility, status, source_version, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21) RETURNING *`,
+    [id, data.tenant_id, data.user_id, data.computer_id, data.calendar_id, data.provider || 'computer_native', data.external_id || null, data.title, data.description || null, data.location || null, data.start_at, data.end_at, data.timezone, data.all_day || false, data.attendees || null, data.recurrence_rule || null, data.visibility, data.status, data.source_version || null, now, now]
   );
   return result.rows[0];
 }
@@ -78,10 +88,10 @@ export async function getCalendarEventsByUser(tenantId: string, userId: string, 
   let query = 'SELECT * FROM calendar_events WHERE tenant_id = $1 AND user_id = $2 AND computer_id = $3';
   const params: any[] = [tenantId, userId, computerId];
   if (startDate && endDate) {
-    query += ' AND start_time >= $4 AND start_time <= $5';
+    query += ' AND start_at >= $4 AND start_at <= $5';
     params.push(startDate, endDate);
   }
-  query += ' ORDER BY start_time ASC';
+  query += ' ORDER BY start_at ASC';
   const result = await pgQuery(query, params);
   return result.rows;
 }
@@ -141,9 +151,9 @@ export async function createReminderRule(data: Omit<ReminderRule, 'id' | 'create
   const id = uuidv4();
   const now = new Date();
   const result = await pgQuery(
-    `INSERT INTO reminder_rules (id, tenant_id, user_id, computer_id, name, condition_type, condition_config, action_type, action_config, is_active, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-    [id, data.tenant_id, data.user_id, data.computer_id, data.name, data.condition_type, JSON.stringify(data.condition_config), data.action_type, JSON.stringify(data.action_config), data.is_active, now, now]
+    `INSERT INTO reminder_rules (id, tenant_id, user_id, computer_id, task_id, event_id, rule_type, schedule_expression, condition_expression, timezone, channels, priority, status, last_triggered_at, next_trigger_at, trigger_count, max_triggers, metadata, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING *`,
+    [id, data.tenant_id, data.user_id, data.computer_id, data.task_id || null, data.event_id || null, data.rule_type, data.schedule_expression || null, data.condition_expression || null, data.timezone || 'UTC', data.channels || ['mobile_push'], data.priority || 'normal', data.status || 'active', data.last_triggered_at || null, data.next_trigger_at || null, data.trigger_count || 0, data.max_triggers || null, JSON.stringify(data.metadata || {}), now, now]
   );
   return result.rows[0];
 }
@@ -170,7 +180,7 @@ export async function getUpcomingEvents(tenantId: string, userId: string, comput
   const now = new Date();
   const future = new Date(now.getTime() + hours * 60 * 60 * 1000);
   const result = await pgQuery(
-    'SELECT * FROM calendar_events WHERE tenant_id = $1 AND user_id = $2 AND computer_id = $3 AND start_time >= $4 AND start_time <= $5 AND status != $6 ORDER BY start_time ASC',
+    'SELECT * FROM calendar_events WHERE tenant_id = $1 AND user_id = $2 AND computer_id = $3 AND start_at >= $4 AND start_at <= $5 AND status != $6 ORDER BY start_at ASC',
     [tenantId, userId, computerId, now, future, 'cancelled']
   );
   return result.rows;

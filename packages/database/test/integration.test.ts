@@ -46,14 +46,17 @@ describe("Database Integration", { skip: !TEST_DB_URL }, () => {
     const start = new Date();
     const end = new Date(start.getTime() + 3600000);
     const event = await calendarModel.createCalendarEvent({
+      tenant_id: "test",
       user_id: "user_test_1",
+      computer_id: "test_pc",
+      calendar_id: null as any,
       title: "Test Meeting",
-      event_type: "meeting",
-      start_time: start.toISOString(),
-      end_time: end.toISOString(),
+      start_at: start,
+      end_at: end,
       timezone: "Asia/Ho_Chi_Minh",
       status: "confirmed",
-    });
+      visibility: "default",
+    } as any);
     assert.ok(event.id);
     assert.equal(event.title, "Test Meeting");
 

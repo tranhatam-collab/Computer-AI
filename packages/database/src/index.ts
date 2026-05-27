@@ -23,9 +23,10 @@ function migrate(db: Database.Database): void {
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
-      name TEXT NOT NULL,
-      locale TEXT NOT NULL DEFAULT 'vi',
-      created_at INTEGER NOT NULL DEFAULT (unixepoch())
+      display_name TEXT NOT NULL DEFAULT '',
+      locale TEXT NOT NULL DEFAULT 'vi-VN',
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
     );
 
     CREATE TABLE IF NOT EXISTS sessions (
@@ -87,10 +88,73 @@ function migrate(db: Database.Database): void {
       created_at INTEGER NOT NULL DEFAULT (unixepoch())
     );
 
+    CREATE TABLE IF NOT EXISTS memory_namespaces (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      computer_id TEXT NOT NULL,
+      namespace_name TEXT NOT NULL,
+      namespace_type TEXT NOT NULL DEFAULT 'context',
+      memory_data TEXT,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      UNIQUE(tenant_id, user_id, computer_id, namespace_name)
+    );
+
+    CREATE TABLE IF NOT EXISTS usage_records (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      computer_id TEXT NOT NULL,
+      run_id TEXT REFERENCES runs(id) ON DELETE SET NULL,
+      provider TEXT NOT NULL,
+      model TEXT,
+      tokens_input INTEGER DEFAULT 0,
+      tokens_output INTEGER DEFAULT 0,
+      cost_estimate REAL,
+      cost_currency TEXT DEFAULT 'USD',
+      quota_type TEXT,
+      recorded_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+
+    CREATE TABLE IF NOT EXISTS upgrade_requests (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      computer_id TEXT NOT NULL,
+      current_plan TEXT NOT NULL,
+      requested_plan TEXT NOT NULL,
+      reason TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      approved_by TEXT,
+      approved_at INTEGER,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+
+    CREATE TABLE IF NOT EXISTS rollback_plans (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      computer_id TEXT NOT NULL,
+      run_id TEXT REFERENCES runs(id) ON DELETE CASCADE,
+      rollback_reason TEXT NOT NULL,
+      rollback_steps TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      executed_at INTEGER,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+
     CREATE INDEX IF NOT EXISTS idx_runs_user ON runs(user_id);
     CREATE INDEX IF NOT EXISTS idx_runs_state ON runs(state);
     CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id);
     CREATE INDEX IF NOT EXISTS idx_invoices_user ON invoices(user_id);
+    CREATE INDEX IF NOT EXISTS idx_memory_user ON memory_namespaces(tenant_id, user_id, computer_id);
+    CREATE INDEX IF NOT EXISTS idx_usage_user ON usage_records(tenant_id, user_id, computer_id, recorded_at);
+    CREATE INDEX IF NOT EXISTS idx_upgrade_user ON upgrade_requests(tenant_id, user_id, computer_id, status);
+    CREATE INDEX IF NOT EXISTS idx_rollback_status ON rollback_plans(status, created_at);
   `);
 }
 

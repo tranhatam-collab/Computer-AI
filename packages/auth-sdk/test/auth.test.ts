@@ -1,12 +1,17 @@
-import { describe, it } from "node:test";
+import { describe, it, before } from "node:test";
 import assert from "node:assert";
 import { createUser, login, logout, authenticate } from "../src/index.js";
+import { runMigrations } from "../../database/src/migrate.js";
 
 const uid = () => `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 const hasDb = !!process.env.TEST_DATABASE_URL || !!process.env.DATABASE_URL;
 const skip = !hasDb;
 
 describe("auth-sdk", () => {
+  before(async () => {
+    if (!skip) await runMigrations();
+  });
+
   it("creates a user", { skip }, async () => {
     const user = await createUser(`test_${uid()}@example.com`, "Test User", "en");
     assert.ok(user.email.includes("@example.com"));
