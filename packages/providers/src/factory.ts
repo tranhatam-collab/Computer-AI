@@ -2,6 +2,9 @@ import type { AIProvider, EmailProvider, PaymentProvider } from "./index.js";
 import { MockAIProvider, MockEmailProvider, MockPaymentProvider } from "./mock.js";
 import { OpenAIProvider } from "./openai-provider.js";
 import { AnthropicProvider } from "./anthropic-provider.js";
+import { SendGridProvider } from "./sendgrid-provider.js";
+import { PayOSProvider } from "./payos-provider.js";
+import { StripeProvider } from "./stripe-provider.js";
 import { AIFallbackProvider } from "./circuit-breaker.js";
 import type { FallbackResult } from "./circuit-breaker.js";
 
@@ -61,9 +64,9 @@ export function generateWithFallback(req: Parameters<AIProvider["generate"]>[0])
 
 export function getEmailProvider(): EmailProvider {
   if (!emailProvider) {
-    const key = process.env.SENDGRID_API_KEY || process.env.SES_ACCESS_KEY;
-    if (!key) {
-      emailProvider = new MockEmailProvider();
+    const sendgridKey = process.env.SENDGRID_API_KEY;
+    if (sendgridKey) {
+      emailProvider = new SendGridProvider(sendgridKey, process.env.FROM_EMAIL);
     } else {
       emailProvider = new MockEmailProvider();
     }
@@ -73,9 +76,19 @@ export function getEmailProvider(): EmailProvider {
 
 export function getPaymentProvider(): PaymentProvider {
   if (!paymentProvider) {
-    const key = process.env.STRIPE_SECRET_KEY || process.env.PAYOS_API_KEY;
-    if (!key) {
-      paymentProvider = new MockPaymentProvider();
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    const payosClientId = process.env.PAYOS_CLIENT_ID;
+    const payosApiKey = process.env.PAYOS_API_KEY;
+    const payosChecksumKey = process.env.PAYOS_CHECKSUM_KEY;
+
+    if (stripeKey) {
+      paymentProvider = new StripeProvider(stripeKey);
+    } else if (payosClientId && payosApiKey && payosChecksumKey) {
+      paymentProvider = new PayOSProvider({
+        clientId: payosClientId,
+        apiKey: payosApiKey,
+        checksumKey: payosChecksumKey,
+      });
     } else {
       paymentProvider = new MockPaymentProvider();
     }

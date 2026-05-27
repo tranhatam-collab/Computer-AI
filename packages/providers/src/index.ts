@@ -63,6 +63,9 @@ export interface PaymentProvider {
 // Re-export new modules
 export { OpenAIProvider } from "./openai-provider.js";
 export { AnthropicProvider } from "./anthropic-provider.js";
+export { SendGridProvider } from "./sendgrid-provider.js";
+export { StripeProvider } from "./stripe-provider.js";
+export { PayOSProvider } from "./payos-provider.js";
 export { AIFallbackProvider, type FallbackResult, type CircuitState } from "./circuit-breaker.js";
 export { estimateCost, type CostEstimate } from "./cost-tracker.js";
-export { generateWithFallback, getAIFallbackProvider } from "./factory.js";
+export { generateWithFallback, getAIFallbackProvider, getEmailProvider, getPaymentProvider } from "./factory.js";
