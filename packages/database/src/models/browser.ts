@@ -285,3 +285,67 @@ export async function getBrowserSession(id: string): Promise<BrowserSession | nu
   const result = await pgQuery('SELECT * FROM browser_sessions WHERE id = $1', [id]);
   return result.rows[0] || null;
 }
+
+// Connected Accounts
+export interface ConnectedAccount {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  computer_id: string;
+  provider: string;
+  account_label: string;
+  account_url?: string;
+  connection_type: string;
+  status: string;
+  scopes?: string[];
+  permission_policy_id?: string;
+  session_id?: string;
+  vault_item_ids?: string[];
+  last_checked_at?: Date;
+  external_account_id?: string;
+  access_token_encrypted?: string;
+  refresh_token_encrypted?: string;
+  token_expires_at?: Date;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export async function createConnectedAccount(data: Omit<ConnectedAccount, 'id' | 'created_at' | 'updated_at'>): Promise<ConnectedAccount> {
+  const id = uuidv4();
+  const now = new Date();
+  const result = await pgQuery(
+    `INSERT INTO connected_accounts (id, tenant_id, user_id, computer_id, provider, account_label, account_url, connection_type, status, scopes, permission_policy_id, session_id, vault_item_ids, last_checked_at, external_account_id, access_token_encrypted, refresh_token_encrypted, token_expires_at, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING *`,
+    [id, data.tenant_id, data.user_id, data.computer_id, data.provider, data.account_label, data.account_url || null, data.connection_type, data.status, data.scopes || [], data.permission_policy_id || null, data.session_id || null, data.vault_item_ids || [], data.last_checked_at || null, data.external_account_id || null, data.access_token_encrypted || null, data.refresh_token_encrypted || null, data.token_expires_at || null, now, now]
+  );
+  return result.rows[0];
+}
+
+export async function getConnectedAccount(id: string): Promise<ConnectedAccount | null> {
+  const result = await pgQuery('SELECT * FROM connected_accounts WHERE id = $1', [id]);
+  return result.rows[0] || null;
+}
+
+export async function getConnectedAccountsByUser(tenantId: string, userId: string, computerId: string): Promise<ConnectedAccount[]> {
+  const result = await pgQuery(
+    'SELECT * FROM connected_accounts WHERE tenant_id = $1 AND user_id = $2 AND computer_id = $3 ORDER BY created_at DESC',
+    [tenantId, userId, computerId]
+  );
+  return result.rows;
+}
+
+export async function updateConnectedAccount(id: string, updates: Partial<ConnectedAccount>): Promise<ConnectedAccount> {
+  const fields = Object.keys(updates).filter(k => !['id', 'created_at'].includes(k));
+  if (!fields.length) throw new Error('No fields to update');
+  const setClause = fields.map((f, i) => `${f} = $${i + 2}`).join(', ');
+  const result = await pgQuery(
+    `UPDATE connected_accounts SET ${setClause}, updated_at = $1 WHERE id = $${fields.length + 2} RETURNING *`,
+    [new Date(), ...fields.map(f => (updates as any)[f]), id]
+  );
+  return result.rows[0];
+}
+
+export async function deleteConnectedAccount(id: string): Promise<boolean> {
+  const result = await pgQuery('DELETE FROM connected_accounts WHERE id = $1', [id]);
+  return (result.rowCount || 0) > 0;
+}

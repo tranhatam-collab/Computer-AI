@@ -15,8 +15,18 @@ import {
 export default async function browserRoutes(fastify: FastifyInstance) {
   // Browser Session Management
   fastify.get("/api/browser/sessions", async (request, reply) => {
-    // TODO: List browser sessions for user
-    return { sessions: [] };
+    try {
+      const { tenant_id, user_id, computer_id } = request.query as any;
+      if (!tenant_id || !user_id || !computer_id) {
+        return reply.status(400).send({ success: false, error: 'Missing tenant_id, user_id, or computer_id' });
+      }
+      const { getSessionVaultsByUser } = await import('@iai/database');
+      const sessions = await getSessionVaultsByUser(tenant_id, user_id, computer_id);
+      return { success: true, data: sessions };
+    } catch (error) {
+      console.error('List sessions error:', error);
+      return reply.status(500).send({ success: false, error: 'Failed to list sessions' });
+    }
   });
 
   fastify.post("/api/browser/sessions", async (request, reply) => {
@@ -355,15 +365,72 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Connected Accounts
+  // Connected Accounts (OAuth via auth-sdk)
   fastify.get("/api/browser/accounts", async (request, reply) => {
-    // TODO: List connected accounts
-    return { accounts: [] };
+    try {
+      const { tenant_id, user_id, computer_id } = request.query as any;
+      if (!tenant_id || !user_id || !computer_id) {
+        return reply.status(400).send({ success: false, error: 'Missing tenant_id, user_id, or computer_id' });
+      }
+      const { getConnectedAccountsByUser } = await import('@iai/database');
+      const accounts = await getConnectedAccountsByUser(tenant_id, user_id, computer_id);
+      return { success: true, data: accounts };
+    } catch (error) {
+      console.error('List accounts error:', error);
+      return reply.status(500).send({ success: false, error: 'Failed to list accounts' });
+    }
   });
 
-  fastify.post("/api/browser/accounts/connect", async (request, reply) => {
-    // TODO: Connect new account (OAuth flow initiation)
-    return { connectionId: "temp_connection_id" };
+  fastify.post("/api/browser/accounts/:provider/connect", async (request, reply) => {
+    try {
+      const { provider } = request.params as any;
+      const { tenant_id, user_id, computer_id } = request.query as any;
+      if (!tenant_id || !user_id || !computer_id) {
+        return reply.status(400).send({ success: false, error: 'Missing tenant_id, user_id, or computer_id' });
+      }
+      const { generateOAuthUrl } = await import('@iai/auth-sdk');
+      const result = generateOAuthUrl(provider, tenant_id, user_id, computer_id);
+      if (!result) {
+        return reply.status(400).send({ success: false, error: `OAuth not configured for provider: ${provider}` });
+      }
+      return { success: true, data: { authUrl: result.url, state: result.state } };
+    } catch (error) {
+      console.error('Connect account error:', error);
+      return reply.status(500).send({ success: false, error: 'Failed to initiate OAuth' });
+    }
+  });
+
+  fastify.post("/api/browser/accounts/:provider/callback", async (request, reply) => {
+    try {
+      const { provider } = request.params as any;
+      const { code, state } = request.query as any;
+      if (!code || !state) {
+        return reply.status(400).send({ success: false, error: 'Missing code or state' });
+      }
+      const { exchangeOAuthCode, verifyOAuthState } = await import('@iai/auth-sdk');
+      const stateData = verifyOAuthState(state);
+      if (!stateData) {
+        return reply.status(400).send({ success: false, error: 'Invalid or expired state' });
+      }
+      const tokenResult = await exchangeOAuthCode(provider, code, state);
+      if (!tokenResult) {
+        return reply.status(400).send({ success: false, error: 'Failed to exchange OAuth code' });
+      }
+      return {
+        success: true,
+        data: {
+          provider,
+          userId: stateData.userId,
+          tenantId: stateData.tenantId,
+          accessToken: tokenResult.accessToken,
+          refreshToken: tokenResult.refreshToken,
+          expiresIn: tokenResult.expiresIn,
+        },
+      };
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      return reply.status(500).send({ success: false, error: 'Failed to complete OAuth' });
+    }
   });
 
   // Vault Management
@@ -521,10 +588,31 @@ export default async function browserRoutes(fastify: FastifyInstance) {
   fastify.get("/api/browser/evidence/:runId", async (request, reply) => {
     try {
       const { runId } = request.params as { runId: string };
-      return { success: true, data: { runId, evidence: null, message: 'Evidence collection not yet implemented' } };
+      const { getEvidencePacksByRun } = await import('@iai/database');
+      const packs = await getEvidencePacksByRun(runId);
+      return { success: true, data: packs };
     } catch (error) {
       console.error('Get evidence error:', error);
       return reply.status(500).send({ success: false, error: 'Failed to get evidence' });
+    }
+  });
+
+  fastify.post("/api/browser/evidence", async (request, reply) => {
+    try {
+      const { tenant_id, user_id, computer_id, run_id, user_command, platforms, screenshots, actions_taken, approvals, final_urls, risk_flags } = request.body as any;
+      if (!tenant_id || !user_id || !computer_id || !run_id) {
+        return reply.status(400).send({ success: false, error: 'Missing required fields' });
+      }
+      const { createEvidencePack } = await import('@iai/database');
+      const pack = await createEvidencePack({
+        tenant_id, user_id, computer_id, run_id, user_command,
+        platforms: platforms || [], screenshots: screenshots || [], actions_taken: actions_taken || [],
+        approvals: approvals || [], final_urls: final_urls || [], risk_flags: risk_flags || [], status: 'completed',
+      });
+      return { success: true, data: pack };
+    } catch (error) {
+      console.error('Create evidence error:', error);
+      return reply.status(500).send({ success: false, error: 'Failed to create evidence' });
     }
   });
 

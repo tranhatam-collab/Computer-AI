@@ -68,7 +68,7 @@ export { StripeProvider } from "./stripe-provider.js";
 export { PayOSProvider } from "./payos-provider.js";
 export { AIFallbackProvider, type FallbackResult, type CircuitState } from "./circuit-breaker.js";
 export { estimateCost, type CostEstimate } from "./cost-tracker.js";
-export { generateWithFallback, getAIFallbackProvider, getEmailProvider, getPaymentProvider, getBrowserProvider } from "./factory.js";
+export { generateWithFallback, getAIFallbackProvider, getAIProvider, getEmailProvider, getPaymentProvider, getBrowserProvider } from "./factory.js";
 export type {
   BrowserSearchRequest,
   BrowserSearchResult,
