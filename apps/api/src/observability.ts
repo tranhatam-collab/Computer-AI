@@ -76,7 +76,17 @@ export default async function observabilityRoutes(fastify: FastifyInstance) {
       Object.entries(providers).map(([k, v]) => [k, { status: v.ok ? "pass" : "fail", error: v.error }])
     );
 
-    const allOk = pg.ok && redis.ok && Object.values(providers).every((p) => p.ok);
+    // Migration status check
+    let migrations: { status: string; count: number; error?: string } = { status: "unknown", count: 0 };
+    try {
+      const { pgQuery } = await import("@iai/database");
+      const result = await pgQuery('SELECT COUNT(*) as count FROM migrations');
+      migrations = { status: "pass", count: parseInt(result.rows[0].count) };
+    } catch (err) {
+      migrations = { status: "fail", count: 0, error: err instanceof Error ? err.message : String(err) };
+    }
+
+    const allOk = pg.ok && redis.ok && Object.values(providers).every((p) => p.ok) && migrations.status === "pass";
 
     return {
       status: allOk ? "healthy" : "degraded",
@@ -86,6 +96,7 @@ export default async function observabilityRoutes(fastify: FastifyInstance) {
       checks: {
         database: { status: pg.ok ? "pass" : "fail", latencyMs: pg.latencyMs, error: pg.error },
         redis: { status: redis.ok ? "pass" : "fail", latencyMs: redis.latencyMs, error: redis.error },
+        migrations,
         providers: providerChecks,
       },
     };
