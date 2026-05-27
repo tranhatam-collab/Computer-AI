@@ -1,4 +1,11 @@
+import dotenv from "dotenv";
 import Fastify from "fastify";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+
+dotenv.config({ path: ".env.local" });
+dotenv.config();
+import fastifyCors from "@fastify/cors";
+import fastifyRateLimit from "@fastify/rate-limit";
 import { products, getPricing, getAllShells } from "@iai/product-registry";
 import { route } from "@iai/routing-matrix";
 import {
@@ -12,7 +19,6 @@ import {
 } from "@iai/workflow-engine";
 import { createSqliteRunStore } from "@iai/database";
 import { getPendingApprovals, approve, reject } from "@iai/approval-sdk";
-import { createUser, login, logout, authenticate } from "@iai/auth-sdk";
 import { getAppMap, getProductsByLane } from "@iai/product-registry";
 import {
   createSubscription,
@@ -29,10 +35,32 @@ import healthRoutes from "./routes/health.js";
 import computerRoutes from "./routes/computers.js";
 import commandRoutes from "./routes/commands.js";
 import runRoutes from "./routes/runs.js";
-import authRoutes from "./routes/auth.js";
+import authRoutes, { getUserFromToken } from "./routes/auth.js";
+import { authenticate } from "@iai/auth-sdk";
 
 const app = Fastify({ logger: true });
 const PORT = parseInt(process.env.PORT || "3001", 10);
+
+const allowedOrigins = (process.env.CONTROL_API_ALLOWED_ORIGINS || "http://localhost:5173,https://computer.iai.one")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+app.register(fastifyCors, {
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes("*") || allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error("Origin not allowed"), false);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+});
+
+app.register(fastifyRateLimit, {
+  global: false,
+  max: 60,
+  timeWindow: "1 minute",
+});
 
 useStore(createSqliteRunStore());
 
@@ -127,33 +155,6 @@ app.post<{ Params: { id: string }; Body: { reason?: string } }>("/api/approvals/
   return { success: true, data: result };
 });
 
-// ── Auth routes ──
-
-app.post<{ Body: { email: string; name: string; locale?: "vi" | "en" } }>("/api/auth/register", async (req) => {
-  const { email, name, locale = "vi" } = req.body;
-  const user = createUser(email, name, locale);
-  return { success: true, data: user };
-});
-
-app.post<{ Body: { email: string } }>("/api/auth/login", async (req) => {
-  const result = login(req.body.email);
-  if (!result) return { success: false, error: "Invalid credentials" };
-  return { success: true, data: result };
-});
-
-app.post<{ Headers: { authorization?: string } }>("/api/auth/logout", async (req) => {
-  const token = (req.headers.authorization || "").replace("Bearer ", "");
-  if (token) logout(token);
-  return { success: true };
-});
-
-app.get<{ Headers: { authorization?: string } }>("/api/me", async (req) => {
-  const token = (req.headers.authorization || "").replace("Bearer ", "");
-  const user = token ? authenticate(token) : null;
-  if (!user) return { success: false, error: "Unauthorized" };
-  return { success: true, data: user };
-});
-
 // ── App map routes ──
 
 app.get("/api/app-map", async () => {
@@ -162,6 +163,132 @@ app.get("/api/app-map", async () => {
 
 app.get<{ Params: { lane: string } }>("/api/app-map/:lane", async (req) => {
   return { success: true, data: getProductsByLane(req.params.lane as any) };
+});
+
+// ── Checkout route (pay.iai.one hub) ──
+
+function asciiSlug(input: string, maxLen = 25): string {
+  return input
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .replace(/[^a-zA-Z0-9]+/g, " ")
+    .trim()
+    .slice(0, maxLen);
+}
+
+app.post<{
+  Body: { productId: string; cycle?: "monthly" | "annual"; locale?: "vi" | "en" };
+  Headers: { authorization?: string };
+}>("/api/checkout/session", {
+  config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+}, async (req) => {
+  const token = (req.headers.authorization || "").replace("Bearer ", "");
+  const user = token
+    ? (authenticate(token) || (await getUserFromToken(token).catch(() => null)))
+    : null;
+  if (!user) return { success: false, error: "Unauthorized", code: "UNAUTHORIZED" };
+
+  const { productId, cycle = "monthly", locale = "vi" } = req.body;
+  const product = products.find((p) => p.id === productId);
+  if (!product) return { success: false, error: "Product not found" };
+
+  const pricing = getPricing(productId as any);
+  const amount = cycle === "annual" ? pricing.annualVnd : pricing.monthlyVnd;
+  if (!amount) {
+    return { success: false, error: "Product has no VND price for this cycle" };
+  }
+
+  const siteKey = process.env.PAY_IAI_ONE_SITE_KEY;
+  if (!siteKey) {
+    return { success: false, error: "Payment is not configured yet", code: "PAYMENT_NOT_CONFIGURED" };
+  }
+
+  const baseUrl = process.env.PAY_IAI_ONE_BASE_URL || "https://pay.iai.one";
+  const siteCode = process.env.COMPUTER_SITE_CODE || "computer-iai";
+  const tenantCode = process.env.COMPUTER_TENANT_CODE || "iai";
+  const publicBase = process.env.VITE_COMPUTER_PUBLIC_BASE_URL || "https://computer.iai.one";
+  const apiPublicUrl = process.env.COMPUTER_API_PUBLIC_URL;
+  const internalOrderId = `computer-${randomUUID()}`;
+  const idempotencyKey = internalOrderId;
+
+  const payload: Record<string, unknown> = {
+    tenant_code: tenantCode,
+    site_code: siteCode,
+    provider: "payos",
+    currency: "VND",
+    billing_cycle: "one_time",
+    internal_order_id: internalOrderId,
+    amount,
+    description: asciiSlug(product.name, 25),
+    success_url: `${publicBase}/thank-you?order=${internalOrderId}`,
+    cancel_url: `${publicBase}/pricing`,
+    email: (user as any).email || undefined,
+    user_id: (user as any).id || undefined,
+    locale,
+    metadata: { product_id: productId, cycle },
+  };
+
+  if (apiPublicUrl) {
+    payload.callback_url = `${apiPublicUrl}/api/webhooks/payment`;
+  }
+
+  try {
+    const res = await fetch(`${baseUrl}/internal/checkout-session`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-site-key": siteKey,
+        "x-idempotency-key": idempotencyKey,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const json = await res.json().catch(() => ({ ok: false, message: "Invalid JSON from payment hub" }));
+    if (!res.ok || !json.ok) {
+      return { success: false, error: json.message || json.code || "Payment hub error", code: json.code };
+    }
+
+    return {
+      success: true,
+      data: {
+        checkout_url: json.checkout_url || null,
+        internal_order_id: internalOrderId,
+        provider_order_id: json.provider_order_id || null,
+      },
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Network error to payment hub", code: "NETWORK_ERROR" };
+  }
+});
+
+// ── Payment webhook from pay.iai.one (member webhook callback) ──
+
+app.post<{
+  Body: Record<string, unknown>;
+  Headers: { "x-pay-signature"?: string; "x-pay-timestamp"?: string };
+}>("/api/webhooks/payment", {
+  config: { rateLimit: { max: 120, timeWindow: "1 minute" } },
+}, async (req) => {
+  const sig = req.headers["x-pay-signature"];
+  const timestamp = req.headers["x-pay-timestamp"];
+  const expectedSecret = process.env.PAY_IAI_ONE_WEBHOOK_SECRET;
+  if (expectedSecret && (!sig || !timestamp)) {
+    return { success: false, error: "Missing signature" };
+  }
+  if (expectedSecret && sig && timestamp) {
+    const bodyStr = JSON.stringify(req.body);
+    const expectedSig = createHmac("sha256", expectedSecret).update(`${timestamp}.${bodyStr}`).digest("hex");
+    const received = Buffer.from(sig, "hex");
+    const expected = Buffer.from(expectedSig, "hex");
+    if (received.length !== expected.length || !timingSafeEqual(received, expected)) {
+      app.log.warn({ sig: "present" }, "Invalid webhook signature");
+      return { success: false, error: "Invalid signature" };
+    }
+  }
+  app.log.info({ body: req.body, sig: sig ? "verified" : "absent" }, "pay.iai.one member webhook");
+  // Phase 1: ack-only. Fulfillment (subscription activation, email) wired in Phase 2.
+  return { success: true, received: true };
 });
 
 // ── Billing routes ──
@@ -207,7 +334,7 @@ app.post<{ Body: { userId: string; invoiceId: string } }>("/api/invoices/send", 
 
 app.post<{ Body: { token: string }; Headers: { authorization?: string } }>("/api/push-token", async (req) => {
   const authToken = (req.headers.authorization || "").replace("Bearer ", "");
-  const user = authToken ? authenticate(authToken) : null;
+  const user = authToken ? await getUserFromToken(authToken) : null;
   if (!user) return { success: false, error: "Unauthorized" };
   const db = getDb();
   db.prepare(`INSERT OR REPLACE INTO push_tokens (user_id, token, platform, created_at) VALUES (?, ?, ?, ?)`)

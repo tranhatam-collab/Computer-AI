@@ -10,20 +10,31 @@ interface PricingPageProps {
 
 const tierOrder = { mass: 0, professional: 1, enterprise: 2, dedicated: 3 };
 
-async function apiSubscribe(userId: string, productId: string) {
-  const res = await fetch(`${API_BASE}/api/subscriptions`, {
+async function apiCheckoutSession(productId: string, cycle: "monthly" | "annual", locale?: "vi" | "en") {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_BASE}/api/checkout/session`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, productId }),
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ productId, cycle, locale }),
   });
   const json = await res.json();
-  if (!json.success) throw new Error(json.error || "Subscribe failed");
+  if (!json.success) {
+    if (json.code === "PAYMENT_NOT_CONFIGURED") {
+      throw new Error(locale === "vi" ? "Thanh toán chưa được cấu hình." : "Payment is not configured yet.");
+    }
+    if (json.code === "UNAUTHORIZED") {
+      throw new Error(locale === "vi" ? "Vui lòng đăng nhập trước." : "Please sign in first.");
+    }
+    throw new Error(json.error || "Checkout failed");
+  }
   return json.data;
 }
 
 export function PricingPage({ locale = "vi", userId }: PricingPageProps) {
-  const [subscribing, setSubscribing] = useState<string | null>(null);
-  const [subscribed, setSubscribed] = useState<Set<string>>(new Set());
+  const [checkingOut, setCheckingOut] = useState<string | null>(null);
 
   const sorted = useMemo(
     () => [...products].sort((a, b) => (tierOrder[a.tier] || 0) - (tierOrder[b.tier] || 0) || a.order - b.order),
@@ -32,14 +43,17 @@ export function PricingPage({ locale = "vi", userId }: PricingPageProps) {
 
   const handleSubscribe = async (productId: string) => {
     if (!userId) return alert(locale === "vi" ? "Vui lòng đăng nhập trước." : "Please sign in first.");
-    setSubscribing(productId);
+    setCheckingOut(productId);
     try {
-      await apiSubscribe(userId, productId);
-      setSubscribed((prev) => new Set(prev).add(productId));
+      const data = await apiCheckoutSession(productId, "monthly", locale);
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        throw new Error(locale === "vi" ? "Không nhận được link thanh toán." : "No checkout URL received.");
+      }
     } catch (err: any) {
       alert(err.message);
-    } finally {
-      setSubscribing(null);
+      setCheckingOut(null);
     }
   };
 
@@ -55,7 +69,6 @@ export function PricingPage({ locale = "vi", userId }: PricingPageProps) {
             const price = getPricing(p.id);
             const isFree = price.monthly === 0;
             const isContact = price.monthly === null;
-            const isSubscribed = subscribed.has(p.id);
             return (
               <div key={p.id} className="pricing-card">
                 <div className="product-tier">{p.tier}</div>
@@ -101,13 +114,11 @@ export function PricingPage({ locale = "vi", userId }: PricingPageProps) {
                   <button
                     className="btn btn-primary"
                     onClick={() => handleSubscribe(p.id)}
-                    disabled={subscribing === p.id || isSubscribed}
+                    disabled={checkingOut === p.id}
                   >
-                    {isSubscribed
-                      ? (locale === "vi" ? "Đã đăng ký" : "Subscribed")
-                      : subscribing === p.id
-                        ? "..."
-                        : (locale === "vi" ? "Đăng ký" : "Subscribe")}
+                    {checkingOut === p.id
+                      ? "..."
+                      : (locale === "vi" ? "Thanh toán" : "Pay now")}
                   </button>
                 )}
               </div>

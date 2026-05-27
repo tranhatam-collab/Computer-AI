@@ -13,10 +13,11 @@ import { PricingPage } from "./pages/PricingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ComparePage } from "./pages/ComparePage";
 import { LanePage } from "./pages/LanePage";
+import { ThankYouPage } from "./pages/ThankYouPage";
 import type { ProductId, LaneId } from "@iai/product-registry";
 
 type Locale = "vi" | "en";
-type View = { type: "home" } | { type: "product"; id: ProductId } | { type: "pricing" } | { type: "login" } | { type: "compare" } | { type: "lane"; id: LaneId };
+type View = { type: "home" } | { type: "product"; id: ProductId } | { type: "pricing" } | { type: "login" } | { type: "compare" } | { type: "lane"; id: LaneId } | { type: "thankyou" };
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -38,6 +39,7 @@ function viewFromPath(pathname: string): View {
   if (path === "/pricing") return { type: "pricing" };
   if (path === "/login") return { type: "login" };
   if (path === "/compare") return { type: "compare" };
+  if (path === "/thank-you") return { type: "thankyou" };
   const productMatch = path.match(/^\/products\/([^/]+)$/);
   if (productMatch) return { type: "product", id: productMatch[1] as ProductId };
   const laneMatch = path.match(/^\/lanes\/([^/]+)$/);
@@ -65,15 +67,18 @@ export default function App() {
   const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
   const content = useMemo(() => (locale === "vi" ? vi : en), [locale]);
 
-  // Load user from token on mount
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      apiFetch("/api/auth/me").then(async (res) => {
-        const json = await res.json();
-        if (json.success) setUser(json.data);
-        else localStorage.removeItem("token");
-      });
+      apiFetch("/api/auth/me")
+        .then(async (res) => {
+          const json = await res.json();
+          if (json.success) setUser(json.data);
+          else localStorage.removeItem("token");
+        })
+        .catch(() => {
+          localStorage.removeItem("token");
+        });
     }
 
     const onPopState = () => setView(viewFromPath(window.location.pathname));
@@ -190,6 +195,23 @@ export default function App() {
     );
   }
 
+  if (view.type === "thankyou") {
+    return (
+      <div className="app-shell">
+        <Header
+          brand={content.site.brand}
+          links={[{ label: locale === "vi" ? "Trang chủ" : "Home", href: toHref("/") }]}
+          locale={locale}
+          onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
+          homeHref={toHref("/")}
+          onNavigate={(href) => navigate(toAppPath(href))}
+        />
+        <ThankYouPage locale={locale} homeHref={toHref("/")} onNavigate={(href) => navigate(toAppPath(href))} />
+        <Footer locale={locale} />
+      </div>
+    );
+  }
+
   return (
     <div className="app-shell">
       <Header
@@ -199,6 +221,8 @@ export default function App() {
         onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
         homeHref={toHref("/")}
         onNavigate={(href) => navigate(toAppPath(href))}
+        user={user}
+        onLogout={handleLogout}
       />
       <Hero
         locale={locale}
