@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@iai/contracts": "workspace:*",
-    "@iai/product-registry": "workspace:*"
+    "@iai/product-registry": "workspace:*",
+    "@iai/providers": "workspace:*"
   }
 }

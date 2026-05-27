@@ -21,6 +21,8 @@ export { FinanceWorker };
 export { EnterpriseWorker };
 export { checkConcurrency, acquireSlot, releaseSlot, getTimeoutMs } from "./policy.js";
 
+const ENABLE_RUNTIME_MOCK = process.env.ENABLE_RUNTIME_MOCK === "true";
+
 const browser = new BrowserWorker();
 const code = new CodeWorker();
 const research = new ResearchWorker();
@@ -55,7 +57,7 @@ const registry = {
       laneIds: ["basic"],
       capabilities: browser.allowedTypes,
       limits: { maxConcurrentRuns: 4, timeoutMs: 30000 },
-      simulated: true,
+      simulated: ENABLE_RUNTIME_MOCK,
     },
     worker: browser,
   },
@@ -66,7 +68,7 @@ const registry = {
       laneIds: ["code", "data"],
       capabilities: code.allowedTypes,
       limits: { maxConcurrentRuns: 2, timeoutMs: 120000 },
-      simulated: true,
+      simulated: ENABLE_RUNTIME_MOCK,
     },
     worker: code,
   },
@@ -77,7 +79,7 @@ const registry = {
       laneIds: ["research"],
       capabilities: research.allowedTypes,
       limits: { maxConcurrentRuns: 3, timeoutMs: 90000 },
-      simulated: true,
+      simulated: ENABLE_RUNTIME_MOCK,
     },
     worker: research,
   },
@@ -88,7 +90,7 @@ const registry = {
       laneIds: ["content", "media"],
       capabilities: content.allowedTypes,
       limits: { maxConcurrentRuns: 4, timeoutMs: 60000 },
-      simulated: true,
+      simulated: ENABLE_RUNTIME_MOCK,
     },
     worker: content,
   },
