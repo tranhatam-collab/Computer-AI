@@ -1,6 +1,6 @@
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert";
-import { ResearchWorker, ContentWorker, CodeWorker } from "../src/index.js";
+import { ResearchWorker, ContentWorker, CodeWorker, BrowserWorker } from "../src/index.js";
 
 describe("Runtime Workers", () => {
   const originalMock = process.env.ENABLE_RUNTIME_MOCK;
@@ -53,6 +53,17 @@ describe("Runtime Workers", () => {
       assert.ok(result.output.includes("ENABLE_RUNTIME_MOCK=true"));
       assert.ok(result.output.includes("Simulated"));
     });
+
+    it("BrowserWorker returns deterministic mock output", async () => {
+      const worker = new BrowserWorker();
+      const result = await worker.execute({
+        id: "test-4",
+        type: "fetch",
+        input: "https://example.com",
+      });
+      assert.ok(result.success);
+      assert.ok(result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+    });
   });
 
   describe("with ENABLE_RUNTIME_MOCK=false", () => {
@@ -89,6 +100,16 @@ describe("Runtime Workers", () => {
         id: "test-6",
         type: "generate",
         input: "Generate code",
+      });
+      assert.ok(!result.output.includes("ENABLE_RUNTIME_MOCK=true"));
+    });
+
+    it("BrowserWorker does not include mock marker when fetch available", async () => {
+      const worker = new BrowserWorker();
+      const result = await worker.execute({
+        id: "test-7",
+        type: "fetch",
+        input: "https://example.com",
       });
       assert.ok(!result.output.includes("ENABLE_RUNTIME_MOCK=true"));
     });
