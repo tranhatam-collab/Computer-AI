@@ -407,7 +407,7 @@ app.register(calendarRoutes, { prefix: "/api" });
 
 app.addHook("onReady", async () => {
   if (!process.env.DATABASE_URL) {
-    app.log.info("PostgreSQL pool skipped (SQLite fallback)");
+    app.log.warn("DATABASE_URL not set — PostgreSQL pool unavailable");
     return;
   }
 
@@ -416,7 +416,6 @@ app.addHook("onReady", async () => {
     app.log.info("PostgreSQL pool initialized");
   } catch (err) {
     app.log.error({ err }, "Failed to initialize PostgreSQL pool");
-    // Phase 1: don't crash if DB not available (fallback to SQLite)
   }
 });
 
@@ -429,7 +428,7 @@ app.addHook("onClose", async () => {
 
 async function start() {
   try {
-    // Initialize run store (PostgreSQL preferred, SQLite fallback)
+    // Initialize run store (PostgreSQL-only)
     await initStore();
     
     await initializeDatabase();
