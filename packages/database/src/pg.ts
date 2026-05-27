@@ -13,6 +13,8 @@ export function getPgPool(): Pool {
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,
+      // @ts-expect-error family is passed through to net.connect but missing in @types/pg
+      family: 4,
     });
 
     pool.on("error", (err) => {
