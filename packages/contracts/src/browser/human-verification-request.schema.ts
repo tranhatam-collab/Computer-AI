@@ -1,0 +1,1 @@
+export type HumanVerificationRequest = { id:string; tenantId:string; userId:string; computerId:string; runId:string; platform:string; reason:"captcha"|"not_a_robot"|"mfa"|"passkey"|"new_device_login"|"sensitive_action"; status:"waiting_user"|"completed"|"expired"|"cancelled"; createdAt:string; expiresAt:string; };

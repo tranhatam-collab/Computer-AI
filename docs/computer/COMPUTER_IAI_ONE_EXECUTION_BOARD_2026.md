@@ -166,7 +166,50 @@
 | 6 — Enterprise | ✅ PARTIAL | 2/5 |
 | 7 — Infrastructure | ⚠️ DEV SCAFFOLD | 4/7 |
 | 8 — Monetization | ⚠️ SDK SCAFFOLD | 2/5 |
-| **Overall** | ⚠️ **NOT PRODUCTION-READY** | **51/62** |
+| 9 — AI Browser | ✅ SPEC READY | 10/10 |
+| 10 — Smart Work Calendar | ✅ SPEC READY | 11/11 |
+| **Overall** | ⚠️ **NOT PRODUCTION-READY** | **72/83** |
+
+---
+
+## PHASE 9 — AI BROWSER (NEW — Added 2026-05-27)
+
+| # | Task | Status | Deps |
+|---|------|--------|------|
+| 9.1 | Verify-first access model | ✅ SPEC READY | — |
+| 9.2 | Connected accounts & OAuth | ✅ SPEC READY | 9.1 |
+| 9.3 | Credential & session vault | ✅ SPEC READY | 9.1 |
+| 9.4 | Permission & approval matrix | ✅ SPEC READY | 9.1 |
+| 9.5 | Runtime sandbox spec | ✅ SPEC READY | 9.1 |
+| 9.6 | Mobile remote control spec | ✅ SPEC READY | 9.1 |
+| 9.7 | Security & audit checklist | ✅ SPEC READY | 9.1 |
+| 9.8 | Database schema | ✅ SPEC READY | 9.1 |
+| 9.9 | API spec | ✅ SPEC READY | 9.1 |
+| 9.10 | Execution board | ✅ SPEC READY | 9.1 |
+
+**Phase 9 acceptance:** All AI Browser specs ready in `Docs/browser/`, `packages/contracts/src/browser/`, `Docs/api/AI_BROWSER_API_SPEC.md`, `Docs/infrastructure/sql/002_ai_browser_schema.sql`, `Docs/execution/AI_BROWSER_PHASED_EXECUTION_BOARD_2026.md`. NOT PRODUCTION-READY.
+
+---
+
+## PHASE 10 — SMART WORK CALENDAR (NEW — Added 2026-05-27)
+
+| # | Task | Status | Deps |
+|---|------|--------|------|
+| 10.1 | Smart Calendar master spec | ✅ SPEC READY | — |
+| 10.2 | Sync architecture | ✅ SPEC READY | 10.1 |
+| 10.3 | Task orchestration | ✅ SPEC READY | 10.1 |
+| 10.4 | Reminder & notification | ✅ SPEC READY | 10.1 |
+| 10.5 | Connected workspaces | ✅ SPEC READY | 10.1 |
+| 10.6 | Mobile app spec | ✅ SPEC READY | 10.1 |
+| 10.7 | Approval & reporting | ✅ SPEC READY | 10.1 |
+| 10.8 | Security policy | ✅ SPEC READY | 10.1 |
+| 10.9 | Database schema | ✅ SPEC READY | 10.1 |
+| 10.10 | API spec | ✅ SPEC READY | 10.1 |
+| 10.11 | Execution board | ✅ SPEC READY | 10.1 |
+
+**Phase 10 acceptance:** All Smart Calendar specs ready in `Docs/calendar/`, `packages/contracts/src/calendar/`, `Docs/api/SMART_WORK_CALENDAR_API_SPEC.md`, `Docs/infrastructure/sql/003_smart_work_calendar_schema.sql`, `Docs/execution/SMART_WORK_CALENDAR_EXECUTION_BOARD_2026.md`. NOT PRODUCTION-READY.
+
+---
 
 ## ARCHITECTURE PHASES (NEW — Added 2026-05-25)
 

@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: computer-api
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    autoDeploy: true
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: PAY_IAI_ONE_BASE_URL
+        value: https://pay.iai.one
+      - key: PAY_IAI_ONE_SITE_KEY
+        sync: false
+      - key: PAY_IAI_ONE_WEBHOOK_SECRET
+        sync: false
+      - key: COMPUTER_SITE_CODE
+        value: computer-iai
+      - key: COMPUTER_TENANT_CODE
+        value: iai
+      - key: COMPUTER_API_PUBLIC_URL
+        value: https://api.computer.iai.one
+      - key: CONTROL_API_ALLOWED_ORIGINS
+        value: https://computer.iai.one

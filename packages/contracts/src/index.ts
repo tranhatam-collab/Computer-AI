@@ -1,3 +1,12 @@
 export type { ProductId, ProductCard } from "./product.js";
 export type { NavLink, HeroContent } from "./content.js";
 export type { VerificationState, OutputArtifact } from "./output.js";
+export type { ApprovalRequest } from "./browser/approval-request.schema.js";
+export type { BrowserAction, BrowserActionRecord, BrowserActionRiskLevel } from "./browser/browser-action.schema.js";
+export type { BrowserProfile } from "./browser/browser-profile.schema.js";
+export type { ConnectedAccount } from "./browser/connected-account.schema.js";
+export type { EvidencePack } from "./browser/evidence-pack.schema.js";
+export type { HumanVerificationRequest } from "./browser/human-verification-request.schema.js";
+export type { SessionVaultRecord } from "./browser/session-vault-record.schema.js";
+export type { VaultItem } from "./browser/vault-item.schema.js";
+export type { CalendarProvider, SyncDirection, CalendarProviderConnection, CalendarEvent, SmartTask, ReminderRule } from "./calendar/smart-calendar.types.js";
