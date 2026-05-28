@@ -14,7 +14,7 @@ import {
 
 export default async function browserRoutes(fastify: FastifyInstance) {
   // Browser Session Management
-  fastify.get("/api/browser/sessions", async (request, reply) => {
+  fastify.get("/browser/sessions", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id } = request.query as any;
       if (!tenant_id || !user_id || !computer_id) {
@@ -29,7 +29,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/sessions", async (request, reply) => {
+  fastify.post("/browser/sessions", async (request, reply) => {
     try {
       const { 
         tenant_id, user_id, computer_id, browser_profile_id, platform,
@@ -71,7 +71,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.get("/api/browser/sessions/:sessionId", async (request, reply) => {
+  fastify.get("/browser/sessions/:sessionId", async (request, reply) => {
     try {
       const { sessionId } = request.params as { sessionId: string };
       
@@ -95,7 +95,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.get("/api/browser/sessions", async (request, reply) => {
+  fastify.get("/browser/sessions", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id } = request.query as any;
       
@@ -119,7 +119,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.put("/api/browser/sessions/:sessionId", async (request, reply) => {
+  fastify.put("/browser/sessions/:sessionId", async (request, reply) => {
     try {
       const { sessionId } = request.params as { sessionId: string };
       const updates = request.body as any;
@@ -140,7 +140,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.delete("/api/browser/sessions/:sessionId", async (request, reply) => {
+  fastify.delete("/browser/sessions/:sessionId", async (request, reply) => {
     try {
       const { sessionId } = request.params as { sessionId: string };
       
@@ -171,7 +171,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/sessions/:sessionId/heartbeat", async (request, reply) => {
+  fastify.post("/browser/sessions/:sessionId/heartbeat", async (request, reply) => {
     try {
       const { sessionId } = request.params as { sessionId: string };
       
@@ -195,7 +195,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
   });
 
   // Browser Profiles
-  fastify.get("/api/browser/profiles", async (request, reply) => {
+  fastify.get("/browser/profiles", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id } = request.query as any;
       
@@ -219,7 +219,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/profiles", async (request, reply) => {
+  fastify.post("/browser/profiles", async (request, reply) => {
     try {
       const { 
         tenant_id, user_id, computer_id, profile_name, mode, status,
@@ -262,7 +262,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.get("/api/browser/profiles/:profileId", async (request, reply) => {
+  fastify.get("/browser/profiles/:profileId", async (request, reply) => {
     try {
       const { profileId } = request.params as { profileId: string };
       
@@ -286,7 +286,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.put("/api/browser/profiles/:profileId", async (request, reply) => {
+  fastify.put("/browser/profiles/:profileId", async (request, reply) => {
     try {
       const { profileId } = request.params as { profileId: string };
       const updates = request.body as any;
@@ -307,7 +307,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.delete("/api/browser/profiles/:profileId", async (request, reply) => {
+  fastify.delete("/browser/profiles/:profileId", async (request, reply) => {
     try {
       const { profileId } = request.params as { profileId: string };
       
@@ -338,7 +338,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/profiles/:profileId/switch", async (request, reply) => {
+  fastify.post("/browser/profiles/:profileId/switch", async (request, reply) => {
     try {
       const { profileId } = request.params as { profileId: string };
       
@@ -366,7 +366,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
   });
 
   // Connected Accounts (OAuth via auth-sdk)
-  fastify.get("/api/browser/accounts", async (request, reply) => {
+  fastify.get("/browser/accounts", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id } = request.query as any;
       if (!tenant_id || !user_id || !computer_id) {
@@ -381,7 +381,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/accounts/:provider/connect", async (request, reply) => {
+  fastify.post("/browser/accounts/:provider/connect", async (request, reply) => {
     try {
       const { provider } = request.params as any;
       const { tenant_id, user_id, computer_id } = request.query as any;
@@ -400,7 +400,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/accounts/:provider/callback", async (request, reply) => {
+  fastify.post("/browser/accounts/:provider/callback", async (request, reply) => {
     try {
       const { provider } = request.params as any;
       const { code, state } = request.query as any;
@@ -434,7 +434,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
   });
 
   // Vault Management
-  fastify.get("/api/browser/vault/items", async (request, reply) => {
+  fastify.get("/browser/vault/items", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id, item_type } = request.query as any;
       if (!tenant_id || !user_id || !computer_id) {
@@ -449,7 +449,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/vault/items", async (request, reply) => {
+  fastify.post("/browser/vault/items", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id, browser_profile_id, item_type, encrypted_item_ref, key_version, storage_region, metadata, expires_in_hours } = request.body as any;
       if (!tenant_id || !user_id || !computer_id || !item_type || !encrypted_item_ref || !key_version || !storage_region) {
@@ -465,7 +465,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.get("/api/browser/vault/items/:itemId", async (request, reply) => {
+  fastify.get("/browser/vault/items/:itemId", async (request, reply) => {
     try {
       const { itemId } = request.params as { itemId: string };
       const { getVaultItem, updateVaultLastAccessed } = await import('@iai/database');
@@ -479,7 +479,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.put("/api/browser/vault/items/:itemId", async (request, reply) => {
+  fastify.put("/browser/vault/items/:itemId", async (request, reply) => {
     try {
       const { itemId } = request.params as { itemId: string };
       const updates = request.body as any;
@@ -493,7 +493,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.delete("/api/browser/vault/items/:itemId", async (request, reply) => {
+  fastify.delete("/browser/vault/items/:itemId", async (request, reply) => {
     try {
       const { itemId } = request.params as { itemId: string };
       const { deleteVaultItem } = await import('@iai/database');
@@ -507,7 +507,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
   });
 
   // Browser Actions
-  fastify.post("/api/browser/actions", async (request, reply) => {
+  fastify.post("/browser/actions", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id, action_type, action_data, risk_level, session_vault_id, requested_by } = request.body as any;
       if (!tenant_id || !user_id || !computer_id || !action_type || !risk_level || !requested_by) {
@@ -528,7 +528,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
   });
 
   // Approvals
-  fastify.get("/api/browser/approvals", async (request, reply) => {
+  fastify.get("/browser/approvals", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id, status } = request.query as any;
       if (!tenant_id || !user_id || !computer_id) {
@@ -543,7 +543,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.get("/api/browser/approvals/:approvalId", async (request, reply) => {
+  fastify.get("/browser/approvals/:approvalId", async (request, reply) => {
     try {
       const { approvalId } = request.params as { approvalId: string };
       const { getApprovalRequest } = await import('@iai/database');
@@ -556,7 +556,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/approvals/:approvalId/approve", async (request, reply) => {
+  fastify.post("/browser/approvals/:approvalId/approve", async (request, reply) => {
     try {
       const { approvalId } = request.params as { approvalId: string };
       const { approved_by, justification } = request.body as any;
@@ -570,7 +570,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/approvals/:approvalId/reject", async (request, reply) => {
+  fastify.post("/browser/approvals/:approvalId/reject", async (request, reply) => {
     try {
       const { approvalId } = request.params as { approvalId: string };
       const { rejected_by, justification } = request.body as any;
@@ -585,7 +585,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
   });
 
   // Evidence & Reports
-  fastify.get("/api/browser/evidence/:runId", async (request, reply) => {
+  fastify.get("/browser/evidence/:runId", async (request, reply) => {
     try {
       const { runId } = request.params as { runId: string };
       const { getEvidencePacksByRun } = await import('@iai/database');
@@ -597,7 +597,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/evidence", async (request, reply) => {
+  fastify.post("/browser/evidence", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id, run_id, user_command, platforms, screenshots, actions_taken, approvals, final_urls, risk_flags } = request.body as any;
       if (!tenant_id || !user_id || !computer_id || !run_id) {
@@ -617,7 +617,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
   });
 
   // Human Verification
-  fastify.get("/api/browser/verification/requests", async (request, reply) => {
+  fastify.get("/browser/verification/requests", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id } = request.query as any;
       
@@ -641,7 +641,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/verification/requests", async (request, reply) => {
+  fastify.post("/browser/verification/requests", async (request, reply) => {
     try {
       const { 
         tenant_id, user_id, computer_id, session_vault_id, request_type,
@@ -683,7 +683,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.get("/api/browser/verification/requests/:requestId", async (request, reply) => {
+  fastify.get("/browser/verification/requests/:requestId", async (request, reply) => {
     try {
       const { requestId } = request.params as { requestId: string };
       
@@ -707,7 +707,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/verification/requests/:requestId/complete", async (request, reply) => {
+  fastify.post("/browser/verification/requests/:requestId/complete", async (request, reply) => {
     try {
       const { requestId } = request.params as { requestId: string };
       const { verification_data } = request.body as any;
@@ -725,7 +725,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/verification/requests/:requestId/fail", async (request, reply) => {
+  fastify.post("/browser/verification/requests/:requestId/fail", async (request, reply) => {
     try {
       const { requestId } = request.params as { requestId: string };
       const { reason } = request.body as any;
@@ -744,7 +744,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
   });
 
   // Verified User Management
-  fastify.get("/api/browser/verified-users", async (request, reply) => {
+  fastify.get("/browser/verified-users", async (request, reply) => {
     try {
       const { tenant_id, user_id } = request.query as any;
       
@@ -768,7 +768,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/verified-users", async (request, reply) => {
+  fastify.post("/browser/verified-users", async (request, reply) => {
     try {
       const { 
         tenant_id, user_id, verification_method, verification_data,
@@ -807,7 +807,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.get("/api/browser/verified-users/check", async (request, reply) => {
+  fastify.get("/browser/verified-users/check", async (request, reply) => {
     try {
       const { tenant_id, user_id, verification_method } = request.query as any;
       
@@ -839,7 +839,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
   });
 
   // Trusted Device Management
-  fastify.get("/api/browser/trusted-devices", async (request, reply) => {
+  fastify.get("/browser/trusted-devices", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id } = request.query as any;
       
@@ -863,7 +863,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.post("/api/browser/trusted-devices", async (request, reply) => {
+  fastify.post("/browser/trusted-devices", async (request, reply) => {
     try {
       const { 
         tenant_id, user_id, computer_id, device_id, device_name, device_type,
@@ -905,7 +905,7 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.get("/api/browser/trusted-devices/check", async (request, reply) => {
+  fastify.get("/browser/trusted-devices/check", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id, device_id } = request.query as any;
       

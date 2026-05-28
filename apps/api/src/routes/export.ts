@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 
 export default async function exportRoutes(fastify: FastifyInstance) {
-  fastify.get("/api/export/calendar", async (request, reply) => {
+  fastify.get("/export/calendar", async (request, reply) => {
     const { tenant_id, user_id, computer_id, format = "json" } = request.query as any;
     if (!tenant_id || !user_id || !computer_id) {
       return reply.status(400).send({ success: false, error: "Missing tenant_id, user_id, or computer_id" });
@@ -27,7 +27,7 @@ export default async function exportRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.get("/api/export/tasks", async (request, reply) => {
+  fastify.get("/export/tasks", async (request, reply) => {
     const { tenant_id, user_id, computer_id, format = "json" } = request.query as any;
     if (!tenant_id || !user_id || !computer_id) {
       return reply.status(400).send({ success: false, error: "Missing tenant_id, user_id, or computer_id" });
@@ -53,7 +53,7 @@ export default async function exportRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.get("/api/export/evidence", async (request, reply) => {
+  fastify.get("/export/evidence", async (request, reply) => {
     const { tenant_id, user_id, computer_id, limit = 50 } = request.query as any;
     if (!tenant_id || !user_id || !computer_id) {
       return reply.status(400).send({ success: false, error: "Missing tenant_id, user_id, or computer_id" });

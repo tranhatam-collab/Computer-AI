@@ -8,7 +8,7 @@ function requireFields(body: any, fields: string[]): string | null {
 
 export default async function calendarRoutes(fastify: FastifyInstance) {
   // Calendar Events
-  fastify.get("/api/calendar/events", async (request, reply) => {
+  fastify.get("/calendar/events", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id, start_date, end_date } = request.query as any;
       const err = requireFields({ tenant_id, user_id, computer_id }, ['tenant_id','user_id','computer_id']);
@@ -21,7 +21,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('List events error:', error); return reply.status(500).send({ success: false, error: 'Failed to list events' }); }
   });
 
-  fastify.post("/api/calendar/events", async (request, reply) => {
+  fastify.post("/calendar/events", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id, calendar_id, title, description, location, start_time, end_time, timezone, recurrence_rule, visibility, attendees } = request.body as any;
       const err = requireFields({ tenant_id, user_id, computer_id, calendar_id, title, start_time, end_time, timezone }, ['tenant_id','user_id','computer_id','calendar_id','title','start_time','end_time','timezone']);
@@ -32,7 +32,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('Create event error:', error); return reply.status(500).send({ success: false, error: 'Failed to create event' }); }
   });
 
-  fastify.get("/api/calendar/events/:eventId", async (request, reply) => {
+  fastify.get("/calendar/events/:eventId", async (request, reply) => {
     try {
       const { eventId } = request.params as { eventId: string };
       const { getCalendarEvent } = await import('@iai/database');
@@ -42,7 +42,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('Get event error:', error); return reply.status(500).send({ success: false, error: 'Failed to get event' }); }
   });
 
-  fastify.patch("/api/calendar/events/:eventId", async (request, reply) => {
+  fastify.patch("/calendar/events/:eventId", async (request, reply) => {
     try {
       const { eventId } = request.params as { eventId: string };
       const updates = request.body as any;
@@ -53,7 +53,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('Update event error:', error); return reply.status(500).send({ success: false, error: 'Failed to update event' }); }
   });
 
-  fastify.delete("/api/calendar/events/:eventId", async (request, reply) => {
+  fastify.delete("/calendar/events/:eventId", async (request, reply) => {
     try {
       const { eventId } = request.params as { eventId: string };
       const { deleteCalendarEvent } = await import('@iai/database');
@@ -63,7 +63,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('Delete event error:', error); return reply.status(500).send({ success: false, error: 'Failed to delete event' }); }
   });
 
-  fastify.get("/api/calendar/events/upcoming", async (request, reply) => {
+  fastify.get("/calendar/events/upcoming", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id, hours } = request.query as any;
       const err = requireFields({ tenant_id, user_id, computer_id }, ['tenant_id','user_id','computer_id']);
@@ -75,7 +75,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
   });
 
   // Smart Tasks
-  fastify.get("/api/tasks", async (request, reply) => {
+  fastify.get("/tasks", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id, state } = request.query as any;
       const err = requireFields({ tenant_id, user_id, computer_id }, ['tenant_id','user_id','computer_id']);
@@ -86,7 +86,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('List tasks error:', error); return reply.status(500).send({ success: false, error: 'Failed to list tasks' }); }
   });
 
-  fastify.post("/api/tasks", async (request, reply) => {
+  fastify.post("/tasks", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id, title, description, priority, due_date, scheduled_date, assigned_to, source, metadata } = request.body as any;
       const err = requireFields({ tenant_id, user_id, computer_id, title, priority }, ['tenant_id','user_id','computer_id','title','priority']);
@@ -97,7 +97,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('Create task error:', error); return reply.status(500).send({ success: false, error: 'Failed to create task' }); }
   });
 
-  fastify.get("/api/tasks/:taskId", async (request, reply) => {
+  fastify.get("/tasks/:taskId", async (request, reply) => {
     try {
       const { taskId } = request.params as { taskId: string };
       const { getSmartTask } = await import('@iai/database');
@@ -107,7 +107,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('Get task error:', error); return reply.status(500).send({ success: false, error: 'Failed to get task' }); }
   });
 
-  fastify.patch("/api/tasks/:taskId", async (request, reply) => {
+  fastify.patch("/tasks/:taskId", async (request, reply) => {
     try {
       const { taskId } = request.params as { taskId: string };
       const updates = request.body as any;
@@ -118,7 +118,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('Update task error:', error); return reply.status(500).send({ success: false, error: 'Failed to update task' }); }
   });
 
-  fastify.delete("/api/tasks/:taskId", async (request, reply) => {
+  fastify.delete("/tasks/:taskId", async (request, reply) => {
     try {
       const { taskId } = request.params as { taskId: string };
       const { deleteSmartTask } = await import('@iai/database');
@@ -128,7 +128,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('Delete task error:', error); return reply.status(500).send({ success: false, error: 'Failed to delete task' }); }
   });
 
-  fastify.post("/api/tasks/:taskId/transition", async (request, reply) => {
+  fastify.post("/tasks/:taskId/transition", async (request, reply) => {
     try {
       const { taskId } = request.params as { taskId: string };
       const { new_state } = request.body as any;
@@ -139,7 +139,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('Transition task error:', error); return reply.status(500).send({ success: false, error: 'Failed to transition task' }); }
   });
 
-  fastify.get("/api/tasks/stats", async (request, reply) => {
+  fastify.get("/tasks/stats", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id } = request.query as any;
       const err = requireFields({ tenant_id, user_id, computer_id }, ['tenant_id','user_id','computer_id']);
@@ -151,7 +151,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
   });
 
   // Reminders
-  fastify.get("/api/reminders", async (request, reply) => {
+  fastify.get("/reminders", async (request, reply) => {
     try {
       const { tenant_id, user_id, computer_id } = request.query as any;
       const err = requireFields({ tenant_id, user_id, computer_id }, ['tenant_id','user_id','computer_id']);
@@ -162,7 +162,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('List reminders error:', error); return reply.status(500).send({ success: false, error: 'Failed to list reminders' }); }
   });
 
-  fastify.post("/api/reminders", async (request, reply) => {
+  fastify.post("/reminders", async (request, reply) => {
     try {
       const body = request.body as any;
       const { tenant_id, user_id, computer_id, task_id, event_id, rule_type, schedule_expression, timezone, channels, priority } = body;
@@ -177,7 +177,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('Create reminder error:', error); return reply.status(500).send({ success: false, error: 'Failed to create reminder' }); }
   });
 
-  fastify.patch("/api/reminders/:reminderId", async (request, reply) => {
+  fastify.patch("/reminders/:reminderId", async (request, reply) => {
     try {
       const { reminderId } = request.params as { reminderId: string };
       const updates = request.body as any;
@@ -188,7 +188,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     } catch (error) { console.error('Update reminder error:', error); return reply.status(500).send({ success: false, error: 'Failed to update reminder' }); }
   });
 
-  fastify.delete("/api/reminders/:reminderId", async (request, reply) => {
+  fastify.delete("/reminders/:reminderId", async (request, reply) => {
     try {
       const { reminderId } = request.params as { reminderId: string };
       const { deleteReminderRule } = await import('@iai/database');
@@ -199,7 +199,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
   });
 
   // Calendar Integrations (OAuth via auth-sdk)
-  fastify.get("/api/calendar/connections", async (request, reply) => {
+  fastify.get("/calendar/connections", async (request, reply) => {
     const { getOAuthStatus } = await import("@iai/auth-sdk");
     const google = getOAuthStatus("google");
     const microsoft = getOAuthStatus("microsoft");
@@ -214,7 +214,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     };
   });
 
-  fastify.post("/api/calendar/connections/:provider", async (request, reply) => {
+  fastify.post("/calendar/connections/:provider", async (request, reply) => {
     const { provider } = request.params as any;
     const { tenant_id, user_id, computer_id } = request.query as any;
     if (!tenant_id || !user_id || !computer_id) {
@@ -228,7 +228,7 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     return { success: true, data: { authUrl: result.url, state: result.state } };
   });
 
-  fastify.get("/api/oauth/callback/:provider", async (request, reply) => {
+  fastify.get("/oauth/callback/:provider", async (request, reply) => {
     const { provider } = request.params as any;
     const { code, state } = request.query as any;
     if (!code || !state) {
@@ -256,11 +256,11 @@ export default async function calendarRoutes(fastify: FastifyInstance) {
     };
   });
 
-  fastify.delete("/api/calendar/connections/:connectionId", async (request, reply) => {
+  fastify.delete("/calendar/connections/:connectionId", async (request, reply) => {
     return { success: true, data: { connectionId: (request.params as any).connectionId, deleted: true } };
   });
 
-  fastify.post("/api/calendar/sync/:connectionId", async (request, reply) => {
+  fastify.post("/calendar/sync/:connectionId", async (request, reply) => {
     try {
       const { connectionId } = request.params as any;
       const { getConnectedAccount, updateConnectedAccount } = await import('@iai/database');
