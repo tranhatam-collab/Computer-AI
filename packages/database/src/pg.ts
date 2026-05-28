@@ -50,11 +50,20 @@ export async function getPgPool(): Promise<Pool> {
     // Resolve hostname to IPv4 before creating pool.
     url = await resolveDatabaseHostToIPv4(url);
     const parsedUrl = new URL(url);
-    console.log(`[DB] Creating pool with host=${parsedUrl.hostname}`);
+    const host = parsedUrl.hostname;
+    const port = parsedUrl.port || '5432';
+    const user = parsedUrl.username || 'postgres';
+    const password = decodeURIComponent(parsedUrl.password);
+    const database = parsedUrl.pathname.replace(/^\//, '') || 'postgres';
+
+    console.log(`[DB] Creating pool with explicit host=${host} port=${port} user=${user} db=${database}`);
 
     pool = new Pool({
-      connectionString: url,
-      host: parsedUrl.hostname,
+      host,
+      port: parseInt(port, 10),
+      user,
+      password,
+      database,
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,
