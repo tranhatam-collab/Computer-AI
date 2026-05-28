@@ -95,30 +95,6 @@ export default async function browserRoutes(fastify: FastifyInstance) {
     }
   });
 
-  fastify.get("/browser/sessions", async (request, reply) => {
-    try {
-      const { tenant_id, user_id, computer_id } = request.query as any;
-      
-      if (!tenant_id || !user_id || !computer_id) {
-        return reply.status(400).send({
-          success: false,
-          error: 'Missing required query parameters: tenant_id, user_id, computer_id'
-        });
-      }
-      
-      const { getSessionVaultsByUser } = await import('@iai/database');
-      const sessions = await getSessionVaultsByUser(tenant_id, user_id, computer_id);
-      
-      return { success: true, data: sessions };
-    } catch (error) {
-      console.error('List sessions error:', error);
-      return reply.status(500).send({
-        success: false,
-        error: 'Failed to list sessions'
-      });
-    }
-  });
-
   fastify.put("/browser/sessions/:sessionId", async (request, reply) => {
     try {
       const { sessionId } = request.params as { sessionId: string };
