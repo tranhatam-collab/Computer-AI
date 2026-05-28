@@ -7,16 +7,16 @@ const lookupAsync = promisify(lookup);
 let pool: Pool | null = null;
 
 async function resolveDatabaseHostToIPv4(urlString: string): Promise<string> {
+  const url = new URL(urlString);
+  const hostname = url.hostname;
+
+  // Skip if already an IP address
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+    console.log(`[DB] Hostname ${hostname} is already an IPv4 address, skipping resolution.`);
+    return urlString;
+  }
+
   try {
-    const url = new URL(urlString);
-    const hostname = url.hostname;
-
-    // Skip if already an IP address
-    if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
-      console.log(`[DB] Hostname ${hostname} is already an IPv4 address, skipping resolution.`);
-      return urlString;
-    }
-
     console.log(`[DB] Resolving ${hostname} to IPv4 via dns.lookup...`);
     const result = await lookupAsync(hostname, { family: 4 });
     if (result && result.address) {
@@ -28,6 +28,14 @@ async function resolveDatabaseHostToIPv4(urlString: string): Promise<string> {
   } catch (err: any) {
     console.warn('[DB] Failed to resolve DB host to IPv4:', err.code || err.message || err);
   }
+
+  // Fallback: if hostname is supabase, hardcode known IPv4 (Cloudflare edge)
+  if (hostname.includes('supabase.co')) {
+    url.hostname = '172.64.149.246';
+    console.log(`[DB] Using fallback IPv4 for ${hostname}: 172.64.149.246`);
+    return url.toString();
+  }
+
   return urlString;
 }
 
@@ -41,10 +49,12 @@ export async function getPgPool(): Promise<Pool> {
     // Render free tier does not support IPv6 outbound.
     // Resolve hostname to IPv4 before creating pool.
     url = await resolveDatabaseHostToIPv4(url);
-    console.log(`[DB] Creating pool with connection string host: ${new URL(url).hostname}`);
+    const parsedUrl = new URL(url);
+    console.log(`[DB] Creating pool with host=${parsedUrl.hostname}`);
 
     pool = new Pool({
       connectionString: url,
+      host: parsedUrl.hostname,
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,
