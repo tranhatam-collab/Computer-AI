@@ -55,6 +55,7 @@ export default async function observabilityRoutes(fastify: FastifyInstance) {
   fastify.get("/health/live", async () => {
     return {
       status: "ok",
+      cacheBust: "9",
       timestamp: new Date().toISOString(),
       uptime: Math.floor((Date.now() - START_TIME) / 1000),
       version: process.env.npm_package_version || "0.1.0",
