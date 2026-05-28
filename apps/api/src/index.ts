@@ -474,6 +474,8 @@ app.addHook("onReady", async () => {
   }
 
   try {
+    // Resolve DB hostname to IPv4 before creating pool (Render free tier lacks IPv6)
+    await resolveDatabaseHostToIPv4();
     getPgPool();
     app.log.info("PostgreSQL pool initialized");
   } catch (err) {

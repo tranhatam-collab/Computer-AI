@@ -7,7 +7,7 @@ FROM node:20-alpine AS deps
 
 # Bump this to bust Render Docker layer cache when source changes.
 # Changing the value invalidates all subsequent layers in this stage.
-ARG CACHE_BUST=4
+ARG CACHE_BUST=5
 RUN echo "cache-bust:$CACHE_BUST"
 
 RUN corepack enable && corepack prepare pnpm@9 --activate
