@@ -44,6 +44,8 @@ import { authenticate } from "@iai/auth-sdk";
 
 const app = Fastify({ logger: true });
 const PORT = parseInt(process.env.PORT || "3001", 10);
+let startupReady = false;
+let startupError: string | null = null;
 
 const allowedOrigins = (process.env.CONTROL_API_ALLOWED_ORIGINS || "http://localhost:5173,https://computer.iai.one")
   .split(",")
@@ -443,6 +445,13 @@ app.get<{ Params: { userId: string; productId: string } }>("/api/usage/:userId/:
 // ── Health / Observability ──
 app.register(observabilityRoutes, { prefix: "/api" });
 
+app.get("/api/startup", async () => {
+  return {
+    ready: startupReady,
+    error: startupError,
+  };
+});
+
 // ── Computer, Command, Run routes ──
 app.register(computerRoutes, { prefix: "/api" });
 app.register(commandRoutes, { prefix: "/api" });
@@ -479,13 +488,21 @@ app.addHook("onClose", async () => {
 
 async function start() {
   try {
-    // Initialize run store (PostgreSQL-only)
-    await initStore();
-    
-    await initializeDatabase();
-    
     await app.listen({ port: PORT, host: "0.0.0.0" });
     console.log(`API server running on http://localhost:${PORT}`);
+
+    try {
+      // Initialize run store and migrations after listen so platform health
+      // checks can distinguish process liveness from external readiness.
+      await initStore();
+      await initializeDatabase();
+      startupReady = true;
+      startupError = null;
+    } catch (err) {
+      startupReady = false;
+      startupError = err instanceof Error ? err.message : String(err);
+      app.log.error({ err }, "Startup initialization failed");
+    }
   } catch (err) {
     app.log.error(err);
     process.exit(1);

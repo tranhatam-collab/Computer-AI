@@ -66,13 +66,13 @@ services:
     autoDeploy: true  # <- deploy tự động mỗi push main
     dockerfilePath: ./apps/api/Dockerfile
     dockerContext: .
-    healthCheckPath: /api/health
+    healthCheckPath: /api/health/live
 ```
 
 ### Manual check after tạo service
 
 - [ ] **Build & Deploy log:** Không lỗi ở stage `builder` hoặc `production`
-- [ ] **Health check:** Status = `Healthy` (không phải `Degraded`)
+- [ ] **Health check:** Status = `Healthy` (không phải `Degraded`); Render dùng `/api/health/live` cho process liveness
 - [ ] **Environment:** Tất cả keys ở P9.2 đã xuất hiện trong tab Environment
 - [ ] **PORT:** Render inject `PORT` env — Dockerfile dùng `PORT=10000` fallback, nhưng Render ghi đè
 
@@ -157,6 +157,9 @@ ENDPOINT=https://api.computer.iai.one
 
 curl -s "$ENDPOINT/api/health" | jq .
 # Expected: status="healthy"; redis may be warn if REDIS_URL is intentionally not set
+
+curl -s "$ENDPOINT/api/startup" | jq .
+# Expected after DB init: ready=true, error=null
 
 curl -s "$ENDPOINT/api/health/deep" | jq .
 # Expected: checks.database.status="pass", checks.migrations.count>=5

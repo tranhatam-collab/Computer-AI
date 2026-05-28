@@ -50,6 +50,17 @@ async function checkProviders(): Promise<Record<string, HealthCheckResult>> {
 }
 
 export default async function observabilityRoutes(fastify: FastifyInstance) {
+  // Liveness: process is up and can respond. This is the safest Render health
+  // check path because readiness may depend on external DB/provider services.
+  fastify.get("/health/live", async () => {
+    return {
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      uptime: Math.floor((Date.now() - START_TIME) / 1000),
+      version: process.env.npm_package_version || "0.1.0",
+    };
+  });
+
   // Health check (shallow)
   fastify.get("/health", async () => {
     const pg = await pgHealth();

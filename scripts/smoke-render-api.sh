@@ -58,6 +58,30 @@ request_json() {
 echo "Smoke target: $ENDPOINT"
 
 health_json="$tmpdir/health.json"
+live_json="$tmpdir/health-live.json"
+request_json "/api/health/live" "$live_json"
+node - "$live_json" <<'NODE'
+const fs = require("node:fs");
+const data = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+if (data.status !== "ok") {
+  console.error("ERROR: /api/health/live status is not ok:", data.status);
+  process.exit(1);
+}
+console.log("PASS /api/health/live", data.status);
+NODE
+
+startup_json="$tmpdir/startup.json"
+request_json "/api/startup" "$startup_json"
+node - "$startup_json" <<'NODE'
+const fs = require("node:fs");
+const data = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+if (!data.ready) {
+  console.error("ERROR: startup is not ready:", data.error);
+  process.exit(1);
+}
+console.log("PASS /api/startup ready=true");
+NODE
+
 request_json "/api/health" "$health_json"
 node - "$health_json" <<'NODE'
 const fs = require("node:fs");
