@@ -1,6 +1,34 @@
 import { createClient } from 'redis';
 import { getPgPool } from './pg.js';
 import { runMigrations as executeMigrations } from './migrate';
+import { resolve4 } from 'dns';
+import { promisify } from 'util';
+
+const resolve4Async = promisify(resolve4);
+
+async function resolveDatabaseHostToIPv4() {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return;
+
+  try {
+    const url = new URL(dbUrl);
+    const hostname = url.hostname;
+
+    // Skip if already an IP address
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) return;
+
+    console.log(`[DB] Resolving ${hostname} to IPv4...`);
+    const addresses = await resolve4Async(hostname);
+    if (addresses && addresses.length > 0) {
+      const ipv4 = addresses[0];
+      url.hostname = ipv4;
+      process.env.DATABASE_URL = url.toString();
+      console.log(`[DB] Resolved to IPv4: ${ipv4}`);
+    }
+  } catch (err: any) {
+    console.warn('[DB] Failed to resolve DB host to IPv4:', err.message || err);
+  }
+}
 
 // Redis connection for session caching
 let redisClient: any = null;
@@ -80,9 +108,15 @@ export async function redisDel(key: string) {
   }
 }
 
+// Export for use in API startup before any DB operation
+export { resolveDatabaseHostToIPv4 };
+
 // Database initialization
 export async function initDatabase() {
   try {
+    // Resolve hostname to IPv4 before connecting (Render free tier lacks IPv6)
+    await resolveDatabaseHostToIPv4();
+
     // Test database connection
     await pgQuery('SELECT NOW()');
     console.log('Database connected successfully');

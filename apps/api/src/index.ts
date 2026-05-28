@@ -31,7 +31,7 @@ import {
 } from "@iai/billing-sdk";
 import type { Invoice as BillingInvoice } from "@iai/billing-sdk";
 import { getCurrentUsage, getRemainingQuota } from "@iai/usage-sdk";
-import { getPgPool, closePgPool, getUserById, createPushToken } from "@iai/database";
+import { getPgPool, closePgPool, getUserById, createPushToken, resolveDatabaseHostToIPv4 } from "@iai/database";
 import observabilityRoutes, { logRequest, logAuditFailure } from "./observability.js";
 import computerRoutes from "./routes/computers.js";
 import commandRoutes from "./routes/commands.js";
@@ -121,6 +121,8 @@ async function initStore() {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required for PostgreSQL run store.");
   }
+  // Force IPv4 resolution before any DB connection (Render free tier lacks IPv6)
+  await resolveDatabaseHostToIPv4();
   const pgStore = await createPgRunStore();
   useStore(pgStore);
   console.log('✅ PostgreSQL run store initialized');
