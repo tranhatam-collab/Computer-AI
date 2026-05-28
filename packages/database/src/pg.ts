@@ -1,8 +1,8 @@
 import { Pool, PoolClient } from "pg";
-import { resolve4 } from "dns";
+import { lookup } from "dns";
 import { promisify } from "util";
 
-const resolve4Async = promisify(resolve4);
+const lookupAsync = promisify(lookup);
 
 let pool: Pool | null = null;
 
@@ -12,18 +12,21 @@ async function resolveDatabaseHostToIPv4(urlString: string): Promise<string> {
     const hostname = url.hostname;
 
     // Skip if already an IP address
-    if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) return urlString;
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+      console.log(`[DB] Hostname ${hostname} is already an IPv4 address, skipping resolution.`);
+      return urlString;
+    }
 
-    console.log(`[DB] Resolving ${hostname} to IPv4...`);
-    const addresses = await resolve4Async(hostname);
-    if (addresses && addresses.length > 0) {
-      const ipv4 = addresses[0];
-      url.hostname = ipv4;
-      console.log(`[DB] Resolved to IPv4: ${ipv4}`);
+    console.log(`[DB] Resolving ${hostname} to IPv4 via dns.lookup...`);
+    const result = await lookupAsync(hostname, { family: 4 });
+    if (result && result.address) {
+      url.hostname = result.address;
+      console.log(`[DB] Resolved ${hostname} to IPv4: ${result.address}`);
       return url.toString();
     }
+    console.warn(`[DB] dns.lookup returned no IPv4 address for ${hostname}`);
   } catch (err: any) {
-    console.warn('[DB] Failed to resolve DB host to IPv4:', err.message || err);
+    console.warn('[DB] Failed to resolve DB host to IPv4:', err.code || err.message || err);
   }
   return urlString;
 }
@@ -38,6 +41,7 @@ export async function getPgPool(): Promise<Pool> {
     // Render free tier does not support IPv6 outbound.
     // Resolve hostname to IPv4 before creating pool.
     url = await resolveDatabaseHostToIPv4(url);
+    console.log(`[DB] Creating pool with connection string host: ${new URL(url).hostname}`);
 
     pool = new Pool({
       connectionString: url,
