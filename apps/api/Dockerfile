@@ -3,10 +3,13 @@
 # Render production image
 # ============================================================
 
-# Bump this to bust Render Docker layer cache when source changes
-ARG CACHE_BUST=2
-
 FROM node:20-alpine AS deps
+
+# Bump this to bust Render Docker layer cache when source changes.
+# Changing the value invalidates all subsequent layers in this stage.
+ARG CACHE_BUST=3
+RUN echo "cache-bust:$CACHE_BUST"
+
 RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
 
