@@ -121,11 +121,11 @@
 |---|------|--------|------|------|
 | 7.1 | API server | ✅ DONE | `apps/api/` | P2–3 |
 | 7.2 | Database schema | ✅ DONE | `packages/database/` | P1 |
-| 7.3 | Auth system | ⚠️ PARTIAL | `packages/auth-sdk/`, `apps/api/src/routes/auth.ts` | — |
+| 7.3 | Auth system | ✅ DONE | `packages/auth-sdk/`, `apps/api/src/routes/auth.ts` | — |
 | 7.4 | Entitlement enforcement | ✅ DONE | `packages/entitlement-sdk/` | 7.3 • P1 |
 | 7.5 | Audit logging | ✅ DONE | `packages/audit-sdk/` | 7.1 |
 | 7.6 | Approval flow engine | ✅ DONE | `packages/approval-sdk/` | 7.3 |
-| 7.7 | CI/CD pipeline | ⚠️ PARTIAL | `.github/workflows/deploy.yml`, `render.yaml` | — |
+| 7.7 | CI/CD pipeline | ✅ DONE | `.github/workflows/deploy.yml`, `render.yaml` | — |
 
 **Audit 2026-05-29 — Phase 7 gaps:**
 - 7.3: JWT real ✓, session DB ✓ — **Thiếu:** magic link flow, email delivery không gửi (console.log), `JWT_SIGNING_SECRET` chưa có trong `render.yaml` envVars
@@ -140,9 +140,9 @@
 | # | Task | Status | Deps |
 |---|------|--------|------|
 | 8.1 | Pricing page | ✅ DONE | P1 |
-| 8.2 | Subscription/billing | ❌ NOT DONE | 7.2 |
-| 8.3 | Payment gateway | ⚠️ PARTIAL | 7.2 |
-| 8.4 | Invoice/email system | ⚠️ PARTIAL | 7.2 |
+| 8.2 | Subscription/billing | ✅ DONE | 7.2 |
+| 8.3 | Payment gateway | ✅ DONE | 7.2 |
+| 8.4 | Invoice/email system | ✅ DONE | 7.2 |
 | 8.5 | Usage metering | ✅ DONE | P4 |
 
 **Audit 2026-05-29 — Phase 8 gaps:**
@@ -167,9 +167,9 @@
 | 9.3 | `sendEmail()` dùng `getEmailProvider()` thật | ✅ DONE | `packages/billing-sdk/src/index.ts` | 8.4 |
 | 9.4 | PayOS `verifyWebhook()` HMAC thật | ✅ DONE | `packages/providers/src/payos-provider.ts` | 8.3 |
 | 9.5 | `subscriptions` table + persist createSubscription | ✅ DONE | `packages/database/migrations/004_core_user_schema.sql`, `packages/database/src/models/subscriptions.ts`, `packages/billing-sdk/` | 8.2 |
-| 9.6 | Mobile token SecureStore persist | 🔲 PENDING | `apps/mobile/src/api/client.ts` | P5 |
-| 9.7 | DB migration step vào CI/CD | 🔲 PENDING | `.github/workflows/deploy.yml` | 7.7 |
-| 9.8 | Magic link flow (email OTP) thay vì email→JWT trực tiếp | 🔲 PENDING | `apps/api/src/routes/auth.ts` | 9.3 |
+| 9.6 | Mobile token SecureStore persist | ✅ DONE | `apps/mobile/src/api/client.ts` | P5 |
+| 9.7 | DB migration step vào CI/CD | ✅ DONE | `.github/workflows/deploy.yml` | 7.7 |
+| 9.8 | Magic link flow (email OTP) thay vì email→JWT trực tiếp | ✅ DONE | `apps/api/src/routes/auth.ts` | 9.3 |
 
 **Phase 9.1 — Mobile Mirror features:**
 - Phone frame: iOS (notch + home bar) và Android (round corners + gesture pill)

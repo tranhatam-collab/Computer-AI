@@ -235,17 +235,17 @@ app.get("/api/runs", async () => {
 // ── Approval routes ──
 
 app.get("/api/approvals", async () => {
-  return { success: true, data: getPendingApprovals("user_1") };
+  return { success: true, data: await getPendingApprovals("user_1") };
 });
 
 app.post<{ Params: { id: string } }>("/api/approvals/:id/approve", async (req) => {
-  const result = approve(req.params.id, "user_1");
+  const result = await approve(req.params.id, "user_1");
   if (!result) return { success: false, error: "Approval not found or not pending" };
   return { success: true, data: result };
 });
 
 app.post<{ Params: { id: string }; Body: { reason?: string } }>("/api/approvals/:id/reject", async (req) => {
-  const result = reject(req.params.id, "user_1", req.body.reason || "Rejected");
+  const result = await reject(req.params.id, "user_1", req.body.reason || "Rejected");
   if (!result) return { success: false, error: "Approval not found or not pending" };
   return { success: true, data: result };
 });

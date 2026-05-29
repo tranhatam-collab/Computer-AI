@@ -12,6 +12,7 @@ export interface ApprovalRequest {
   risk_level: 'low' | 'medium' | 'high' | 'critical';
   status: 'pending' | 'approved' | 'rejected' | 'expired' | 'cancelled';
   requested_by: string;
+  assignee_id?: string;
   approved_by?: string;
   approved_at?: Date;
   rejected_at?: Date;
@@ -27,9 +28,9 @@ export async function createApprovalRequest(data: Omit<ApprovalRequest, 'id' | '
   const id = uuidv4();
   const now = new Date();
   const result = await pgQuery(
-    `INSERT INTO approval_requests (id, tenant_id, user_id, computer_id, session_vault_id, action_type, action_data, risk_level, status, requested_by, approved_by, approved_at, rejected_at, expires_at, human_verification_required, human_verification_id, justification, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING *`,
-    [id, data.tenant_id, data.user_id, data.computer_id, data.session_vault_id, data.action_type, JSON.stringify(data.action_data), data.risk_level, data.status, data.requested_by, data.approved_by, data.approved_at, data.rejected_at, data.expires_at, data.human_verification_required, data.human_verification_id, data.justification, now, now]
+    `INSERT INTO approval_requests (id, tenant_id, user_id, computer_id, session_vault_id, action_type, action_data, risk_level, status, requested_by, assignee_id, approved_by, approved_at, rejected_at, expires_at, human_verification_required, human_verification_id, justification, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING *`,
+    [id, data.tenant_id, data.user_id, data.computer_id, data.session_vault_id, data.action_type, JSON.stringify(data.action_data), data.risk_level, data.status, data.requested_by, data.assignee_id, data.approved_by, data.approved_at, data.rejected_at, data.expires_at, data.human_verification_required, data.human_verification_id, data.justification, now, now]
   );
   return result.rows[0];
 }

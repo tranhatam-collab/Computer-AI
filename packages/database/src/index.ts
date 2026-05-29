@@ -153,6 +153,29 @@ function migrate(db: BetterSqlite3.Database): void {
       updated_at INTEGER NOT NULL DEFAULT (unixepoch())
     );
 
+    CREATE TABLE IF NOT EXISTS approval_requests (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL DEFAULT 'iai',
+      user_id TEXT NOT NULL,
+      computer_id TEXT NOT NULL DEFAULT 'default',
+      session_vault_id TEXT,
+      action_type TEXT NOT NULL,
+      action_data TEXT,
+      risk_level TEXT NOT NULL DEFAULT 'low',
+      status TEXT NOT NULL DEFAULT 'pending',
+      requested_by TEXT NOT NULL,
+      assignee_id TEXT,
+      approved_by TEXT,
+      approved_at INTEGER,
+      rejected_at INTEGER,
+      expires_at INTEGER NOT NULL,
+      human_verification_required INTEGER NOT NULL DEFAULT 0,
+      human_verification_id TEXT,
+      justification TEXT,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+    );
+
     CREATE INDEX IF NOT EXISTS idx_runs_user ON runs(user_id);
     CREATE INDEX IF NOT EXISTS idx_runs_state ON runs(state);
     CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id);
@@ -161,6 +184,8 @@ function migrate(db: BetterSqlite3.Database): void {
     CREATE INDEX IF NOT EXISTS idx_usage_user ON usage_records(tenant_id, user_id, computer_id, recorded_at);
     CREATE INDEX IF NOT EXISTS idx_upgrade_user ON upgrade_requests(tenant_id, user_id, computer_id, status);
     CREATE INDEX IF NOT EXISTS idx_rollback_status ON rollback_plans(status, created_at);
+    CREATE INDEX IF NOT EXISTS idx_approval_user ON approval_requests(tenant_id, user_id, computer_id, status);
+    CREATE INDEX IF NOT EXISTS idx_approval_status ON approval_requests(status, created_at);
   `);
 }
 

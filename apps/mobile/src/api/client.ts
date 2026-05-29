@@ -1,10 +1,48 @@
 import { getCached, setCache } from "../services/cache";
+import * as SecureStore from "expo-secure-store";
 
 declare const process:
   | { env?: { EXPO_PUBLIC_API_URL?: string } }
   | undefined;
 
 const BASE_URL = process?.env?.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+
+const TOKEN_KEY = "authToken";
+
+async function getStoredToken(): Promise<string | null> {
+  try {
+    const token = await SecureStore.getItemAsync(TOKEN_KEY);
+    if (token) return token;
+  } catch {
+    // SecureStore may not be available
+  }
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+async function setStoredToken(token: string | null) {
+  try {
+    if (token) {
+      await SecureStore.setItemAsync(TOKEN_KEY, token);
+    } else {
+      await SecureStore.deleteItemAsync(TOKEN_KEY);
+    }
+  } catch {
+    // SecureStore may not be available
+  }
+  try {
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  } catch {
+    // localStorage may not be available
+  }
+}
 
 export interface Product {
   id: string;
@@ -50,11 +88,11 @@ export interface Session {
 
 let authToken: string | null = null;
 
-try {
-  authToken = localStorage.getItem("token");
-} catch {
-  // localStorage may not be available in some RN environments
-}
+getStoredToken().then((token) => {
+  authToken = token;
+}).catch(() => {
+  // ignore
+});
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const cacheKey = `${path}::${JSON.stringify(options?.body || "")}`;
@@ -105,12 +143,12 @@ export const api = {
       body: JSON.stringify({ email }),
     });
     authToken = result.session.token;
-    try { localStorage.setItem("token", authToken); } catch {}
+    await setStoredToken(authToken);
     return result;
   },
-  logout: () => {
+  logout: async () => {
     authToken = null;
-    try { localStorage.removeItem("token"); } catch {}
+    await setStoredToken(null);
     return request<void>("/api/auth/logout", { method: "POST" });
   },
   me: () => request<User>("/api/me"),
@@ -119,6 +157,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ token }),
     }),
-  setToken: (token: string | null) => { authToken = token; },
+  setToken: async (token: string | null) => {
+    authToken = token;
+    await setStoredToken(token);
+  },
   getToken: () => authToken,
 };

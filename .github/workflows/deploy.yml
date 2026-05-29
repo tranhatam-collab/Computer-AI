@@ -32,6 +32,11 @@ jobs:
       - name: Type check
         run: pnpm run typecheck
 
+      - name: Run database migrations
+        run: pnpm --filter ./apps/api exec tsx src/scripts/migrate.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       - name: Build web
         run: pnpm --filter ./apps/web build
 
