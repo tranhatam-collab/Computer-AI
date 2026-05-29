@@ -178,7 +178,7 @@ export async function runMigrations() {
     console.log(`Already executed migrations: ${executed.join(', ')}`);
     
     // Load available migrations
-    const migrationFiles = ['001_computer_core_schema.sql', '002_ai_browser_schema.sql', '003_smart_work_calendar_schema.sql', '004_core_user_schema.sql', '005_ai_computer_os_core.sql', '006_add_invoice_transaction_id.sql'];
+    const migrationFiles = ['001_computer_core_schema.sql', '002_ai_browser_schema.sql', '003_smart_work_calendar_schema.sql', '004_core_user_schema.sql', '005_ai_computer_os_core.sql', '006_add_invoice_transaction_id.sql', '007_add_daily_usage.sql'];
     const availableMigrations = migrationFiles.map(loadMigration);
     
     // Filter pending migrations
@@ -224,7 +224,7 @@ export async function getMigrationStatus() {
     await createMigrationTable();
     const executed = await getExecutedMigrations();
     
-    const migrationFiles = ['001_computer_core_schema.sql', '002_ai_browser_schema.sql', '003_smart_work_calendar_schema.sql', '004_core_user_schema.sql', '005_ai_computer_os_core.sql', '006_add_invoice_transaction_id.sql'];
+    const migrationFiles = ['001_computer_core_schema.sql', '002_ai_browser_schema.sql', '003_smart_work_calendar_schema.sql', '004_core_user_schema.sql', '005_ai_computer_os_core.sql', '006_add_invoice_transaction_id.sql', '007_add_daily_usage.sql'];
     const available = migrationFiles.map(f => f.replace('.sql', ''));
     
     return {

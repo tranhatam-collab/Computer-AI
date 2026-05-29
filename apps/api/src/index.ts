@@ -6,7 +6,7 @@ dotenv.config({ path: ".env.local" });
 dotenv.config();
 import fastifyCors from "@fastify/cors";
 import fastifyRateLimit from "@fastify/rate-limit";
-import { products, getPricing, getAllShells } from "@iai/product-registry";
+import { products, getPricing, getAllShells, getShell } from "@iai/product-registry";
 import { route } from "@iai/routing-matrix";
 import {
   assignRoute,
@@ -263,8 +263,9 @@ app.post<{
   if (!product) return { success: false, error: "Invalid productId" };
 
   // Quota check
+  const shell = getShell(productId as any);
   if (authUser) {
-    const quota = getRemainingQuota(authUser.id, productId as any);
+    const quota = await getRemainingQuota(authUser.id, productId as any);
     if (quota.runsLeft <= 0) {
       return { success: false, error: "Daily run quota exceeded. Please upgrade your plan.", code: "QUOTA_EXCEEDED" };
     }
@@ -273,11 +274,17 @@ app.post<{
   const run = await createRun(productId, text);
   await updateRun(run.id, "queue");
 
+  const currentUsage = authUser ? await getCurrentUsage(authUser.id, productId as any) : null;
   const routeResult = route({
     text,
     productId: productId as any,
-    quotaState: { runsUsed: 0, outputCreditsUsed: 0, storageUsedMb: 0, resetAt: Date.now() + 86400000 },
-    quotaLimits: { runsPerDay: 100, outputCredits: 50, storageMb: 500 },
+    quotaState: currentUsage ? {
+      runsUsed: currentUsage.runsUsed,
+      outputCreditsUsed: currentUsage.outputCreditsUsed,
+      storageUsedMb: currentUsage.storageUsedMb,
+      resetAt: Date.now() + 86400000,
+    } : { runsUsed: 0, outputCreditsUsed: 0, storageUsedMb: 0, resetAt: Date.now() + 86400000 },
+    quotaLimits: shell.quota,
     sessionKey,
   });
   await assignRoute(run.id, routeResult);
@@ -291,7 +298,7 @@ app.post<{
   const completedRun = await updateRun(verifyingRun.id, "verify-pass");
 
   if (authUser) {
-    trackRun(authUser.id, productId as any);
+    await trackRun(authUser.id, productId as any);
     await writeAuditLog(authUser.id, "command.executed", run.id, `Product: ${productId}, Lane: ${routeResult.lane}`);
   }
 
@@ -321,18 +328,24 @@ app.get("/api/runs", async () => {
 
 // ── Approval routes ──
 
-app.get("/api/approvals", async () => {
-  return { success: true, data: await getPendingApprovals("user_1") };
+app.get("/api/approvals", async (req) => {
+  const authUser = (req as any).user;
+  const userId = authUser?.id || "anonymous";
+  return { success: true, data: await getPendingApprovals(userId) };
 });
 
 app.post<{ Params: { id: string } }>("/api/approvals/:id/approve", async (req) => {
-  const result = await approve(req.params.id, "user_1");
+  const authUser = (req as any).user;
+  const userId = authUser?.id || "anonymous";
+  const result = await approve(req.params.id, userId);
   if (!result) return { success: false, error: "Approval not found or not pending" };
   return { success: true, data: result };
 });
 
 app.post<{ Params: { id: string }; Body: { reason?: string } }>("/api/approvals/:id/reject", async (req) => {
-  const result = await reject(req.params.id, "user_1", req.body.reason || "Rejected");
+  const authUser = (req as any).user;
+  const userId = authUser?.id || "anonymous";
+  const result = await reject(req.params.id, userId, req.body.reason || "Rejected");
   if (!result) return { success: false, error: "Approval not found or not pending" };
   return { success: true, data: result };
 });

@@ -23,5 +23,6 @@ jobs:
       - run: pnpm --filter ./apps/api exec tsx src/scripts/migrate.ts
         env:
           DATABASE_URL: ${{ secrets.TEST_DATABASE_URL || secrets.DATABASE_URL }}
+      - run: pnpm test
       - run: pnpm --filter ./apps/web build
       - run: pnpm --filter ./apps/api build

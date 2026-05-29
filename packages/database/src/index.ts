@@ -125,6 +125,19 @@ function migrate(db: BetterSqlite3.Database): void {
       recorded_at INTEGER NOT NULL DEFAULT (unixepoch())
     );
 
+    CREATE TABLE IF NOT EXISTS daily_usage (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      product_id TEXT NOT NULL,
+      date TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d', 'now')),
+      runs_used INTEGER NOT NULL DEFAULT 0,
+      output_credits_used INTEGER NOT NULL DEFAULT 0,
+      storage_used_mb INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      UNIQUE(user_id, product_id, date)
+    );
+
     CREATE TABLE IF NOT EXISTS upgrade_requests (
       id TEXT PRIMARY KEY,
       tenant_id TEXT NOT NULL,
@@ -184,6 +197,8 @@ function migrate(db: BetterSqlite3.Database): void {
     CREATE INDEX IF NOT EXISTS idx_invoices_transaction ON invoices(transaction_id);
     CREATE INDEX IF NOT EXISTS idx_memory_user ON memory_namespaces(tenant_id, user_id, computer_id);
     CREATE INDEX IF NOT EXISTS idx_usage_user ON usage_records(tenant_id, user_id, computer_id, recorded_at);
+    CREATE INDEX IF NOT EXISTS idx_daily_usage_user ON daily_usage(user_id);
+    CREATE INDEX IF NOT EXISTS idx_daily_usage_date ON daily_usage(date);
     CREATE INDEX IF NOT EXISTS idx_upgrade_user ON upgrade_requests(tenant_id, user_id, computer_id, status);
     CREATE INDEX IF NOT EXISTS idx_rollback_status ON rollback_plans(status, created_at);
     CREATE INDEX IF NOT EXISTS idx_approval_user ON approval_requests(tenant_id, user_id, computer_id, status);

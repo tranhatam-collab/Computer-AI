@@ -272,6 +272,9 @@ importers:
       '@iai/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@iai/database':
+        specifier: workspace:*
+        version: link:../database
       '@iai/product-registry':
         specifier: workspace:*
         version: link:../product-registry

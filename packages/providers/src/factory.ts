@@ -7,6 +7,7 @@ import { PayOSProvider } from "./payos-provider.js";
 import { StripeProvider } from "./stripe-provider.js";
 import { AIFallbackProvider } from "./circuit-breaker.js";
 import type { FallbackResult } from "./circuit-breaker.js";
+import { estimateCost } from "./cost-tracker.js";
 import { MockBrowserProvider, RealBrowserProvider } from "./browser-provider.js";
 
 let aiProvider: AIProvider | AIFallbackProvider | null = null;
@@ -20,6 +21,7 @@ export function getAIProvider(): AIProvider {
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
 
     if (!openaiKey && !anthropicKey) {
+      console.warn("⚠️ AI_PROVIDER_FALLBACK: No OPENAI_API_KEY or ANTHROPIC_API_KEY set. Reverting to MockAIProvider.");
       aiProvider = new MockAIProvider();
     } else if (openaiKey && anthropicKey) {
       // Primary: OpenAI, Fallback: Anthropic
@@ -48,17 +50,16 @@ export function generateWithFallback(req: Parameters<AIProvider["generate"]>[0])
   if (fallback) {
     return fallback.generate(req);
   }
-  // Single provider path: no fallback tracking
+  // Single provider path: track cost via cost-tracker
   const provider = getAIProvider();
   return provider.generate(req).then((response) => ({
     response,
-    cost: {
-      provider: provider.kind,
-      model: req.model,
-      inputTokens: response.usage.inputTokens,
-      outputTokens: response.usage.outputTokens,
-      costCents: 0, // Single provider path doesn't track cost here
-    },
+    cost: estimateCost(
+      provider.kind,
+      req.model,
+      response.usage.inputTokens,
+      response.usage.outputTokens
+    ),
     provider: provider.kind,
     attempts: [],
   }));
