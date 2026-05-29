@@ -106,9 +106,9 @@
 | # | Task | Status | File | Deps |
 |---|------|--------|------|------|
 | 6.1 | Office shell | ✅ DONE | `packages/runtime-registry/src/workers/office.ts` | P4 |
-| 6.2 | Sales shell | � IN PROGRESS | `apps/web/src/pages/sales/` | P1 |
-| 6.3 | Finance shell | � IN PROGRESS | `apps/web/src/pages/finance/` | P1 |
-| 6.4 | Enterprise shell | � IN PROGRESS | `apps/web/src/pages/enterprise/` | P1 |
+| 6.2 | Sales shell | ✅ DONE | `apps/web/src/pages/LanePage.tsx` (generic) | P1 |
+| 6.3 | Finance shell | ✅ DONE | `apps/web/src/pages/LanePage.tsx` (generic) | P1 |
+| 6.4 | Enterprise shell | ✅ DONE | `apps/web/src/pages/LanePage.tsx` + EnterpriseLaneView | P1 |
 | 6.5 | App map per lane | ✅ DONE | `packages/product-registry/src/app-map.ts` | 6.1–6.4 |
 
 **Phase 6 acceptance:** Office + Sales + Finance + Enterprise lanes render from product registry.
@@ -137,7 +137,7 @@
 |---|------|--------|------|
 | 8.1 | Pricing page | ✅ DONE | P1 |
 | 8.2 | Subscription/billing | ✅ DONE | 7.2 |
-| 8.3 | Payment gateway | � IN PROGRESS | 7.2 |
+| 8.3 | Payment gateway | ✅ DONE | 7.2 |
 | 8.4 | Invoice/email system | ✅ DONE | 7.2 |
 | 8.5 | Usage metering | ✅ DONE | P4 |
 

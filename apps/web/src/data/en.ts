@@ -25,8 +25,9 @@ export default {
     { "label": "Home", "href": "#home" },
     { "label": "Products", "href": "#products" },
     { "label": "Compare", "href": "#compare" },
-    { "label": "How it works", "href": "#how" },
-    { "label": "Trust", "href": "#trust" },
+    { "label": "Sales", "href": "/lanes/sales" },
+    { "label": "Finance", "href": "/lanes/finance" },
+    { "label": "Enterprise", "href": "/lanes/enterprise" },
     { "label": "FAQ", "href": "#faq" }
   ],
   "hero": {

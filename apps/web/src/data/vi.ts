@@ -25,8 +25,9 @@ export default {
     { "label": "Trang chủ", "href": "#home" },
     { "label": "Sản phẩm", "href": "#products" },
     { "label": "So sánh", "href": "#compare" },
-    { "label": "Cách hoạt động", "href": "#how" },
-    { "label": "Tin cậy", "href": "#trust" },
+    { "label": "Bán hàng", "href": "/lanes/sales" },
+    { "label": "Tài chính", "href": "/lanes/finance" },
+    { "label": "Doanh nghiệp", "href": "/lanes/enterprise" },
     { "label": "FAQ", "href": "#faq" }
   ],
   "hero": {
