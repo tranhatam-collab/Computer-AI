@@ -72,24 +72,26 @@ Cụ thể:
 **Định vị khóa:** Hệ Máy Tính AI Cá Nhân Tự Nâng Cấp Có Kiểm Chứng
 **Runtime:** Node/Fastify (port 3001), Vite/React web, Expo mobile
 
-| Layer | Trạng thái | Đánh giá | Ghi chú |
+| Layer | Trạng thái (2026-05-29) | Đánh giá | Ghi chú |
 |-------|-----------|----------|---------|
-| Web Catalog | Build pass, 12 products, i18n VI/EN | 7/10 | Đang chạy trên GitHub Pages, chưa có real shell routing |
-| Mobile (Expo) | Starter, single-screen, no navigation | 3/10 | Chưa có EAS build, chưa có command center |
-| API (Fastify) | SQLite local, routes stub | 4/10 | Chưa có real auth wiring, payment wiring |
-| Product Registry | 12 products, shells, entitlements, pricing | 8/10 | Tốt nhất trong hệ, nhưng chỉ là data package |
-| AI Routing | Intent→Lane→Model, simulated | 6/10 | Không gọi real AI |
-| Workflow Engine | State machine, verify, score | 6/10 | In-memory hoặc SQLite local |
-| Runtime Workers | 5 worker classes simulated | 3/10 | Không có real AI call |
-| Auth SDK | Scaffold, in-memory | 3/10 | Chưa có magic link real |
-| Entitlement SDK | Gate logic exists | 6/10 | Cần connect real subscription |
-| Audit SDK | Immutable log, in-memory | 4/10 | Cần persistent store |
-| Approval SDK | Flow exists, in-memory | 4/10 | OK cho dev |
-| Billing SDK | Scaffold, no provider | 2/10 | Stripe/PayOS chưa wired |
-| Database | better-sqlite3, schema OK | 5/10 | Cần chuyển D1/Postgres |
-| CI/CD | GitHub Actions configured | 4/10 | Chưa verified qua real run |
+| Web Catalog | Build pass, 12 products, i18n VI/EN, lanes Sales/Finance/Enterprise | 8/10 | GitHub Pages deploy, shell routing qua LanePage generic |
+| Mobile (Expo) | Multi-screen: Command/Tasks/Approvals/Results, API client | 6/10 | Token không persist qua restart, chưa có EAS build |
+| Mobile Mirror (Web) | `/mobile` route, iOS/Android frame, full flow cloned | 7/10 | Gọi API thật, toggle iOS/Android, dark theme |
+| API (Fastify) | PostgreSQL, routes: auth/products/command/runs/approvals/checkout | 6/10 | Postgres real, auth JWT ok nhưng thiếu magic link |
+| Product Registry | 12 products, shells, entitlements, pricing, app-map per lane | 8/10 | Source of truth tốt |
+| AI Routing | Intent→Lane→Model, provider factory | 7/10 | Real nếu có API key, Mock nếu không |
+| Workflow Engine | State machine, verify, score, PostgreSQL-backed | 6/10 | Chạy được end-to-end |
+| Runtime Workers | 5 workers, check ENABLE_RUNTIME_MOCK | 6/10 | Conditional real AI |
+| Auth SDK | JWT real, session DB, không có magic link | 5/10 | `JWT_SIGNING_SECRET` thiếu trong render.yaml |
+| Entitlement SDK | Gate logic exists, check subscription | 6/10 | Subscription not persisted → gate luôn fail sau restart |
+| Audit SDK | Logs to DB | 6/10 | PostgreSQL-backed |
+| Approval SDK | Flow exists, DB | 6/10 | Đang hoạt động |
+| Billing SDK | Invoice DB ✓, `createSubscription` in-memory, email console.log | 4/10 | 2 bug production-blocking |
+| Payment Providers | Stripe real HTTP ✓, PayOS real HTTP ✓, webhook verify stub | 5/10 | PayOS verifyWebhook không verify HMAC |
+| Database | PostgreSQL, 5 migration files, advisory lock, migrate.ts | 7/10 | Không phải D1 nhưng real DB |
+| CI/CD | GitHub Actions build ✓, render.yaml Docker deploy ✓ | 5/10 | Thiếu test step, migration step |
 
-**Tổng điểm: ~35/100**
+**Tổng điểm: ~50/100** *(cập nhật từ 35/100, audit 2026-05-29)*
 
 ### 3.2 vetuonglai-system
 
@@ -288,47 +290,52 @@ Cụ thể:
 **Tại sao ưu tiên #1:** Không có auth = không có user = không có sản phẩm.
 
 **Hành động cụ thể:**
-- [ ] Tạo D1 database `iai-one-core` trên Cloudflare account chính
-- [ ] Deploy `api.iai.one` Worker với route `/v1/auth/magic-link`
-- [ ] Tích hợp email provider thật (Resend hoặc AWS SES) — không dùng console.log
-- [ ] Tạo `@iai/auth-sdk` v2: JWT session, refresh token, logout
-- [ ] Connect `computer.iai.one` web login page tới real auth API (không còn stub)
-- [ ] Auth session phải hoạt động cross-domain (computer.iai.one ↔ vetuonglai.com ↔ muonnoi.org)
+- [ ] Tạo D1 database `iai-one-core` trên Cloudflare account chính *(chưa làm — đang dùng Postgres)*
+- [ ] Deploy `api.iai.one` Worker với route `/v1/auth/magic-link` *(chưa làm — auth trên Render/Fastify, không phải CF Worker)*
+- [x] Tích hợp email provider thật — **PARTIAL:** `getEmailProvider()` trong providers package có SendGrid, nhưng `sendEmail()` trong billing-sdk vẫn là `console.log()` — cần wiring
+- [x] Tạo `@iai/auth-sdk` v2: JWT session, refresh token, logout — **DONE** (không phải magic link)
+- [x] Connect `computer.iai.one` web login page tới real auth API — **DONE** (routes mounted)
+- [ ] Auth session phải hoạt động cross-domain — **chưa làm**
+- [ ] **BUG MỚI (2026-05-29):** Thêm `JWT_SIGNING_SECRET` vào `render.yaml` envVars — hiện thiếu
 
 **Acceptance criteria:**
-- User có thể đăng ký bằng email trên computer.iai.one
-- User nhận được magic link thật trong inbox
-- User đăng nhập và giữ session qua refresh
-- Đăng xuất hoạt động
+- User có thể đăng ký bằng email trên computer.iai.one *(đăng ký được, không nhận email xác nhận)*
+- User nhận được magic link thật trong inbox ❌ *chưa đạt*
+- User đăng nhập và giữ session qua refresh *(JWT 7 ngày — đạt, nhưng không phải magic link)*
+- Đăng xuất hoạt động ✅
 
 ### Blocker 2: Real Database & Schema Lock (Ngày 3-10)
 **Tại sao ưu tiên #2:** In-memory = mất dữ liệu khi restart. SQLite local không scale.
 
 **Hành động cụ thể:**
-- [ ] Lock schema D1 cho toàn hệ: users, sessions, profiles, subscriptions, products, runs, audit_logs
-- [ ] Tạo `@iai/database` v2 — D1 client wrapper + migration system
-- [ ] Chuyển `computer.iai.one` apps/api từ better-sqlite3 local → D1 (dùng wrangler dev local + remote)
-- [ ] Tất cả SDK (auth, audit, approval, billing) phải write vào D1, không còn in-memory
+- [x] Schema lock cho: users, sessions, invoices, runs, audit_logs — **DONE** (PostgreSQL, 5 migrations)
+- [ ] D1 migration — **DIVERGED:** Đang dùng PostgreSQL thay vì D1. Quyết định: tiếp tục Postgres hay chuyển D1?
+- [x] Migration system — **DONE:** `migrate.ts` với advisory lock hoạt động
+- [ ] **BUG MỚI (2026-05-29):** `createSubscription()` không write DB — subscriptions mất khi restart. Cần thêm `subscriptions` table và persist
+- [x] auth, audit, approval — write vào Postgres ✅
+- [ ] billing `createSubscription` — vẫn in-memory ❌
 
 **Acceptance criteria:**
-- API restart không mất dữ liệu user
-- Có thể query audit log từ D1
-- Migration chạy được trên local và production
+- API restart không mất dữ liệu user ✅ *(users/sessions/invoices OK, subscriptions ❌)*
+- Có thể query audit log từ DB ✅
+- Migration chạy được trên local và production ✅ *(cần thêm step vào CI)*
 
 ### Blocker 3: Product-to-AI Alignment (Ngày 7-14)
 **Tại sao ưu tiên #3:** `computer.iai.one` đã có 12 products nhưng AI là simulated. User không nhận được giá trị thực.
 
 **Hành động cụ thể:**
-- [ ] Tạo provider interface v2 hỗ trợ OpenAI GPT-4o / Anthropic Claude
-- [ ] Cấu hình API key thật (dùng Cloudflare Secrets)
-- [ ] Implement 1 worker thực: Research Worker gọi real API với timeout + retry
-- [ ] Chạy end-to-end: Web → API → Router → Worker → Output → Verify → Score
-- [ ] Đảm bảo quota/cost guard hoạt động (không cho phép bill shock)
+- [x] Provider interface v2: OpenAI + Anthropic + circuit breaker + fallback — **DONE**
+- [x] Factory: `getAIProvider()` check env vars, fallback MockAI — **DONE**
+- [x] Workers (research, content, code, browser) check `ENABLE_RUNTIME_MOCK` — **DONE**
+- [ ] Cấu hình API key thật trên Render — **PENDING** (keys chưa set trong Render dashboard)
+- [x] End-to-end flow: Web → API → Router → Worker → Output — **DONE** *(mock mode)*
+- [ ] Cost guard thật: `costCents` hardcoded = 0 trong single-provider path — **BUG (2026-05-29)**
+- [ ] Quota limit nối vào real cost tracking — **chưa làm**
 
 **Acceptance criteria:**
-- User type "Nghiên cứu về thị trường AI ở Việt Nam" → nhận output thật từ LLM trong < 10 giây
-- Cost per run được log và giới hạn
-- Overload guard từ chối khi vượt quota
+- User type → nhận output thật từ LLM ⚠️ *(Cần set API key trong Render)*
+- Cost per run được log và giới hạn ❌ *(costCents = 0, không track)*
+- Overload guard từ chối khi vượt quota ❌ *(chưa implement)*
 
 ### Blocker 4: Stop Spec Bloat — Code Sprint (Ngày 1-30)
 **Tại sao ưu tiên #4:** Team đang viết spec thay vì code. Velocity = 0.
@@ -491,5 +498,60 @@ NOT PRODUCTION-READY UNTIL VERIFIED
 ```
 
 ---
+
+---
+
+## 13. AUDIT THỰC TẾ — 2026-05-29
+
+**Auditor:** Code audit nghiêm ngặt — đọc source, không tin execution board  
+**Phương pháp:** Đọc từng file implementation, so với acceptance criteria từng phase
+
+### 13.1 Kết quả tổng
+
+| Hạng mục | Claim (board) | Thực tế | Delta |
+|---|---|---|---|
+| Auth (magic link + email) | ✅ | 30% | JWT real, không magic link, email không gửi |
+| DB persistence | ✅ | 70% | users/sessions/invoices OK, subscriptions ❌ |
+| AI integration | ✅ | 60% | Conditional (cần API keys để real) |
+| Payment gateway | ✅ | 65% | Stripe real, PayOS webhook stub |
+| Email delivery | ✅ | 5% | console.log only |
+| Mobile | ✅ | 60% | UI done, token không persist |
+| CI/CD | ✅ | 50% | Build/deploy pass, no tests, no migration |
+| Subscriptions | ✅ | 10% | in-memory stub, TODO comment |
+| **Tổng thực tế** | ~100% | **~50/100** | |
+
+### 13.2 Bugs production-blocking (theo thứ tự ưu tiên)
+
+| # | Bug | File | Severity | Status |
+|---|---|---|---|---|
+| B1 | `JWT_SIGNING_SECRET` thiếu trong render.yaml | `render.yaml` | HIGH | ✅ FIXED |
+| B2 | `sendEmail()` dùng console.log, không dùng `getEmailProvider()` | `packages/billing-sdk/src/index.ts:101` | HIGH | ✅ FIXED |
+| B3 | `PayOSProvider.verifyWebhook()` không verify HMAC | `packages/providers/src/payos-provider.ts:54` | HIGH | ✅ FIXED |
+| B4 | `createSubscription()` in-memory, không persist DB | `packages/billing-sdk/src/index.ts:28` | HIGH | ✅ FIXED |
+| B5 | Mobile `authToken` biến module-level, mất khi app restart | `apps/mobile/src/api/client.ts:51` | MEDIUM | 🔲 PENDING |
+| B6 | CI/CD không có DB migration step | `.github/workflows/deploy.yml` | MEDIUM | 🔲 PENDING |
+| B7 | `costCents` hardcoded = 0 trong single-provider AI path | `packages/providers/src/factory.ts` | MEDIUM | 🔲 PENDING |
+
+### 13.3 Tính năng mới thêm (2026-05-29)
+
+| Feature | File | Status |
+|---|---|---|
+| Mobile Mirror page (web `/mobile`) | `apps/web/src/pages/MobileMirrorPage.tsx` | ✅ DONE |
+| MobileAppMirror component — full flow clone | `apps/web/src/components/MobileAppMirror.tsx` | ✅ DONE |
+| iOS / Android frame toggle | `apps/web/src/styles.css` | ✅ DONE |
+| Route `/mobile` wired | `apps/web/src/App.tsx` | ✅ DONE |
+| Sales / Finance / Enterprise nav links | `apps/web/src/data/vi.ts`, `en.ts` | ✅ DONE |
+| EnterpriseLaneView | `apps/web/src/pages/EnterpriseLaneView.tsx` | ✅ DONE |
+| LanePage generic router | `apps/web/src/pages/LanePage.tsx` | ✅ DONE |
+
+### 13.4 Quyết định kiến trúc cần clarify
+
+1. **PostgreSQL hay D1?** — Master plan ghi D1, code đang dùng PostgreSQL trên Render. Cần quyết định một trong hai để tránh diverge thêm.
+2. **Magic link hay email+JWT?** — Hiện tại: `POST /auth/login` nhận email → trả JWT trực tiếp (không gửi OTP). Nếu giữ cách này, cần document rõ đây là "passwordless direct JWT" không phải magic link.
+3. **Stripe hay PayOS làm primary?** — `getPaymentProvider()` ưu tiên Stripe. Nếu target Vietnam market là chính, cần flip ưu tiên.
+
+---
+
+*Last updated: 2026-05-29 — Audit nghiêm ngặt v2*
 
 *End of Comprehensive Ecosystem Audit & Unified Master Plan*

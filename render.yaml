@@ -30,3 +30,11 @@ services:
         value: https://api.computer.iai.one
       - key: CONTROL_API_ALLOWED_ORIGINS
         value: https://computer.iai.one
+      - key: JWT_SIGNING_SECRET
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false

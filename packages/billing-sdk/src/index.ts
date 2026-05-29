@@ -1,9 +1,12 @@
 import { getPricing, getProduct } from "@iai/product-registry";
 import type { ProductId } from "@iai/product-registry";
+import { getEmailProvider } from "@iai/providers";
 import {
   createInvoice as pgCreateInvoice,
   getInvoicesByUser as pgGetInvoicesByUser,
-  markInvoicePaid as pgMarkInvoicePaid
+  markInvoicePaid as pgMarkInvoicePaid,
+  createSubscription as pgCreateSubscription,
+  cancelSubscription as pgCancelSubscription,
 } from "@iai/database";
 
 export interface ProductSubscription {
@@ -25,15 +28,20 @@ export interface Invoice {
   paidAt?: number;
 }
 
-export function createSubscription(userId: string, productId: ProductId): ProductSubscription {
-  // TODO: Add PostgreSQL subscription model when needed
-  const startedAt = Math.floor(Date.now() / 1000);
-  const expiresAt = startedAt + 86400 * 30;
-  return { userId, productId, status: "active", startedAt, expiresAt };
+export async function createSubscription(userId: string, productId: ProductId): Promise<ProductSubscription> {
+  const expiresAt = new Date(Date.now() + 86400 * 30 * 1000);
+  const row = await pgCreateSubscription(userId, productId, expiresAt);
+  return {
+    userId: row.user_id,
+    productId: row.product_id as ProductId,
+    status: row.status,
+    startedAt: Math.floor(new Date(row.started_at).getTime() / 1000),
+    expiresAt: Math.floor(new Date(row.expires_at).getTime() / 1000),
+  };
 }
 
-export function cancelSubscription(userId: string, productId: ProductId): void {
-  // TODO: Add PostgreSQL subscription model when needed
+export async function cancelSubscription(userId: string, productId: ProductId): Promise<void> {
+  await pgCancelSubscription(userId, productId);
 }
 
 export async function generateInvoice(userId: string, productId: ProductId, currency: "USD" | "VND" = "USD"): Promise<Invoice> {
@@ -99,7 +107,14 @@ export function buildInvoiceEmail(invoice: Invoice, userEmail: string, userName:
 }
 
 export async function sendEmail(payload: EmailPayload): Promise<void> {
-  // Provider hook: swap this for SendGrid, Resend, AWS SES, etc.
-  console.log(`[email] To: ${payload.to} | Subject: ${payload.subject}`);
-  console.log(`[email] HTML preview: ${payload.html.slice(0, 200)}...`);
+  const provider = getEmailProvider();
+  const result = await provider.send({
+    to: payload.to,
+    subject: payload.subject,
+    body: payload.html,
+    html: payload.html,
+  });
+  if (!result.sent) {
+    throw new Error(`Email failed: ${payload.to}`);
+  }
 }

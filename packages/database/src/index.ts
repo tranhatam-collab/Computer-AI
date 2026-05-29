@@ -189,3 +189,4 @@ export * from "./models/approval";
 export * from "./models/calendar";
 export * from "./models/evidence";
 export * from "./models/users";
+export * from "./models/subscriptions";

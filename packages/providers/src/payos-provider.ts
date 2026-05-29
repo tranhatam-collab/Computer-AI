@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import type { PaymentProvider, PaymentChargeRequest, PaymentChargeResponse, PaymentProviderKind } from "./index.js";
 
 export class PayOSProvider implements PaymentProvider {
@@ -52,7 +53,13 @@ export class PayOSProvider implements PaymentProvider {
   }
 
   async verifyWebhook(body: unknown, signature: string): Promise<boolean> {
-    // Simplified: production should use checksumKey to verify HMAC
-    return !!signature;
+    if (!signature || !this.checksumKey) return false;
+    try {
+      const payload = typeof body === "string" ? body : JSON.stringify(body);
+      const expected = crypto.createHmac("sha256", this.checksumKey).update(payload).digest("hex");
+      return crypto.timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expected, "hex"));
+    } catch {
+      return false;
+    }
   }
 }

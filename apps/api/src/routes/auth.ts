@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import crypto from "crypto";
 import { getUserById, getUserByEmail, createUser, createSession, deleteSession } from "@iai/database";
+import { getEmailProvider } from "@iai/providers";
 
 const SESSION_DAYS = 7;
 
@@ -69,6 +70,12 @@ export async function getUserFromToken(token: string | undefined) {
   return getUserById(payload.userId);
 }
 
+const otpStore = new Map<string, { code: string; expiresAt: number }>();
+
+function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
 export default async function authRoutes(app: FastifyInstance) {
   app.post("/auth/register", async (req: FastifyRequest<{ Body: { email: string; name: string; locale?: 'vi' | 'en' } }>) => {
     const { email, name, locale = "vi" } = req.body;
@@ -93,6 +100,48 @@ export default async function authRoutes(app: FastifyInstance) {
     const token = signJWT({ userId: user.id, email: user.email });
     const session = await createSession(user.id);
 
+    return {
+      success: true,
+      data: { user, session: { token: session.token, expires_at: session.expires_at } },
+    };
+  });
+
+  app.post("/auth/magic-link", async (req: FastifyRequest<{ Body: { email: string; locale?: 'vi' | 'en' } }>) => {
+    const { email, locale = "vi" } = req.body;
+    const user = await getUserByEmail(email.trim());
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    const code = generateOTP();
+    otpStore.set(email.trim(), { code, expiresAt: Date.now() + 5 * 60 * 1000 });
+
+    const provider = getEmailProvider();
+    await provider.send({
+      to: email.trim(),
+      subject: locale === "vi" ? "Mã đăng nhập IAI" : "IAI Login Code",
+      body: `Your login code: ${code}`,
+      html: `<p>${locale === "vi" ? "Mã đăng nhập của bạn" : "Your login code"}: <strong>${code}</strong></p>`,
+    });
+
+    return { success: true, message: locale === "vi" ? "Đã gửi mã OTP" : "OTP sent" };
+  });
+
+  app.post("/auth/verify-otp", async (req: FastifyRequest<{ Body: { email: string; code: string } }>) => {
+    const { email, code } = req.body;
+    const stored = otpStore.get(email.trim());
+    if (!stored || stored.code !== code || Date.now() > stored.expiresAt) {
+      return { success: false, error: "Invalid or expired code" };
+    }
+    otpStore.delete(email.trim());
+
+    const user = await getUserByEmail(email.trim());
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    const token = signJWT({ userId: user.id, email: user.email });
+    const session = await createSession(user.id);
     return {
       success: true,
       data: { user, session: { token: session.token, expires_at: session.expires_at } },

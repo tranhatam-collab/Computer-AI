@@ -389,12 +389,12 @@ app.post<{
 // ── Billing routes ──
 
 app.post<{ Body: { userId: string; productId: string } }>("/api/subscriptions", async (req) => {
-  const sub = createSubscription(req.body.userId, req.body.productId as any);
+  const sub = await createSubscription(req.body.userId, req.body.productId as any);
   return { success: true, data: sub };
 });
 
 app.post<{ Body: { userId: string; productId: string } }>("/api/subscriptions/cancel", async (req) => {
-  cancelSubscription(req.body.userId, req.body.productId as any);
+  await cancelSubscription(req.body.userId, req.body.productId as any);
   return { success: true };
 });
 

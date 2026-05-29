@@ -50,6 +50,12 @@ export interface Session {
 
 let authToken: string | null = null;
 
+try {
+  authToken = localStorage.getItem("token");
+} catch {
+  // localStorage may not be available in some RN environments
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const cacheKey = `${path}::${JSON.stringify(options?.body || "")}`;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -99,10 +105,12 @@ export const api = {
       body: JSON.stringify({ email }),
     });
     authToken = result.session.token;
+    try { localStorage.setItem("token", authToken); } catch {}
     return result;
   },
   logout: () => {
     authToken = null;
+    try { localStorage.removeItem("token"); } catch {}
     return request<void>("/api/auth/logout", { method: "POST" });
   },
   me: () => request<User>("/api/me"),

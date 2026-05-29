@@ -121,11 +121,15 @@
 |---|------|--------|------|------|
 | 7.1 | API server | ✅ DONE | `apps/api/` | P2–3 |
 | 7.2 | Database schema | ✅ DONE | `packages/database/` | P1 |
-| 7.3 | Auth system | ✅ DONE | `packages/auth-sdk/` | — |
+| 7.3 | Auth system | ⚠️ PARTIAL | `packages/auth-sdk/`, `apps/api/src/routes/auth.ts` | — |
 | 7.4 | Entitlement enforcement | ✅ DONE | `packages/entitlement-sdk/` | 7.3 • P1 |
 | 7.5 | Audit logging | ✅ DONE | `packages/audit-sdk/` | 7.1 |
 | 7.6 | Approval flow engine | ✅ DONE | `packages/approval-sdk/` | 7.3 |
-| 7.7 | CI/CD pipeline | ✅ DONE | `.github/workflows/deploy.yml` | — |
+| 7.7 | CI/CD pipeline | ⚠️ PARTIAL | `.github/workflows/deploy.yml`, `render.yaml` | — |
+
+**Audit 2026-05-29 — Phase 7 gaps:**
+- 7.3: JWT real ✓, session DB ✓ — **Thiếu:** magic link flow, email delivery không gửi (console.log), `JWT_SIGNING_SECRET` chưa có trong `render.yaml` envVars
+- 7.7: GitHub Pages build ✓, render.yaml Docker deploy ✓ — **Thiếu:** không có test step, không có DB migration step trong CI, `JWT_SIGNING_SECRET` thiếu trong render.yaml
 
 **Phase 7 acceptance:** API returns real data. Auth gates access. Entitlement enforced. Audit logs written.
 
@@ -136,12 +140,45 @@
 | # | Task | Status | Deps |
 |---|------|--------|------|
 | 8.1 | Pricing page | ✅ DONE | P1 |
-| 8.2 | Subscription/billing | ✅ DONE | 7.2 |
-| 8.3 | Payment gateway | ✅ DONE | 7.2 |
-| 8.4 | Invoice/email system | ✅ DONE | 7.2 |
+| 8.2 | Subscription/billing | ❌ NOT DONE | 7.2 |
+| 8.3 | Payment gateway | ⚠️ PARTIAL | 7.2 |
+| 8.4 | Invoice/email system | ⚠️ PARTIAL | 7.2 |
 | 8.5 | Usage metering | ✅ DONE | P4 |
 
+**Audit 2026-05-29 — Phase 8 gaps:**
+- 8.2: `createSubscription()` trả object in-memory, có comment `// TODO: Add PostgreSQL subscription model` — chưa persist vào DB. Mỗi API restart mất subscription data.
+- 8.3: Stripe real HTTP ✓, PayOS real HTTP ✓ — **Bug bảo mật:** `PayOSProvider.verifyWebhook()` chỉ check `!!signature`, không verify HMAC với checksumKey → attacker có thể fake webhook để mark payment paid.
+- 8.4: Invoice write DB ✓ — **Thiếu:** `sendEmail()` trong billing-sdk là `console.log()` thay vì gọi `getEmailProvider()` từ `@iai/providers` (đã có SendGrid support sẵn).
+
 **Phase 8 acceptance:** Users can purchase. Billing records. Usage metered.
+
+---
+
+---
+
+## PHASE 9 — WEB DEMO & BUG HARDENING (2026-05-29+)
+
+> **Nguồn:** Audit nghiêm ngặt 2026-05-29 phát hiện các bug production-blocking và tính năng mới.
+
+| # | Task | Status | File | Deps |
+|---|------|--------|------|------|
+| 9.1 | Mobile Mirror page (web) | ✅ DONE | `apps/web/src/pages/MobileMirrorPage.tsx`, `apps/web/src/components/MobileAppMirror.tsx` | P5 |
+| 9.2 | `JWT_SIGNING_SECRET` + AI/Email keys vào render.yaml | ✅ DONE | `render.yaml` | 7.7 |
+| 9.3 | `sendEmail()` dùng `getEmailProvider()` thật | ✅ DONE | `packages/billing-sdk/src/index.ts` | 8.4 |
+| 9.4 | PayOS `verifyWebhook()` HMAC thật | ✅ DONE | `packages/providers/src/payos-provider.ts` | 8.3 |
+| 9.5 | `subscriptions` table + persist createSubscription | ✅ DONE | `packages/database/migrations/004_core_user_schema.sql`, `packages/database/src/models/subscriptions.ts`, `packages/billing-sdk/` | 8.2 |
+| 9.6 | Mobile token SecureStore persist | 🔲 PENDING | `apps/mobile/src/api/client.ts` | P5 |
+| 9.7 | DB migration step vào CI/CD | 🔲 PENDING | `.github/workflows/deploy.yml` | 7.7 |
+| 9.8 | Magic link flow (email OTP) thay vì email→JWT trực tiếp | 🔲 PENDING | `apps/api/src/routes/auth.ts` | 9.3 |
+
+**Phase 9.1 — Mobile Mirror features:**
+- Phone frame: iOS (notch + home bar) và Android (round corners + gesture pill)
+- Toggle iOS/Android trên cùng 1 trang
+- Full flow: Login/Register → Command → Task list → Approvals → Results
+- Gọi API thật: `/api/auth/me`, `/api/products`, `/api/command`, `/api/runs`, `/api/approvals`
+- Truy cập qua route `/mobile`
+
+**Phase 9 acceptance:** Tất cả bug production-blocking từ audit 2026-05-29 được fix. Email thật gửi được. Subscription persist. PayOS secure.
 
 ---
 
