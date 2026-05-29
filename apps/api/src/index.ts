@@ -30,7 +30,7 @@ import {
   sendEmail,
 } from "@iai/billing-sdk";
 import type { Invoice as BillingInvoice } from "@iai/billing-sdk";
-import { getCurrentUsage, getRemainingQuota } from "@iai/usage-sdk";
+import { getCurrentUsage, getRemainingQuota, trackRun } from "@iai/usage-sdk";
 import { getPgPool, closePgPool, getUserById, createPushToken, getPushTokensByUser, getInvoiceByTransactionId } from "@iai/database";
 import observabilityRoutes, { logRequest, logAuditFailure } from "./observability.js";
 import computerRoutes from "./routes/computers.js";
@@ -42,6 +42,7 @@ import calendarRoutes from "./routes/calendar.js";
 import exportRoutes from "./routes/export.js";
 import { authenticate } from "@iai/auth-sdk";
 import { writeAuditLog } from "@iai/audit-sdk";
+import { getAIProvider, getAIFallbackProvider, getEmailProvider, getPaymentProvider } from "@iai/providers";
 
 const app = Fastify({ logger: true });
 const PORT = parseInt(process.env.PORT || "3001", 10);
@@ -65,8 +66,25 @@ app.register(fastifyCors, {
 
 app.register(fastifyRateLimit, {
   global: false,
-  max: 60,
+  max: async (req: any) => {
+    const user = req.user;
+    if (!user) return 10; // unauthenticated / public
+    const tier = (user.tier || "free").toLowerCase();
+    switch (tier) {
+      case "enterprise": return 300;
+      case "business": return 120;
+      case "pro": return 60;
+      case "student": return 20;
+      case "free":
+      default: return 10;
+    }
+  },
   timeWindow: "1 minute",
+  keyGenerator: (req: any) => {
+    const user = req.user;
+    if (user) return user.id;
+    return req.ip || "anonymous";
+  },
 });
 
 // Authentication hook
@@ -244,6 +262,14 @@ app.post<{
   const product = products.find((p) => p.id === productId);
   if (!product) return { success: false, error: "Invalid productId" };
 
+  // Quota check
+  if (authUser) {
+    const quota = getRemainingQuota(authUser.id, productId as any);
+    if (quota.runsLeft <= 0) {
+      return { success: false, error: "Daily run quota exceeded. Please upgrade your plan.", code: "QUOTA_EXCEEDED" };
+    }
+  }
+
   const run = await createRun(productId, text);
   await updateRun(run.id, "queue");
 
@@ -265,6 +291,7 @@ app.post<{
   const completedRun = await updateRun(verifyingRun.id, "verify-pass");
 
   if (authUser) {
+    trackRun(authUser.id, productId as any);
     await writeAuditLog(authUser.id, "command.executed", run.id, `Product: ${productId}, Lane: ${routeResult.lane}`);
   }
 
@@ -553,6 +580,34 @@ app.post<{ Body: { token: string }; Headers: { authorization?: string } }>("/api
 app.post<{ Body: { userId: string; title: string; body: string; data?: Record<string, unknown> } }>("/api/push/send", async (req) => {
   const result = await sendPushNotification(req.body.userId, req.body.title, req.body.body, req.body.data);
   return { success: true, data: result };
+});
+
+// ── AI Provider status ──
+
+app.get("/api/ai/status", { config: { noAuth: true } }, async () => {
+  const ai = getAIProvider();
+  const fallback = getAIFallbackProvider();
+  const email = getEmailProvider();
+  const payment = getPaymentProvider();
+
+  return {
+    success: true,
+    data: {
+      ai: {
+        primary: ai?.kind || "none",
+        health: fallback ? fallback.getHealth() : null,
+        configured: ai?.kind === "openai" || ai?.kind === "anthropic",
+      },
+      email: {
+        provider: email?.kind || "none",
+        configured: email?.kind === "sendgrid" || email?.kind === "ses",
+      },
+      payment: {
+        provider: payment?.kind || "none",
+        configured: payment?.kind === "stripe" || payment?.kind === "payos",
+      },
+    },
+  };
 });
 
 // ── Usage routes ──

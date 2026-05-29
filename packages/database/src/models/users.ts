@@ -15,6 +15,7 @@ export interface User {
   email: string;
   name: string;
   locale: 'vi' | 'en';
+  tier: string;
   created_at: Date;
 }
 
@@ -60,6 +61,7 @@ function rowToUser(row: any): User {
     email: row.email,
     name: row.display_name || row.name || '',
     locale: row.locale === 'vi-VN' ? 'vi' : 'en',
+    tier: row.tier || 'free',
     created_at: row.created_at,
   };
 }
@@ -75,7 +77,7 @@ export async function createUser(email: string, name: string, locale: 'vi' | 'en
   const result = await pgQuery(
     `INSERT INTO users (id, email, email_hash, display_name, locale, timezone, tier, status, created_at, updated_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-     RETURNING id, email, display_name as name, locale, created_at`,
+     RETURNING id, email, display_name as name, locale, tier, created_at`,
     [id, email, emailHash, name, mappedLocale, timezone, 'free', 'active', now, now]
   );
 
@@ -84,7 +86,7 @@ export async function createUser(email: string, name: string, locale: 'vi' | 'en
 
 export async function getUserById(id: string): Promise<User | null> {
   const result = await pgQuery(
-    'SELECT id, email, display_name as name, locale, created_at FROM users WHERE id = $1',
+    'SELECT id, email, display_name as name, locale, tier, created_at FROM users WHERE id = $1',
     [id]
   );
   return result.rows[0] || null;
@@ -92,7 +94,7 @@ export async function getUserById(id: string): Promise<User | null> {
 
 export async function getUserByEmail(email: string): Promise<User | null> {
   const result = await pgQuery(
-    'SELECT id, email, display_name as name, locale, created_at FROM users WHERE email = $1',
+    'SELECT id, email, display_name as name, locale, tier, created_at FROM users WHERE email = $1',
     [email]
   );
   return result.rows[0] || null;

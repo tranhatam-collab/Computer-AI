@@ -13,6 +13,7 @@ export interface User {
   email: string;
   name: string;
   locale: "vi" | "en";
+  tier: string;
 }
 
 export interface Session {
@@ -28,6 +29,7 @@ export async function createUser(email: string, name: string, locale: "vi" | "en
     email: user.email,
     name: user.name,
     locale: user.locale as "vi" | "en",
+    tier: user.tier || "free",
   };
 }
 
@@ -43,6 +45,7 @@ export async function authenticate(token: string): Promise<User | null> {
     email: user.email,
     name: user.name,
     locale: user.locale as "vi" | "en",
+    tier: user.tier || "free",
   } : null;
 }
 
@@ -57,6 +60,7 @@ export async function login(email: string): Promise<{ user: User; session: Sessi
       email: user.email,
       name: user.name,
       locale: user.locale as "vi" | "en",
+      tier: user.tier || "free",
     },
     session: {
       token: session.token,
