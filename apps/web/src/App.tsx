@@ -14,10 +14,11 @@ import { LoginPage } from "./pages/LoginPage";
 import { ComparePage } from "./pages/ComparePage";
 import { LanePage } from "./pages/LanePage";
 import { ThankYouPage } from "./pages/ThankYouPage";
+import { MobileMirrorPage } from "./pages/MobileMirrorPage";
 import type { ProductId, LaneId } from "@iai/product-registry";
 
 type Locale = "vi" | "en";
-type View = { type: "home" } | { type: "product"; id: ProductId } | { type: "pricing" } | { type: "login" } | { type: "compare" } | { type: "lane"; id: LaneId } | { type: "thankyou" };
+type View = { type: "home" } | { type: "product"; id: ProductId } | { type: "pricing" } | { type: "login" } | { type: "compare" } | { type: "lane"; id: LaneId } | { type: "thankyou" } | { type: "mobile-mirror" };
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -40,6 +41,7 @@ function viewFromPath(pathname: string): View {
   if (path === "/login") return { type: "login" };
   if (path === "/compare") return { type: "compare" };
   if (path === "/thank-you") return { type: "thankyou" };
+  if (path === "/mobile") return { type: "mobile-mirror" };
   const productMatch = path.match(/^\/products\/([^/]+)$/);
   if (productMatch) return { type: "product", id: productMatch[1] as ProductId };
   const laneMatch = path.match(/^\/lanes\/([^/]+)$/);
@@ -207,6 +209,23 @@ export default function App() {
           onNavigate={(href) => navigate(toAppPath(href))}
         />
         <ThankYouPage locale={locale} homeHref={toHref("/")} onNavigate={(href) => navigate(toAppPath(href))} />
+        <Footer locale={locale} />
+      </div>
+    );
+  }
+
+  if (view.type === "mobile-mirror") {
+    return (
+      <div className="app-shell">
+        <Header
+          brand={content.site.brand}
+          links={[{ label: locale === "vi" ? "Trang chủ" : "Home", href: toHref("/") }]}
+          locale={locale}
+          onToggleLocale={() => setLocale((prev) => (prev === "vi" ? "en" : "vi"))}
+          homeHref={toHref("/")}
+          onNavigate={(href) => navigate(toAppPath(href))}
+        />
+        <MobileMirrorPage locale={locale} />
         <Footer locale={locale} />
       </div>
     );
