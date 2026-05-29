@@ -3,6 +3,7 @@ import { MockAIProvider, MockEmailProvider, MockPaymentProvider } from "./mock.j
 import { OpenAIProvider } from "./openai-provider.js";
 import { AnthropicProvider } from "./anthropic-provider.js";
 import { SendGridProvider } from "./sendgrid-provider.js";
+import { SESProvider } from "./ses-provider.js";
 import { PayOSProvider } from "./payos-provider.js";
 import { StripeProvider } from "./stripe-provider.js";
 import { AIFallbackProvider } from "./circuit-breaker.js";
@@ -68,9 +69,16 @@ export function generateWithFallback(req: Parameters<AIProvider["generate"]>[0])
 export function getEmailProvider(): EmailProvider {
   if (!emailProvider) {
     const sendgridKey = process.env.SENDGRID_API_KEY;
+    const sesAccessKey = process.env.SES_ACCESS_KEY_ID;
+    const sesSecretKey = process.env.SES_SECRET_ACCESS_KEY;
+    const sesRegion = process.env.SES_REGION || "us-east-1";
+
     if (sendgridKey) {
       emailProvider = new SendGridProvider(sendgridKey, process.env.FROM_EMAIL);
+    } else if (sesAccessKey && sesSecretKey) {
+      emailProvider = new SESProvider(sesAccessKey, sesSecretKey, sesRegion, process.env.FROM_EMAIL);
     } else {
+      console.warn("⚠️ EMAIL_PROVIDER_FALLBACK: No SENDGRID_API_KEY or SES credentials set. Reverting to MockEmailProvider.");
       emailProvider = new MockEmailProvider();
     }
   }
