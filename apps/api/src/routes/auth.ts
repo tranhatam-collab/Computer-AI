@@ -82,6 +82,12 @@ function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+function buildSessionCookie(token: string): string {
+  const domain = process.env.COOKIE_DOMAIN || ".iai.one";
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  return `iai_session=${token}; Domain=${domain}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${SESSION_DAYS * 86400}`;
+}
+
 export default async function authRoutes(app: FastifyInstance) {
   app.post("/auth/register", { config: { noAuth: true } }, async (req: FastifyRequest<{ Body: { email: string; name: string; locale?: 'vi' | 'en' } }>) => {
     const { email, name, locale = "vi" } = req.body;
@@ -95,7 +101,7 @@ export default async function authRoutes(app: FastifyInstance) {
     return { success: true, data: { id: user.id, email: user.email, name: user.name } };
   });
 
-  app.post("/auth/login", { config: { noAuth: true } }, async (req: FastifyRequest<{ Body: { email: string } }>) => {
+  app.post("/auth/login", { config: { noAuth: true } }, async (req: FastifyRequest<{ Body: { email: string } }>, reply) => {
     const { email } = req.body;
 
     const user = await getUserByEmail(email.trim());
@@ -105,6 +111,7 @@ export default async function authRoutes(app: FastifyInstance) {
 
     const token = signJWT({ userId: user.id, email: user.email });
     const session = await createSession(user.id);
+    void reply.header("Set-Cookie", buildSessionCookie(token));
 
     return {
       success: true,
@@ -133,7 +140,7 @@ export default async function authRoutes(app: FastifyInstance) {
     return { success: true, message: locale === "vi" ? "Đã gửi mã OTP" : "OTP sent" };
   });
 
-  app.post("/auth/verify-otp", { config: { noAuth: true } }, async (req: FastifyRequest<{ Body: { email: string; code: string } }>) => {
+  app.post("/auth/verify-otp", { config: { noAuth: true } }, async (req: FastifyRequest<{ Body: { email: string; code: string } }>, reply) => {
     const { email, code } = req.body;
     const stored = otpStore.get(email.trim());
     if (!stored || stored.code !== code || Date.now() > stored.expiresAt) {
@@ -148,24 +155,31 @@ export default async function authRoutes(app: FastifyInstance) {
 
     const token = signJWT({ userId: user.id, email: user.email });
     const session = await createSession(user.id);
+    void reply.header("Set-Cookie", buildSessionCookie(token));
     return {
       success: true,
       data: { user, session: { token: session.token, expires_at: session.expires_at } },
     };
   });
 
-  app.get("/auth/me", async (req: FastifyRequest<{ Headers: { authorization?: string } }>) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
+  app.get("/auth/me", async (req: FastifyRequest<{ Headers: { authorization?: string; cookie?: string } }>) => {
+    const headerToken = req.headers.authorization?.replace("Bearer ", "");
+    const cookieToken = (req.headers.cookie || "").match(/iai_session=([^;]+)/)?.[1];
+    const token = headerToken || cookieToken;
     const user = await getUserFromToken(token);
     if (!user) return { success: false, error: "Unauthorized" };
     return { success: true, data: user };
   });
 
-  app.post("/auth/logout", async (req: FastifyRequest<{ Headers: { authorization?: string } }>) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
+  app.post("/auth/logout", async (req: FastifyRequest<{ Headers: { authorization?: string; cookie?: string } }>, reply) => {
+    const headerToken = req.headers.authorization?.replace("Bearer ", "");
+    const cookieToken = (req.headers.cookie || "").match(/iai_session=([^;]+)/)?.[1];
+    const token = headerToken || cookieToken;
     if (token) {
       await deleteSession(token);
     }
+    const domain = process.env.COOKIE_DOMAIN || ".iai.one";
+    void reply.header("Set-Cookie", `iai_session=; Domain=${domain}; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
     return { success: true };
   });
 

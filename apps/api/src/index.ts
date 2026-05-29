@@ -30,7 +30,7 @@ import {
   sendEmail,
 } from "@iai/billing-sdk";
 import type { Invoice as BillingInvoice } from "@iai/billing-sdk";
-import { getCurrentUsage, getRemainingQuota, trackRun } from "@iai/usage-sdk";
+import { getCurrentUsage, getRemainingQuota, trackRun, trackOutput } from "@iai/usage-sdk";
 import { getPgPool, closePgPool, getUserById, createPushToken, getPushTokensByUser, getInvoiceByTransactionId } from "@iai/database";
 import observabilityRoutes, { logRequest, logAuditFailure } from "./observability.js";
 import computerRoutes from "./routes/computers.js";
@@ -94,8 +94,11 @@ app.addHook("preHandler", async (request, reply) => {
   const routeConfig = (request.routeOptions?.config || {}) as any;
   if (routeConfig.noAuth === true) return;
 
+  // Try Bearer header first, then cookie fallback for cross-domain auth
   const authHeader = request.headers.authorization || "";
-  const token = authHeader.replace("Bearer ", "");
+  const cookieToken = (request.headers.cookie || "").match(/iai_session=([^;]+)/)?.[1];
+  const token = authHeader.replace("Bearer ", "") || cookieToken || "";
+
   if (!token) {
     reply.code(401);
     throw new Error("Unauthorized");
@@ -299,6 +302,9 @@ app.post<{
 
   if (authUser) {
     await trackRun(authUser.id, productId as any);
+    // Estimate output credits: ~1 credit per 100 chars of output
+    const outputCredits = Math.max(1, Math.ceil((routeResult.lane.length + 10) / 100));
+    await trackOutput(authUser.id, productId as any, outputCredits);
     await writeAuditLog(authUser.id, "command.executed", run.id, `Product: ${productId}, Lane: ${routeResult.lane}`);
   }
 
