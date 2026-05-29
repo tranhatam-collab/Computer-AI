@@ -82,6 +82,7 @@ function migrate(db: BetterSqlite3.Database): void {
       amount REAL NOT NULL,
       currency TEXT NOT NULL DEFAULT 'USD',
       status TEXT NOT NULL DEFAULT 'pending',
+      transaction_id TEXT,
       created_at INTEGER NOT NULL DEFAULT (unixepoch()),
       paid_at INTEGER
     );
@@ -180,6 +181,7 @@ function migrate(db: BetterSqlite3.Database): void {
     CREATE INDEX IF NOT EXISTS idx_runs_state ON runs(state);
     CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id);
     CREATE INDEX IF NOT EXISTS idx_invoices_user ON invoices(user_id);
+    CREATE INDEX IF NOT EXISTS idx_invoices_transaction ON invoices(transaction_id);
     CREATE INDEX IF NOT EXISTS idx_memory_user ON memory_namespaces(tenant_id, user_id, computer_id);
     CREATE INDEX IF NOT EXISTS idx_usage_user ON usage_records(tenant_id, user_id, computer_id, recorded_at);
     CREATE INDEX IF NOT EXISTS idx_upgrade_user ON upgrade_requests(tenant_id, user_id, computer_id, status);

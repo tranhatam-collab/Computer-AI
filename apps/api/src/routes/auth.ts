@@ -2,6 +2,12 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import crypto from "crypto";
 import { getUserById, getUserByEmail, createUser, createSession, deleteSession } from "@iai/database";
 import { getEmailProvider } from "@iai/providers";
+import {
+  getOAuthStatus,
+  generateOAuthUrl,
+  verifyOAuthState,
+  exchangeOAuthCode,
+} from "@iai/auth-sdk";
 
 const SESSION_DAYS = 7;
 
@@ -77,7 +83,7 @@ function generateOTP(): string {
 }
 
 export default async function authRoutes(app: FastifyInstance) {
-  app.post("/auth/register", async (req: FastifyRequest<{ Body: { email: string; name: string; locale?: 'vi' | 'en' } }>) => {
+  app.post("/auth/register", { config: { noAuth: true } }, async (req: FastifyRequest<{ Body: { email: string; name: string; locale?: 'vi' | 'en' } }>) => {
     const { email, name, locale = "vi" } = req.body;
 
     const existing = await getUserByEmail(email.trim());
@@ -89,7 +95,7 @@ export default async function authRoutes(app: FastifyInstance) {
     return { success: true, data: { id: user.id, email: user.email, name: user.name } };
   });
 
-  app.post("/auth/login", async (req: FastifyRequest<{ Body: { email: string } }>) => {
+  app.post("/auth/login", { config: { noAuth: true } }, async (req: FastifyRequest<{ Body: { email: string } }>) => {
     const { email } = req.body;
 
     const user = await getUserByEmail(email.trim());
@@ -106,7 +112,7 @@ export default async function authRoutes(app: FastifyInstance) {
     };
   });
 
-  app.post("/auth/magic-link", async (req: FastifyRequest<{ Body: { email: string; locale?: 'vi' | 'en' } }>) => {
+  app.post("/auth/magic-link", { config: { noAuth: true } }, async (req: FastifyRequest<{ Body: { email: string; locale?: 'vi' | 'en' } }>) => {
     const { email, locale = "vi" } = req.body;
     const user = await getUserByEmail(email.trim());
     if (!user) {
@@ -127,7 +133,7 @@ export default async function authRoutes(app: FastifyInstance) {
     return { success: true, message: locale === "vi" ? "Đã gửi mã OTP" : "OTP sent" };
   });
 
-  app.post("/auth/verify-otp", async (req: FastifyRequest<{ Body: { email: string; code: string } }>) => {
+  app.post("/auth/verify-otp", { config: { noAuth: true } }, async (req: FastifyRequest<{ Body: { email: string; code: string } }>) => {
     const { email, code } = req.body;
     const stored = otpStore.get(email.trim());
     if (!stored || stored.code !== code || Date.now() > stored.expiresAt) {
@@ -161,5 +167,55 @@ export default async function authRoutes(app: FastifyInstance) {
       await deleteSession(token);
     }
     return { success: true };
+  });
+
+  // ── OAuth routes ──
+
+  app.get("/auth/oauth/status/:provider", { config: { noAuth: true } }, async (req: FastifyRequest<{ Params: { provider: string } }>) => {
+    const provider = req.params.provider as "google" | "microsoft";
+    const status = getOAuthStatus(provider);
+    return { success: true, data: status };
+  });
+
+  app.get("/auth/oauth/:provider", { config: { noAuth: true } }, async (req: FastifyRequest<{ Params: { provider: string }; Querystring: { tenantId?: string; userId?: string; computerId?: string } }>) => {
+    const provider = req.params.provider as "google" | "microsoft";
+    const { tenantId = "iai", userId = "", computerId = "default" } = req.query;
+    const result = generateOAuthUrl(provider, tenantId, userId, computerId);
+    if (!result) {
+      return { success: false, error: `OAuth not configured for ${provider}` };
+    }
+    return { success: true, data: { url: result.url, state: result.state } };
+  });
+
+  app.get("/auth/oauth/callback/:provider", { config: { noAuth: true } }, async (req: FastifyRequest<{ Params: { provider: string }; Querystring: { code?: string; state?: string; error?: string } }>) => {
+    const provider = req.params.provider as "google" | "microsoft";
+    const { code, state, error } = req.query;
+
+    if (error) {
+      return { success: false, error };
+    }
+    if (!code || !state) {
+      return { success: false, error: "Missing code or state" };
+    }
+
+    const stateData = verifyOAuthState(state);
+    if (!stateData) {
+      return { success: false, error: "Invalid or expired state" };
+    }
+
+    const tokens = await exchangeOAuthCode(provider, code, state);
+    if (!tokens) {
+      return { success: false, error: "Failed to exchange code for token" };
+    }
+
+    return {
+      success: true,
+      data: {
+        provider,
+        userId: stateData.userId,
+        accessToken: tokens.accessToken,
+        expiresIn: tokens.expiresIn,
+      },
+    };
   });
 }

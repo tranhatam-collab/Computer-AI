@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { query } from "@iai/database/pg";
 import { checkCostLimit } from "@iai/cost-governor";
+import { writeAuditLog } from "@iai/audit-sdk";
 
 export default async function commandRoutes(app: FastifyInstance) {
   // List commands for user/instance
@@ -67,6 +68,11 @@ export default async function commandRoutes(app: FastifyInstance) {
       [user_id, instance_id, command_type, intent || null, JSON.stringify(payload || {}), estimated_cost_cents, status]
     );
 
+    const user = (req as any).user;
+    if (user) {
+      await writeAuditLog(user.id, "command.created", res.rows[0].id, `Type: ${command_type}, Status: ${status}`);
+    }
+
     return {
       success: true,
       data: { id: res.rows[0].id, status, needs_approval: needsApproval },
@@ -83,6 +89,11 @@ export default async function commandRoutes(app: FastifyInstance) {
       [approved_by, req.params.id]
     );
 
+    const user = (req as any).user;
+    if (user) {
+      await writeAuditLog(user.id, "command.approved", req.params.id, `Approved by: ${approved_by}`);
+    }
+
     return { success: true };
   });
 
@@ -92,6 +103,12 @@ export default async function commandRoutes(app: FastifyInstance) {
       `UPDATE commands SET status = 'rejected', updated_at = NOW() WHERE id = $1`,
       [req.params.id]
     );
+
+    const user = (req as any).user;
+    if (user) {
+      await writeAuditLog(user.id, "command.rejected", req.params.id, `Reason: ${req.body.reason || "Rejected"}`);
+    }
+
     return { success: true };
   });
 }

@@ -41,6 +41,7 @@ export interface Invoice {
   amount: number;
   currency: string;
   status: 'pending' | 'paid' | 'failed' | 'cancelled';
+  transaction_id?: string;
   created_at: Date;
   paid_at?: Date;
 }
@@ -204,13 +205,13 @@ export async function getAuditLogsByResource(resource: string, limit: number = 1
 }
 
 // Invoice Management
-export async function createInvoice(userId: string, productId: string, amount: number, currency: string = 'USD'): Promise<Invoice> {
+export async function createInvoice(userId: string, productId: string, amount: number, currency: string = 'USD', transactionId?: string): Promise<Invoice> {
   const id = uuidv4();
   const now = new Date();
   
   const result = await pgQuery(
-    `INSERT INTO invoices (id, user_id, product_id, amount, currency, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-    [id, userId, productId, amount, currency, 'pending', now]
+    `INSERT INTO invoices (id, user_id, product_id, amount, currency, status, transaction_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+    [id, userId, productId, amount, currency, 'pending', transactionId || null, now]
   );
   
   return result.rows[0];
@@ -218,6 +219,11 @@ export async function createInvoice(userId: string, productId: string, amount: n
 
 export async function getInvoiceById(id: string): Promise<Invoice | null> {
   const result = await pgQuery('SELECT * FROM invoices WHERE id = $1', [id]);
+  return result.rows[0] || null;
+}
+
+export async function getInvoiceByTransactionId(transactionId: string): Promise<Invoice | null> {
+  const result = await pgQuery('SELECT * FROM invoices WHERE transaction_id = $1', [transactionId]);
   return result.rows[0] || null;
 }
 

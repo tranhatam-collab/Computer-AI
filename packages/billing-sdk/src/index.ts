@@ -24,6 +24,7 @@ export interface Invoice {
   amount: number;
   currency: "USD" | "VND";
   status: "pending" | "paid" | "failed";
+  transactionId?: string;
   createdAt: number;
   paidAt?: number;
 }
@@ -44,10 +45,10 @@ export async function cancelSubscription(userId: string, productId: ProductId): 
   await pgCancelSubscription(userId, productId);
 }
 
-export async function generateInvoice(userId: string, productId: ProductId, currency: "USD" | "VND" = "USD"): Promise<Invoice> {
+export async function generateInvoice(userId: string, productId: ProductId, currency: "USD" | "VND" = "USD", transactionId?: string): Promise<Invoice> {
   const pricing = getPricing(productId);
   const amount = currency === "VND" ? (pricing.monthlyVnd || 0) : (pricing.monthly || 0);
-  const invoice = await pgCreateInvoice(userId, productId, amount, currency);
+  const invoice = await pgCreateInvoice(userId, productId, amount, currency, transactionId);
   return {
     id: invoice.id,
     userId: invoice.user_id,
@@ -55,6 +56,7 @@ export async function generateInvoice(userId: string, productId: ProductId, curr
     amount: invoice.amount,
     currency: invoice.currency as "USD" | "VND",
     status: invoice.status as "pending" | "paid" | "failed",
+    transactionId: invoice.transaction_id || undefined,
     createdAt: Math.floor(new Date(invoice.created_at).getTime() / 1000),
     paidAt: invoice.paid_at ? Math.floor(new Date(invoice.paid_at).getTime() / 1000) : undefined,
   };
@@ -118,3 +120,4 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
     throw new Error(`Email failed: ${payload.to}`);
   }
 }
+

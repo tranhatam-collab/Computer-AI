@@ -31,7 +31,7 @@ import {
 } from "@iai/billing-sdk";
 import type { Invoice as BillingInvoice } from "@iai/billing-sdk";
 import { getCurrentUsage, getRemainingQuota } from "@iai/usage-sdk";
-import { getPgPool, closePgPool, getUserById, createPushToken } from "@iai/database";
+import { getPgPool, closePgPool, getUserById, createPushToken, getPushTokensByUser, getInvoiceByTransactionId } from "@iai/database";
 import observabilityRoutes, { logRequest, logAuditFailure } from "./observability.js";
 import computerRoutes from "./routes/computers.js";
 import commandRoutes from "./routes/commands.js";
@@ -41,6 +41,7 @@ import browserRoutes from "./routes/browser.js";
 import calendarRoutes from "./routes/calendar.js";
 import exportRoutes from "./routes/export.js";
 import { authenticate } from "@iai/auth-sdk";
+import { writeAuditLog } from "@iai/audit-sdk";
 
 const app = Fastify({ logger: true });
 const PORT = parseInt(process.env.PORT || "3001", 10);
@@ -66,6 +67,27 @@ app.register(fastifyRateLimit, {
   global: false,
   max: 60,
   timeWindow: "1 minute",
+});
+
+// Authentication hook
+app.decorateRequest("user", null);
+
+app.addHook("preHandler", async (request, reply) => {
+  const routeConfig = (request.routeOptions?.config || {}) as any;
+  if (routeConfig.noAuth === true) return;
+
+  const authHeader = request.headers.authorization || "";
+  const token = authHeader.replace("Bearer ", "");
+  if (!token) {
+    reply.code(401);
+    throw new Error("Unauthorized");
+  }
+  const user = await getUserFromToken(token);
+  if (!user) {
+    reply.code(401);
+    throw new Error("Unauthorized");
+  }
+  (request as any).user = user;
 });
 
 // Security headers
@@ -159,24 +181,53 @@ async function savePushToken(userId: string, token: string): Promise<void> {
   await createPushToken(userId, token, "expo");
 }
 
+async function sendPushNotification(userId: string, title: string, body: string, data?: Record<string, unknown>): Promise<{ sent: number; failed: number }> {
+  const tokens = await getPushTokensByUser(userId);
+  if (tokens.length === 0) return { sent: 0, failed: 0 };
+
+  const messages = tokens.map((t) => ({
+    to: t.token,
+    sound: "default",
+    title,
+    body,
+    data: data || {},
+  }));
+
+  const res = await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(messages),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Expo push failed: ${res.status}`);
+  }
+
+  const json = (await res.json()) as any;
+  const results = json.data || [];
+  const sent = results.filter((r: any) => r.status === "ok").length;
+  const failed = results.length - sent;
+  return { sent, failed };
+}
+
 // ── Product routes ──
 
-app.get("/api/products", async () => {
+app.get("/api/products", { config: { noAuth: true } }, async () => {
   return { success: true, data: products };
 });
 
-app.get<{ Params: { id: string } }>("/api/products/:id", async (req) => {
+app.get<{ Params: { id: string } }>("/api/products/:id", { config: { noAuth: true } }, async (req) => {
   const product = products.find((p) => p.id === req.params.id);
   if (!product) return { success: false, error: "Product not found" };
   return { success: true, data: product };
 });
 
-app.get<{ Params: { id: string } }>("/api/products/:id/pricing", async (req) => {
+app.get<{ Params: { id: string } }>("/api/products/:id/pricing", { config: { noAuth: true } }, async (req) => {
   const pricing = getPricing(req.params.id as any);
   return { success: true, data: pricing };
 });
 
-app.get<{ Params: { id: string } }>("/api/products/:id/shell", async (req) => {
+app.get<{ Params: { id: string } }>("/api/products/:id/shell", { config: { noAuth: true } }, async (req) => {
   const shell = getAllShells().find((s) => s.id === req.params.id);
   if (!shell) return { success: false, error: "Shell not found" };
   return { success: true, data: shell };
@@ -188,6 +239,7 @@ app.post<{
   Body: { text: string; productId: string; sessionKey?: string };
 }>("/api/command", async (req) => {
   const { text, productId, sessionKey = "anon" } = req.body;
+  const authUser = (req as any).user;
 
   const product = products.find((p) => p.id === productId);
   if (!product) return { success: false, error: "Invalid productId" };
@@ -212,6 +264,10 @@ app.post<{
   });
   const completedRun = await updateRun(verifyingRun.id, "verify-pass");
 
+  if (authUser) {
+    await writeAuditLog(authUser.id, "command.executed", run.id, `Product: ${productId}, Lane: ${routeResult.lane}`);
+  }
+
   return { success: true, data: { run: completedRun, route: routeResult } };
 });
 
@@ -219,6 +275,10 @@ app.post<{
 
 app.post<{ Body: { productId: string; text: string } }>("/api/runs", async (req) => {
   const run = await createRun(req.body.productId, req.body.text);
+  const authUser = (req as any).user;
+  if (authUser) {
+    await writeAuditLog(authUser.id, "run.created", run.id, `Product: ${req.body.productId}`);
+  }
   return { success: true, data: run };
 });
 
@@ -252,11 +312,11 @@ app.post<{ Params: { id: string }; Body: { reason?: string } }>("/api/approvals/
 
 // ── App map routes ──
 
-app.get("/api/app-map", async () => {
+app.get("/api/app-map", { config: { noAuth: true } }, async () => {
   return { success: true, data: getAppMap() };
 });
 
-app.get<{ Params: { lane: string } }>("/api/app-map/:lane", async (req) => {
+app.get<{ Params: { lane: string } }>("/api/app-map/:lane", { config: { noAuth: true } }, async (req) => {
   return { success: true, data: getProductsByLane(req.params.lane as any) };
 });
 
@@ -363,7 +423,7 @@ app.post<{
   Body: Record<string, unknown>;
   Headers: { "x-pay-signature"?: string; "x-pay-timestamp"?: string };
 }>("/api/webhooks/payment", {
-  config: { rateLimit: { max: 120, timeWindow: "1 minute" } },
+  config: { noAuth: true, rateLimit: { max: 120, timeWindow: "1 minute" } },
 }, async (req) => {
   const sig = req.headers["x-pay-signature"];
   const timestamp = req.headers["x-pay-timestamp"];
@@ -382,24 +442,76 @@ app.post<{
     }
   }
   app.log.info({ body: req.body, sig: sig ? "verified" : "absent" }, "pay.iai.one member webhook");
-  // Phase 1: ack-only. Fulfillment (subscription activation, email) wired in Phase 2.
-  return { success: true, received: true };
+
+  // Fulfillment: extract transaction, activate subscription, notify user
+  const orderCode = String(req.body.orderCode || req.body.paymentLinkId || req.body.transactionId || "");
+  const paymentStatus = String(req.body.status || req.body.code || "").toUpperCase();
+
+  if (!orderCode) {
+    return { success: true, received: true, note: "no transaction id" };
+  }
+
+  const invoice = await getInvoiceByTransactionId(orderCode);
+  if (!invoice) {
+    return { success: true, received: true, note: "invoice not found" };
+  }
+
+  if (invoice.status === "paid") {
+    return { success: true, received: true, note: "already fulfilled" };
+  }
+
+  if (paymentStatus === "PAID" || paymentStatus === "00" || paymentStatus === "SUCCESS") {
+    await markInvoicePaid(invoice.id);
+    await createSubscription(invoice.user_id, invoice.product_id as any);
+
+    const user = await getUserById(invoice.user_id);
+    if (user) {
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: "[iai.one] Thanh toán thành công / Payment confirmed",
+          html: `<p>Hi ${user.name || user.email},</p>
+<p>Your payment for <strong>${invoice.product_id}</strong> has been received.</p>
+<ul>
+<li>Invoice: ${invoice.id}</li>
+<li>Amount: ${invoice.amount} ${invoice.currency}</li>
+<li>Status: Paid</li>
+</ul>
+<p>Thank you for using iai.one.</p>`,
+        });
+      } catch (err) {
+        app.log.warn({ err }, "Webhook email failed");
+      }
+      await writeAuditLog(invoice.user_id, "payment.fulfilled", invoice.id, `Webhook fulfilled for order ${orderCode}`);
+      try {
+        await sendPushNotification(invoice.user_id, "iai.one", "Thanh toán thành công / Payment confirmed", { invoiceId: invoice.id, productId: invoice.product_id });
+      } catch (err) {
+        app.log.warn({ err }, "Webhook push notification failed");
+      }
+    }
+    return { success: true, received: true, fulfilled: true };
+  }
+
+  return { success: true, received: true, status: paymentStatus };
 });
 
 // ── Billing routes ──
 
 app.post<{ Body: { userId: string; productId: string } }>("/api/subscriptions", async (req) => {
   const sub = await createSubscription(req.body.userId, req.body.productId as any);
+  await writeAuditLog(req.body.userId, "subscription.created", sub.userId, `Product: ${req.body.productId}`);
   return { success: true, data: sub };
 });
 
 app.post<{ Body: { userId: string; productId: string } }>("/api/subscriptions/cancel", async (req) => {
   await cancelSubscription(req.body.userId, req.body.productId as any);
+  await writeAuditLog(req.body.userId, "subscription.cancelled", req.body.userId, `Product: ${req.body.productId}`);
   return { success: true };
 });
 
 app.post<{ Body: { userId: string; productId: string; currency?: "USD" | "VND" } }>("/api/invoices", async (req) => {
   const inv = await generateInvoiceForUser(req.body.userId, req.body.productId, req.body.currency);
+  await writeAuditLog(req.body.userId, "invoice.created", inv.id, `Product: ${req.body.productId}, Currency: ${req.body.currency || "USD"}`);
   return { success: true, data: inv };
 });
 
@@ -409,6 +521,10 @@ app.get<{ Params: { userId: string } }>("/api/invoices/:userId", async (req) => 
 
 app.post<{ Body: { invoiceId: string } }>("/api/invoices/pay", async (req) => {
   await markInvoicePaidById(req.body.invoiceId);
+  const authUser = (req as any).user;
+  if (authUser) {
+    await writeAuditLog(authUser.id, "invoice.paid", req.body.invoiceId, "Manual payment marked");
+  }
   return { success: true };
 });
 
@@ -434,6 +550,11 @@ app.post<{ Body: { token: string }; Headers: { authorization?: string } }>("/api
   return { success: true };
 });
 
+app.post<{ Body: { userId: string; title: string; body: string; data?: Record<string, unknown> } }>("/api/push/send", async (req) => {
+  const result = await sendPushNotification(req.body.userId, req.body.title, req.body.body, req.body.data);
+  return { success: true, data: result };
+});
+
 // ── Usage routes ──
 
 app.get<{ Params: { userId: string; productId: string } }>("/api/usage/:userId/:productId", async (req) => {
@@ -445,7 +566,7 @@ app.get<{ Params: { userId: string; productId: string } }>("/api/usage/:userId/:
 // ── Health / Observability ──
 app.register(observabilityRoutes, { prefix: "/api" });
 
-app.get("/api/startup", async () => {
+app.get("/api/startup", { config: { noAuth: true } }, async () => {
   return {
     ready: startupReady,
     error: startupError,
